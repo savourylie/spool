@@ -1,7 +1,7 @@
 # [TICKET-009] Scheduled Metrics Refresh
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #002 ✅, #006 ✅
