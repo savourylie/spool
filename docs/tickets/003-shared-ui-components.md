@@ -1,7 +1,7 @@
 # [TICKET-003] Shared UI Components
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #001 ✅
@@ -14,15 +14,15 @@
 Build the reusable UI component library based on DESIGN.md specifications: Candy Button (primary), Outline Button (secondary), Sticker Card, and styled Input. These components are used across the landing page, dashboard, and backfill progress screens.
 
 ## Acceptance Criteria
-- [ ] Primary "Candy Button" component: pill shape, accent background, white text, 2px border, hard shadow, hover lift (-2px translate + 6px shadow), active press (2px translate + 2px shadow), bounce easing
-- [ ] Optional trailing icon variant (ArrowRight in white circle)
-- [ ] Secondary "Outline Button" component: transparent background, 2px border, no shadow, hover fills with tertiary (#FBBF24)
-- [ ] "Sticker Card" component: white background, 2px border, radius-lg, soft hard shadow, hover wiggle (rotate -1deg, scale 1.02), Outfit Bold title
-- [ ] Optional floating icon variant (colored circle half-in/half-out of top border)
-- [ ] Styled Input component: white background, 2px border (#CBD5E1), radius-md, focus state (accent border + accent shadow), bold uppercase small label
-- [ ] All components respect `prefers-reduced-motion` (disable bounce, wiggle)
-- [ ] All components use design tokens from #001 (no hardcoded colors)
-- [ ] All components have proper focus states with thick colored border + hard shadow (per DESIGN.md accessibility)
+- [x] Primary "Candy Button" component: pill shape, accent background, white text, 2px border, hard shadow, hover lift (-2px translate + 6px shadow), active press (2px translate + 2px shadow), bounce easing
+- [x] Optional trailing icon variant (ArrowRight in white circle)
+- [x] Secondary "Outline Button" component: transparent background, 2px border, no shadow, hover fills with tertiary (#FBBF24)
+- [x] "Sticker Card" component: white background, 2px border, radius-lg, soft hard shadow, hover wiggle (rotate -1deg, scale 1.02), Outfit Bold title
+- [x] Optional floating icon variant (colored circle half-in/half-out of top border)
+- [x] Styled Input component: white background, 2px border (#CBD5E1), radius-md, focus state (accent border + accent shadow), bold uppercase small label
+- [x] All components respect `prefers-reduced-motion` (disable bounce, wiggle)
+- [x] All components use design tokens from #001 (no hardcoded colors)
+- [x] All components have proper focus states with thick colored border + hard shadow (per DESIGN.md accessibility)
 
 ## Design Reference
 - **Components**: § Components > Buttons (Candy Button, Outline), Cards (Sticker Card), Inputs

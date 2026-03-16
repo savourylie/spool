@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 2     |
+| ✅ Done        | 3     |
 | 🔧 In Progress | 0     |
 | 📋 Pending     | 3     |
-| 🚫 Blocked     | 17    |
+| 🚫 Blocked     | 16    |
 | ⏸️ Deferred    | 0     |
 
 ---
@@ -21,7 +21,7 @@
 | --- | ---------------------------------------------------------------- | --------- | ---------- | ----- |
 | 001 | [Project Scaffolding & Design Tokens](./001-project-scaffolding.md) | `done` | —          | Next.js 16, Tailwind v4, full DESIGN.md token system |
 | 002 | [Database Schema & Supabase Config](./002-database-schema.md)    | `done` | #001 ✅    | Schema, RLS, Realtime, client helpers, types generated |
-| 003 | [Shared UI Components](./003-shared-ui-components.md)            | `pending` | #001 ✅    | Unblocked — design tokens + shadcn Button primitive available |
+| 003 | [Shared UI Components](./003-shared-ui-components.md)            | `done` | #001 ✅    | Candy/Outline buttons, Sticker Card, Input components |
 
 ## Phase 2 — Auth & API Layer
 
@@ -36,7 +36,7 @@
 | #   | Ticket                                                           | Status    | Depends On   | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ------------ | ----- |
 | 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `blocked` | #002 ✅, #005, #006 |   |
-| 008 | [Backfill Progress UI](./008-backfill-progress-ui.md)            | `blocked` | #003, #007   |       |
+| 008 | [Backfill Progress UI](./008-backfill-progress-ui.md)            | `blocked` | #003 ✅, #007   |       |
 | 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `blocked` | #002 ✅, #006   |       |
 | 010 | [Scheduled Daily Stats & Demographics](./010-scheduled-daily-stats.md) | `blocked` | #002 ✅, #006 |  |
 | 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `blocked` | #005, #006   |       |
@@ -45,8 +45,8 @@
 
 | #   | Ticket                                                           | Status    | Depends On   | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ------------ | ----- |
-| 012 | [Landing Page](./012-landing-page.md)                            | `blocked` | #003         |       |
-| 013 | [Dashboard Layout & Tab Navigation](./013-dashboard-layout.md)   | `blocked` | #003, #004   |       |
+| 012 | [Landing Page](./012-landing-page.md)                            | `pending` | #003 ✅       | Unblocked — shared UI components done |
+| 013 | [Dashboard Layout & Tab Navigation](./013-dashboard-layout.md)   | `blocked` | #003 ✅, #004   |       |
 | 014 | [Post Performance Table](./014-post-performance-table.md)        | `blocked` | #002 ✅, #013   |       |
 | 015 | [Post Table Filters & Sorting](./015-post-filters.md)            | `blocked` | #014         |       |
 | 016 | [Post Detail Expansion & Sparkline](./016-post-detail-expansion.md) | `blocked` | #014      |       |
@@ -82,9 +82,9 @@
  │    ├── 018 Follower Trend Chart
  │    └── 019 Demographics Charts
  │
- ├── 003 Shared UI Components  📋 PENDING
+ ├── 003 Shared UI Components  ✅ DONE
  │    ├── 008 Backfill Progress UI
- │    ├── 012 Landing Page
+ │    ├── 012 Landing Page  📋 PENDING
  │    └── 013 Dashboard Layout ──► 014, 015, 016, 017, 018, 019
  │
  └── All ──► 020 Edge Cases ──► 021 Responsive & A11y ──► 022 QA/Polish

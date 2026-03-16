@@ -1,10 +1,10 @@
 # [TICKET-012] Landing Page
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #003
+- Requires: #003 ✅
 
 ## Description
 Build the public landing page at `/` that introduces Spool and provides the "Connect Threads" CTA. Follows the DESIGN.md Hero section pattern with playful geometric decorations, the Candy Button CTA, and feature highlights.

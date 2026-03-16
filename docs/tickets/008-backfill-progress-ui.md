@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #003, #007
+- Requires: #003 ✅, #007
 
 ## Description
 Build the loading screen shown after OAuth connect while the backfill pipeline runs. Displays a real-time progress bar using Supabase Realtime subscriptions on the `backfill_jobs` table, with playful messaging and auto-redirect to the dashboard on completion.
