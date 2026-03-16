@@ -1,0 +1,387 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { runBackfill } from "../backfill";
+
+// --- Mock tracking ---
+
+const calls: {
+  table: string;
+  op: string;
+  args: unknown[];
+}[] = [];
+
+function trackCall(table: string, op: string, ...args: unknown[]) {
+  calls.push({ table, op, args });
+}
+
+// --- Configurable mock state ---
+
+let mockUserResult: { data: unknown; error: unknown } = {
+  data: { threads_user_id: "threads-123", access_token: "encrypted" },
+  error: null,
+};
+let mockPostUpsertData: { id: string } | null = { id: "post-uuid-1" };
+
+// --- Supabase mock ---
+
+function createMockFrom(table: string) {
+  if (table === "users") {
+    return {
+      select: () => ({
+        eq: () => ({
+          single: () => Promise.resolve(mockUserResult),
+        }),
+      }),
+    };
+  }
+
+  if (table === "posts") {
+    return {
+      upsert: (...args: unknown[]) => {
+        trackCall(table, "upsert", ...args);
+        return {
+          select: () => ({
+            single: () =>
+              Promise.resolve({ data: mockPostUpsertData, error: null }),
+          }),
+        };
+      },
+    };
+  }
+
+  if (table === "backfill_jobs") {
+    return {
+      update: (...args: unknown[]) => {
+        trackCall(table, "update", ...args);
+        return {
+          eq: () => Promise.resolve({ error: null }),
+        };
+      },
+    };
+  }
+
+  if (table === "post_metrics") {
+    return {
+      insert: (...args: unknown[]) => {
+        trackCall(table, "insert", ...args);
+        return Promise.resolve({ error: null });
+      },
+    };
+  }
+
+  if (table === "daily_stats") {
+    return {
+      upsert: (...args: unknown[]) => {
+        trackCall(table, "upsert", ...args);
+        return Promise.resolve({ error: null });
+      },
+    };
+  }
+
+  if (table === "demographics") {
+    return {
+      insert: (...args: unknown[]) => {
+        trackCall(table, "insert", ...args);
+        return Promise.resolve({ error: null });
+      },
+    };
+  }
+
+  return {
+    insert: () => Promise.resolve({ error: null }),
+    update: () => ({ eq: () => Promise.resolve({ error: null }) }),
+  };
+}
+
+vi.mock("@/lib/supabase/server", () => ({
+  createAdminClient: () => ({
+    from: (table: string) => createMockFrom(table),
+  }),
+}));
+
+// --- ThreadsAPI mock ---
+
+const mockGetUserPosts = vi.fn();
+const mockGetPostInsights = vi.fn();
+const mockGetFollowersCount = vi.fn();
+const mockGetFollowerDemographics = vi.fn();
+
+vi.mock("@/lib/threads-api", () => ({
+  ThreadsAPI: vi.fn().mockImplementation(function () {
+    return {
+      getUserPosts: mockGetUserPosts,
+      getPostInsights: mockGetPostInsights,
+      getFollowersCount: mockGetFollowersCount,
+      getFollowerDemographics: mockGetFollowerDemographics,
+    };
+  }),
+}));
+
+vi.mock("@/lib/crypto", () => ({
+  decrypt: vi.fn().mockReturnValue("decrypted-token"),
+}));
+
+// --- Helpers ---
+
+function getUpdateCalls() {
+  return calls
+    .filter((c) => c.table === "backfill_jobs" && c.op === "update")
+    .map((c) => c.args[0]);
+}
+
+function getPostUpsertCalls() {
+  return calls
+    .filter((c) => c.table === "posts" && c.op === "upsert")
+    .map((c) => c.args[0]);
+}
+
+function getMetricsInsertCalls() {
+  return calls
+    .filter((c) => c.table === "post_metrics" && c.op === "insert")
+    .map((c) => c.args[0]);
+}
+
+function getDailyStatsUpsertCalls() {
+  return calls
+    .filter((c) => c.table === "daily_stats" && c.op === "upsert")
+    .map((c) => c.args[0]);
+}
+
+function getDemographicsInsertCalls() {
+  return calls
+    .filter((c) => c.table === "demographics" && c.op === "insert")
+    .map((c) => c.args[0]);
+}
+
+// --- Tests ---
+
+describe("runBackfill", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    calls.length = 0;
+
+    mockUserResult = {
+      data: { threads_user_id: "threads-123", access_token: "encrypted" },
+      error: null,
+    };
+    mockPostUpsertData = { id: "post-uuid-1" };
+
+    mockGetUserPosts.mockResolvedValue([
+      {
+        id: "media-1",
+        media_type: "TEXT",
+        text: "Hello world",
+        timestamp: "2024-12-01T10:00:00Z",
+        permalink: "https://threads.net/@user/1",
+        shortcode: "abc",
+      },
+    ]);
+
+    mockGetPostInsights.mockResolvedValue({
+      views: 100,
+      likes: 10,
+      replies: 5,
+      reposts: 2,
+      quotes: 1,
+      shares: 3,
+    });
+
+    mockGetFollowersCount.mockResolvedValue(500);
+
+    mockGetFollowerDemographics.mockResolvedValue({
+      dimension: "country",
+      values: [
+        { key: "US", value: 45 },
+        { key: "GB", value: 12 },
+      ],
+    });
+  });
+
+  it("completes full backfill: posts, metrics, daily_stats, demographics", async () => {
+    await runBackfill("user-uuid", "job-uuid");
+
+    const updates = getUpdateCalls();
+
+    // Job status transitions: running → total_posts → processed_posts → complete
+    expect(updates[0]).toEqual(
+      expect.objectContaining({ status: "running" }),
+    );
+    expect(updates[1]).toEqual(
+      expect.objectContaining({ total_posts: 1 }),
+    );
+    expect(updates[2]).toEqual(
+      expect.objectContaining({ processed_posts: 1 }),
+    );
+    expect(updates[updates.length - 1]).toEqual(
+      expect.objectContaining({ status: "complete" }),
+    );
+
+    // Post upserted with correct data
+    const postUpserts = getPostUpsertCalls();
+    expect(postUpserts).toHaveLength(1);
+    expect(postUpserts[0]).toEqual(
+      expect.objectContaining({
+        user_id: "user-uuid",
+        threads_media_id: "media-1",
+        media_type: "TEXT",
+        text_preview: "Hello world",
+      }),
+    );
+
+    // Metrics inserted
+    const metricsInserts = getMetricsInsertCalls();
+    expect(metricsInserts).toHaveLength(1);
+    expect(metricsInserts[0]).toEqual(
+      expect.objectContaining({
+        post_id: "post-uuid-1",
+        views: 100,
+        likes: 10,
+        shares: 3,
+      }),
+    );
+
+    // Daily stats upserted
+    const dailyStats = getDailyStatsUpsertCalls();
+    expect(dailyStats).toHaveLength(1);
+    expect(dailyStats[0]).toEqual(
+      expect.objectContaining({
+        user_id: "user-uuid",
+        followers_count: 500,
+      }),
+    );
+
+    // Demographics fetched for 3 dimensions
+    expect(mockGetFollowerDemographics).toHaveBeenCalledTimes(3);
+    expect(mockGetFollowerDemographics).toHaveBeenCalledWith("country");
+    expect(mockGetFollowerDemographics).toHaveBeenCalledWith("city");
+    expect(mockGetFollowerDemographics).toHaveBeenCalledWith("gender");
+
+    // Demographics inserted (3 calls, each with 2 records)
+    const demoInserts = getDemographicsInsertCalls();
+    expect(demoInserts).toHaveLength(3);
+  });
+
+  it("processes multiple posts sequentially with incremental progress", async () => {
+    mockGetUserPosts.mockResolvedValue([
+      {
+        id: "media-1",
+        media_type: "TEXT",
+        text: "Post 1",
+        timestamp: "2024-12-01T10:00:00Z",
+        permalink: "https://threads.net/@user/1",
+        shortcode: "abc",
+      },
+      {
+        id: "media-2",
+        media_type: "IMAGE",
+        text: "Post 2",
+        timestamp: "2024-11-15T10:00:00Z",
+        permalink: "https://threads.net/@user/2",
+        shortcode: "def",
+      },
+    ]);
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    const updates = getUpdateCalls();
+
+    expect(updates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ total_posts: 2 }),
+        expect.objectContaining({ processed_posts: 1 }),
+        expect.objectContaining({ processed_posts: 2 }),
+        expect.objectContaining({ status: "complete" }),
+      ]),
+    );
+
+    expect(mockGetPostInsights).toHaveBeenCalledTimes(2);
+    expect(mockGetPostInsights).toHaveBeenCalledWith("media-1");
+    expect(mockGetPostInsights).toHaveBeenCalledWith("media-2");
+  });
+
+  it("marks job as failed on API error", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockGetUserPosts.mockRejectedValue(new Error("Rate limited"));
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    const updates = getUpdateCalls();
+    expect(updates[updates.length - 1]).toEqual(
+      expect.objectContaining({ status: "failed" }),
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it("marks job as failed when user not found", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockUserResult = { data: null, error: { message: "Not found" } };
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    const updates = getUpdateCalls();
+    expect(updates[updates.length - 1]).toEqual(
+      expect.objectContaining({ status: "failed" }),
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it("continues on demographics failure (non-fatal)", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockGetFollowerDemographics.mockRejectedValue(
+      new Error("Under 100 followers"),
+    );
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    expect(warnSpy).toHaveBeenCalled();
+
+    const updates = getUpdateCalls();
+    expect(updates[updates.length - 1]).toEqual(
+      expect.objectContaining({ status: "complete" }),
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it("handles zero posts gracefully", async () => {
+    mockGetUserPosts.mockResolvedValue([]);
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    const updates = getUpdateCalls();
+    expect(updates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ total_posts: 0 }),
+        expect.objectContaining({ status: "complete" }),
+      ]),
+    );
+
+    expect(mockGetPostInsights).not.toHaveBeenCalled();
+    expect(mockGetFollowersCount).toHaveBeenCalledTimes(1);
+    expect(mockGetFollowerDemographics).toHaveBeenCalledTimes(3);
+  });
+
+  it("truncates text_preview to 280 characters", async () => {
+    const longText = "a".repeat(500);
+    mockGetUserPosts.mockResolvedValue([
+      {
+        id: "media-1",
+        media_type: "TEXT",
+        text: longText,
+        timestamp: "2024-12-01T10:00:00Z",
+        permalink: "https://threads.net/@user/1",
+        shortcode: "abc",
+      },
+    ]);
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    const postUpserts = getPostUpsertCalls();
+    expect(postUpserts[0]).toEqual(
+      expect.objectContaining({
+        text_preview: "a".repeat(280),
+      }),
+    );
+  });
+});
