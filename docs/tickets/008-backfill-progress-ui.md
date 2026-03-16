@@ -1,7 +1,7 @@
 # [TICKET-008] Backfill Progress UI
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #003 ✅, #007 ✅
@@ -10,14 +10,14 @@
 Build the loading screen shown after OAuth connect while the backfill pipeline runs. Displays a real-time progress bar using Supabase Realtime subscriptions on the `backfill_jobs` table, with playful messaging and auto-redirect to the dashboard on completion.
 
 ## Acceptance Criteria
-- [ ] Loading page at `/loading` or `/backfill` displays while backfill runs
-- [ ] Real-time progress bar: subscribes to `backfill_jobs` row via Supabase Realtime
-- [ ] Progress percentage: `(processed_posts / total_posts) × 100`
-- [ ] Animated messaging: "Analyzing your posts..." or similar playful text
-- [ ] Progress bar uses DESIGN.md accent color with hard shadow styling
-- [ ] On `status = 'complete'`: auto-redirect to `/dashboard`
-- [ ] On `status = 'failed'`: show error state with "Try again" button that re-triggers backfill
-- [ ] If user navigates to `/loading` with no active backfill job, redirect to dashboard or landing
+- [x] Loading page at `/loading` or `/backfill` displays while backfill runs
+- [x] Real-time progress bar: subscribes to `backfill_jobs` row via Supabase Realtime
+- [x] Progress percentage: `(processed_posts / total_posts) × 100`
+- [x] Animated messaging: "Analyzing your posts..." or similar playful text
+- [x] Progress bar uses DESIGN.md accent color with hard shadow styling
+- [x] On `status = 'complete'`: auto-redirect to `/dashboard`
+- [x] On `status = 'failed'`: show error state with "Try again" button that re-triggers backfill
+- [x] If user navigates to `/loading` with no active backfill job, redirect to dashboard or landing
 
 ## Design Reference
 - **Components**: § Components > Buttons (for "Try again" CTA)
