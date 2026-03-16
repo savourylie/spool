@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 6     |
+| ✅ Done        | 7     |
 | 🔧 In Progress | 0     |
 | 📋 Pending     | 6     |
-| 🚫 Blocked     | 10    |
+| 🚫 Blocked     | 9     |
 | ⏸️ Deferred    | 0     |
 
 ---
@@ -35,8 +35,8 @@
 
 | #   | Ticket                                                           | Status    | Depends On   | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ------------ | ----- |
-| 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `pending` | #002 ✅, #005 ✅, #006 ✅ | Unblocked — #006 done |
-| 008 | [Backfill Progress UI](./008-backfill-progress-ui.md)            | `blocked` | #003 ✅, #007   |       |
+| 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `done` | #002 ✅, #005 ✅, #006 ✅ | Backfill service, API route, 7 tests |
+| 008 | [Backfill Progress UI](./008-backfill-progress-ui.md)            | `pending` | #003 ✅, #007 ✅ | Unblocked — #007 done |
 | 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `pending` | #002 ✅, #006 ✅ | Unblocked — #006 done |
 | 010 | [Scheduled Daily Stats & Demographics](./010-scheduled-daily-stats.md) | `pending` | #002 ✅, #006 ✅ | Unblocked — #006 done |
 | 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `pending` | #005 ✅, #006 ✅ | Unblocked — #006 done |
@@ -72,7 +72,7 @@
  │    ├── 004 Threads OAuth Flow  ✅ DONE ──► 005 Token Encryption  ✅ DONE
  │    │                                    │
  │    │    006 Threads API Service  ✅ DONE
- │    │    ├── 007 Backfill Pipeline  📋 PENDING ──► 008 Backfill Progress UI
+ │    │    ├── 007 Backfill Pipeline  ✅ DONE ──► 008 Backfill Progress UI  📋 PENDING
  │    │    ├── 009 Scheduled Metrics Refresh  📋 PENDING
  │    │    ├── 010 Scheduled Daily Stats & Demographics  📋 PENDING
  │    │    └── 011 Scheduled Token Refresh  📋 PENDING
