@@ -1,10 +1,14 @@
 # [TICKET-003] Shared UI Components
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #001
+- Requires: #001 ✅
+  - Design tokens in `src/app/globals.css`: colors (`bg-accent`, `bg-secondary`, `bg-tertiary`, `bg-quaternary`), shadows (`shadow-default`, `shadow-hover`, `shadow-active`), radii (`rounded-sm`=8px, `rounded-md`=16px, `rounded-lg`=24px), easing (`ease-bounce`)
+  - `cn()` utility at `src/lib/utils.ts` for conditional class merging
+  - shadcn Button primitive at `src/components/ui/button.tsx` — override styles to match DESIGN.md Candy Button / Outline specs
+  - **Icon library is Phosphor** (`@phosphor-icons/react`), not Lucide — update references in implementation notes accordingly
 
 ## Description
 Build the reusable UI component library based on DESIGN.md specifications: Candy Button (primary), Outline Button (secondary), Sticker Card, and styled Input. These components are used across the landing page, dashboard, and backfill progress screens.

@@ -1,10 +1,13 @@
 # [TICKET-002] Database Schema & Supabase Config
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #001
+- Requires: #001 ✅
+  - `@supabase/supabase-js` and `@supabase/ssr` installed in `package.json`
+  - `.env.local` created with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` placeholders
+  - TypeScript and project structure ready (`src/lib/` for service modules)
 
 ## Description
 Set up Supabase local development, create the database schema (users, posts, post_metrics, daily_stats, demographics, backfill_jobs), configure Row Level Security policies, and enable Supabase Realtime on the backfill_jobs table for progress tracking.

@@ -1,10 +1,12 @@
 # [TICKET-006] Threads API Service Layer
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #001
+- Requires: #001 ✅
+  - TypeScript project structure ready; service files go in `src/lib/`
+  - `@/*` import alias configured in `tsconfig.json` (maps to `./src/*`)
 
 ## Description
 Create a typed service layer that wraps all Threads API calls used by Spool. This abstraction isolates the rest of the app from the raw API, handles pagination, rate limit awareness, and provides typed responses. Per PRD risk mitigation: "Abstract API calls behind a service layer; monitor Meta changelog."
