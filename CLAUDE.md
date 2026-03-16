@@ -12,7 +12,7 @@
 
 ## Technical Decisions (PRD v0)
 
-Resolved ambiguities from `docs/PRDv0.md` and `docs/threads-api.md`:
+Resolved ambiguities from `docs/PRD.md` and `docs/threads-api.md`:
 
 1. **Backfill progress** — Use Supabase Realtime (subscribe to a `backfill_jobs` table) to push progress updates to the client.
 2. **Token security** — Encrypt access tokens at the app layer (AES-256-GCM) before storing in the `users` table.

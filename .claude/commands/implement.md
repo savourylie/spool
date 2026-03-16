@@ -11,7 +11,7 @@ If an argument was provided (e.g., `TICKET-001`), implement ONLY that specific t
 
 ## Phase 1: Understand the Project
 
-1. Read `docs/PRDv0.md` thoroughly. Internalize the product requirements, user stories, acceptance criteria, and scope.
+1. Read `docs/PRD.md` thoroughly. Internalize the product requirements, user stories, acceptance criteria, and scope.
 2. Read `docs/DESIGN.md` thoroughly. Understand the architecture, data models, API contracts, tech stack choices, and any design decisions or constraints.
 3. Briefly summarize (to yourself) the key requirements and architectural decisions before moving on. This is your mental model for all implementation work.
 
