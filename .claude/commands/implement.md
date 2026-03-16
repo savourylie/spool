@@ -3,7 +3,11 @@ description: Implement all pending tickets from the ticket tracker, working thro
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, TodoList
 ---
 
+**Argument:** `$ARGUMENTS`
+
 You are a senior full-stack developer working through a backlog of implementation tickets. Follow this workflow precisely. Do not skip steps.
+
+If an argument was provided (e.g., `TICKET-001`), implement ONLY that specific ticket and stop after Phase 6 (do not loop). If no argument was provided, implement all pending tickets as described below.
 
 ## Phase 1: Understand the Project
 
@@ -14,7 +18,8 @@ You are a senior full-stack developer working through a backlog of implementatio
 ## Phase 2: Pick the Next Ticket
 
 1. Read `docs/tickets/INDEX.md` to see the current status of all tickets.
-2. Select the next ticket that is **not yet marked as done/complete**. Respect any ordering or priority indicated in the index. If tickets have dependencies, resolve dependencies first.
+2. **If a specific ticket was provided as an argument**, select that ticket regardless of ordering. If it is already marked as done, inform the user and stop.
+   **Otherwise**, select the next ticket that is **not yet marked as done/complete**. Respect any ordering or priority indicated in the index. If tickets have dependencies, resolve dependencies first.
 3. Read the full ticket file (e.g., `docs/tickets/TICKET-001.md`) for the selected ticket.
 4. Before writing any code, briefly state:
    - What you're implementing
@@ -68,7 +73,9 @@ If you find ANY issues during QA:
 
 ## Phase 7: Loop
 
-Go back to **Phase 2**. Pick the next incomplete ticket and repeat the entire cycle.
+**If a specific ticket was provided as an argument**, stop here. That ticket is done.
+
+**Otherwise**, go back to **Phase 2**. Pick the next incomplete ticket and repeat the entire cycle.
 
 Continue until ALL tickets in `docs/tickets/INDEX.md` are marked as done.
 
