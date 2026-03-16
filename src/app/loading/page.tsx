@@ -1,10 +1,38 @@
-export default function LoadingPage() {
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { SESSION_COOKIE_NAME } from "@/lib/session";
+import { createAdminClient } from "@/lib/supabase/server";
+import { BackfillProgress } from "@/components/backfill-progress";
+
+export default async function LoadingPage() {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!userId) {
+    redirect("/");
+  }
+
+  const supabase = createAdminClient();
+
+  const { data: job } = await supabase
+    .from("backfill_jobs")
+    .select("id, status, processed_posts, total_posts")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!job || job.status === "complete") {
+    redirect("/dashboard");
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-2">
-      <h1 className="font-heading text-2xl font-bold">
-        Analyzing your posts...
-      </h1>
-      <p className="text-muted-foreground">This may take a moment.</p>
-    </div>
+    <BackfillProgress
+      jobId={job.id}
+      userId={userId}
+      initialStatus={job.status}
+      initialProcessed={job.processed_posts}
+      initialTotal={job.total_posts}
+    />
   );
 }
