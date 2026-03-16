@@ -36,6 +36,10 @@ yarn-error.log*
 # testing
 coverage/
 
+# supabase
+supabase/.temp/
+supabase/.branches/
+
 # misc
 .DS_Store
 *.pem
