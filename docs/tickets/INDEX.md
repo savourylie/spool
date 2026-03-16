@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 5     |
+| ✅ Done        | 6     |
 | 🔧 In Progress | 0     |
-| 📋 Pending     | 3     |
-| 🚫 Blocked     | 14    |
+| 📋 Pending     | 6     |
+| 🚫 Blocked     | 10    |
 | ⏸️ Deferred    | 0     |
 
 ---
@@ -29,17 +29,17 @@
 | --- | ---------------------------------------------------------------- | --------- | ---------- | ----- |
 | 004 | [Threads OAuth Flow](./004-threads-oauth.md)                     | `done` | #002 ✅    | OAuth flow, session cookies, loading stub |
 | 005 | [Token Encryption](./005-token-encryption.md)                    | `done` | #004 ✅    | AES-256-GCM encryption for tokens |
-| 006 | [Threads API Service Layer](./006-threads-api-service.md)        | `pending` | #001 ✅    | Unblocked — TypeScript + `src/lib/` structure ready |
+| 006 | [Threads API Service Layer](./006-threads-api-service.md)        | `done` | #001 ✅    | ThreadsAPI class, types, 15 tests passing |
 
 ## Phase 3 — Data Ingestion
 
 | #   | Ticket                                                           | Status    | Depends On   | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ------------ | ----- |
-| 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `blocked` | #002 ✅, #005 ✅, #006 |   |
+| 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `pending` | #002 ✅, #005 ✅, #006 ✅ | Unblocked — #006 done |
 | 008 | [Backfill Progress UI](./008-backfill-progress-ui.md)            | `blocked` | #003 ✅, #007   |       |
-| 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `blocked` | #002 ✅, #006   |       |
-| 010 | [Scheduled Daily Stats & Demographics](./010-scheduled-daily-stats.md) | `blocked` | #002 ✅, #006 |  |
-| 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `blocked` | #005 ✅, #006   |       |
+| 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `pending` | #002 ✅, #006 ✅ | Unblocked — #006 done |
+| 010 | [Scheduled Daily Stats & Demographics](./010-scheduled-daily-stats.md) | `pending` | #002 ✅, #006 ✅ | Unblocked — #006 done |
+| 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `pending` | #005 ✅, #006 ✅ | Unblocked — #006 done |
 
 ## Phase 4 — Frontend Pages
 
@@ -71,11 +71,11 @@
  ├── 002 Database Schema & Supabase Config  ✅ DONE
  │    ├── 004 Threads OAuth Flow  ✅ DONE ──► 005 Token Encryption  ✅ DONE
  │    │                                    │
- │    │    006 Threads API Service  📋 PENDING
- │    │    ├── 007 Backfill Pipeline ──► 008 Backfill Progress UI
- │    │    ├── 009 Scheduled Metrics Refresh
- │    │    ├── 010 Scheduled Daily Stats & Demographics
- │    │    └── 011 Scheduled Token Refresh
+ │    │    006 Threads API Service  ✅ DONE
+ │    │    ├── 007 Backfill Pipeline  📋 PENDING ──► 008 Backfill Progress UI
+ │    │    ├── 009 Scheduled Metrics Refresh  📋 PENDING
+ │    │    ├── 010 Scheduled Daily Stats & Demographics  📋 PENDING
+ │    │    └── 011 Scheduled Token Refresh  📋 PENDING
  │    │
  │    ├── 014 Post Performance Table
  │    ├── 017 Best Time Heatmap

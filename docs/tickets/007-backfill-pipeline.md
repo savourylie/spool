@@ -1,10 +1,10 @@
 # [TICKET-007] Backfill Pipeline
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #002 ✅, #005 ✅, #006
+- Requires: #002 ✅, #005 ✅, #006 ✅
 
 ## Description
 Implement the post-OAuth backfill pipeline that fetches all of a user's Threads posts and their engagement metrics, stores them in the database, and updates the backfill job progress in real-time. This runs immediately after a user connects their account.

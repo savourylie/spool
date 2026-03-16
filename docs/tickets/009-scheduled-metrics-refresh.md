@@ -1,10 +1,10 @@
 # [TICKET-009] Scheduled Metrics Refresh
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #002 ✅, #006
+- Requires: #002 ✅, #006 ✅
 
 ## Description
 Implement the every-6-hour cron job that fetches new posts and updated engagement metrics for all users with valid tokens. This keeps the post performance data fresh by appending new `post_metrics` snapshots.

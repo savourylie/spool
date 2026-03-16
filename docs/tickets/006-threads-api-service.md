@@ -1,7 +1,7 @@
 # [TICKET-006] Threads API Service Layer
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #001 ✅
@@ -12,18 +12,18 @@
 Create a typed service layer that wraps all Threads API calls used by Spool. This abstraction isolates the rest of the app from the raw API, handles pagination, rate limit awareness, and provides typed responses. Per PRD risk mitigation: "Abstract API calls behind a service layer; monitor Meta changelog."
 
 ## Acceptance Criteria
-- [ ] `lib/threads-api.ts` exports a `ThreadsAPI` class/module that accepts an access token
-- [ ] Method: `getUserProfile()` → returns `{ id, username }` from `GET /me`
-- [ ] Method: `getUserPosts(since?: Date)` → returns paginated list of posts from `GET /{user-id}/threads`, handles cursor-based pagination automatically
-- [ ] Method: `getPostInsights(mediaId: string)` → returns `{ views, likes, replies, reposts, quotes, shares }` from `GET /{media-id}/insights`
-- [ ] Method: `getUserInsights(metric: string, since?: Date, until?: Date)` → returns user-level insights from `GET /{user-id}/threads_insights`
-- [ ] Method: `getFollowerDemographics(dimension: 'country' | 'city' | 'gender')` → returns demographic breakdown
-- [ ] Method: `getFollowersCount()` → returns current follower count
-- [ ] Method: `refreshToken(token: string)` → returns new long-lived token from `GET /refresh_access_token`
-- [ ] All methods return typed interfaces (not `any`)
-- [ ] Repost facades filtered out from `getUserPosts()` results (per CLAUDE.md decision #4)
-- [ ] Posts before April 13, 2024 filtered out (per CLAUDE.md decision #3)
-- [ ] Rate limit headers logged; exponential backoff on 429 responses
+- [x] `lib/threads-api.ts` exports a `ThreadsAPI` class/module that accepts an access token
+- [x] Method: `getUserProfile()` → returns `{ id, username }` from `GET /me`
+- [x] Method: `getUserPosts(since?: Date)` → returns paginated list of posts from `GET /{user-id}/threads`, handles cursor-based pagination automatically
+- [x] Method: `getPostInsights(mediaId: string)` → returns `{ views, likes, replies, reposts, quotes, shares }` from `GET /{media-id}/insights`
+- [x] Method: `getUserInsights(metric: string, since?: Date, until?: Date)` → returns user-level insights from `GET /{user-id}/threads_insights`
+- [x] Method: `getFollowerDemographics(dimension: 'country' | 'city' | 'gender')` → returns demographic breakdown
+- [x] Method: `getFollowersCount()` → returns current follower count
+- [x] Method: `refreshToken(token: string)` → returns new long-lived token from `GET /refresh_access_token`
+- [x] All methods return typed interfaces (not `any`)
+- [x] Repost facades filtered out from `getUserPosts()` results (per CLAUDE.md decision #4)
+- [x] Posts before April 13, 2024 filtered out (per CLAUDE.md decision #3)
+- [x] Rate limit headers logged; exponential backoff on 429 responses
 
 ## Implementation Notes
 - Key files: `lib/threads-api.ts`, `lib/threads-api.types.ts`
