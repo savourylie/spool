@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 1     |
+| ✅ Done        | 2     |
 | 🔧 In Progress | 0     |
 | 📋 Pending     | 3     |
-| 🚫 Blocked     | 18    |
+| 🚫 Blocked     | 17    |
 | ⏸️ Deferred    | 0     |
 
 ---
@@ -20,14 +20,14 @@
 | #   | Ticket                                                           | Status    | Depends On | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ---------- | ----- |
 | 001 | [Project Scaffolding & Design Tokens](./001-project-scaffolding.md) | `done` | —          | Next.js 16, Tailwind v4, full DESIGN.md token system |
-| 002 | [Database Schema & Supabase Config](./002-database-schema.md)    | `pending` | #001 ✅    | Unblocked — Supabase client libs installed, `.env.local` ready |
+| 002 | [Database Schema & Supabase Config](./002-database-schema.md)    | `done` | #001 ✅    | Schema, RLS, Realtime, client helpers, types generated |
 | 003 | [Shared UI Components](./003-shared-ui-components.md)            | `pending` | #001 ✅    | Unblocked — design tokens + shadcn Button primitive available |
 
 ## Phase 2 — Auth & API Layer
 
 | #   | Ticket                                                           | Status    | Depends On | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ---------- | ----- |
-| 004 | [Threads OAuth Flow](./004-threads-oauth.md)                     | `blocked` | #002       |       |
+| 004 | [Threads OAuth Flow](./004-threads-oauth.md)                     | `pending` | #002 ✅    | Unblocked — database schema ready |
 | 005 | [Token Encryption](./005-token-encryption.md)                    | `blocked` | #004       |       |
 | 006 | [Threads API Service Layer](./006-threads-api-service.md)        | `pending` | #001 ✅    | Unblocked — TypeScript + `src/lib/` structure ready |
 
@@ -35,10 +35,10 @@
 
 | #   | Ticket                                                           | Status    | Depends On   | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ------------ | ----- |
-| 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `blocked` | #002, #005, #006 |   |
+| 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `blocked` | #002 ✅, #005, #006 |   |
 | 008 | [Backfill Progress UI](./008-backfill-progress-ui.md)            | `blocked` | #003, #007   |       |
-| 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `blocked` | #002, #006   |       |
-| 010 | [Scheduled Daily Stats & Demographics](./010-scheduled-daily-stats.md) | `blocked` | #002, #006 |  |
+| 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `blocked` | #002 ✅, #006   |       |
+| 010 | [Scheduled Daily Stats & Demographics](./010-scheduled-daily-stats.md) | `blocked` | #002 ✅, #006 |  |
 | 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `blocked` | #005, #006   |       |
 
 ## Phase 4 — Frontend Pages
@@ -47,12 +47,12 @@
 | --- | ---------------------------------------------------------------- | --------- | ------------ | ----- |
 | 012 | [Landing Page](./012-landing-page.md)                            | `blocked` | #003         |       |
 | 013 | [Dashboard Layout & Tab Navigation](./013-dashboard-layout.md)   | `blocked` | #003, #004   |       |
-| 014 | [Post Performance Table](./014-post-performance-table.md)        | `blocked` | #002, #013   |       |
+| 014 | [Post Performance Table](./014-post-performance-table.md)        | `blocked` | #002 ✅, #013   |       |
 | 015 | [Post Table Filters & Sorting](./015-post-filters.md)            | `blocked` | #014         |       |
 | 016 | [Post Detail Expansion & Sparkline](./016-post-detail-expansion.md) | `blocked` | #014      |       |
-| 017 | [Best Time to Post Heatmap](./017-best-time-heatmap.md)          | `blocked` | #002, #013   |       |
-| 018 | [Follower Trend Line Chart](./018-follower-trend-chart.md)       | `blocked` | #002, #013   |       |
-| 019 | [Demographics Charts](./019-demographics-charts.md)              | `blocked` | #002, #013   |       |
+| 017 | [Best Time to Post Heatmap](./017-best-time-heatmap.md)          | `blocked` | #002 ✅, #013   |       |
+| 018 | [Follower Trend Line Chart](./018-follower-trend-chart.md)       | `blocked` | #002 ✅, #013   |       |
+| 019 | [Demographics Charts](./019-demographics-charts.md)              | `blocked` | #002 ✅, #013   |       |
 
 ## Phase 5 — Polish
 
@@ -68,7 +68,7 @@
 
 ```
 001 Project Scaffolding & Design Tokens  ✅ DONE
- ├── 002 Database Schema & Supabase Config  📋 PENDING
+ ├── 002 Database Schema & Supabase Config  ✅ DONE
  │    ├── 004 Threads OAuth Flow ──► 005 Token Encryption
  │    │                                    │
  │    │    006 Threads API Service  📋 PENDING

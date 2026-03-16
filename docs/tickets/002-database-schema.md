@@ -1,7 +1,7 @@
 # [TICKET-002] Database Schema & Supabase Config
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #001 ✅
@@ -13,18 +13,18 @@
 Set up Supabase local development, create the database schema (users, posts, post_metrics, daily_stats, demographics, backfill_jobs), configure Row Level Security policies, and enable Supabase Realtime on the backfill_jobs table for progress tracking.
 
 ## Acceptance Criteria
-- [ ] Supabase CLI initialized (`supabase init`)
-- [ ] Local Supabase instance starts with `supabase start`
-- [ ] Migration file creates `users` table with encrypted `access_token` column (text), `threads_user_id` (unique), `username`, `token_expires_at`, `created_at`
-- [ ] Migration file creates `posts` table with `user_id` FK, `threads_media_id` (unique), `media_type`, `text_preview`, `permalink`, `topic_tag`, `published_at`
-- [ ] Migration file creates `post_metrics` table (append-only) with `post_id` FK, `views`, `likes`, `replies`, `reposts`, `quotes`, `shares`, `fetched_at`
-- [ ] Migration file creates `daily_stats` table with `user_id` FK, `date`, `followers_count`, `views`, unique constraint on `(user_id, date)`
-- [ ] Migration file creates `demographics` table with `user_id` FK, `dimension`, `key`, `value`, `fetched_at`
-- [ ] Migration file creates `backfill_jobs` table with `user_id` FK, `status` (pending/running/complete/failed), `total_posts`, `processed_posts`, `started_at`, `completed_at`
-- [ ] RLS enabled on all tables; policies restrict access to the authenticated user's own data
-- [ ] Supabase Realtime enabled on `backfill_jobs` table
-- [ ] Indexes created on: `posts(user_id, published_at)`, `post_metrics(post_id, fetched_at)`, `daily_stats(user_id, date)`
-- [ ] Environment variables configured: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- [x] Supabase CLI initialized (`supabase init`)
+- [x] Local Supabase instance starts with `supabase start`
+- [x] Migration file creates `users` table with encrypted `access_token` column (text), `threads_user_id` (unique), `username`, `token_expires_at`, `created_at`
+- [x] Migration file creates `posts` table with `user_id` FK, `threads_media_id` (unique), `media_type`, `text_preview`, `permalink`, `topic_tag`, `published_at`
+- [x] Migration file creates `post_metrics` table (append-only) with `post_id` FK, `views`, `likes`, `replies`, `reposts`, `quotes`, `shares`, `fetched_at`
+- [x] Migration file creates `daily_stats` table with `user_id` FK, `date`, `followers_count`, `views`, unique constraint on `(user_id, date)`
+- [x] Migration file creates `demographics` table with `user_id` FK, `dimension`, `key`, `value`, `fetched_at`
+- [x] Migration file creates `backfill_jobs` table with `user_id` FK, `status` (pending/running/complete/failed), `total_posts`, `processed_posts`, `started_at`, `completed_at`
+- [x] RLS enabled on all tables; policies restrict access to the authenticated user's own data
+- [x] Supabase Realtime enabled on `backfill_jobs` table
+- [x] Indexes created on: `posts(user_id, published_at)`, `post_metrics(post_id, fetched_at)`, `daily_stats(user_id, date)`
+- [x] Environment variables configured: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ## Implementation Notes
 - Key files: `supabase/config.toml`, `supabase/migrations/001_initial_schema.sql`

@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #002, #013
+- Requires: #002 ✅, #013
 
 ## Description
 Build the demographics section of the Audience tab: horizontal bar chart for top 10 countries, horizontal bar chart for top 10 cities, and a donut chart for gender split. Data sourced from the `demographics` table.

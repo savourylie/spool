@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #002, #013
+- Requires: #002 ✅, #013
 
 ## Description
 Build the follower count trend line chart for the Audience tab. Shows daily follower count over time from the `daily_stats` table, with notable spike annotations linked to posts published near those dates.

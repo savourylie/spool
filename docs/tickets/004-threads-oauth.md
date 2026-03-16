@@ -1,10 +1,10 @@
 # [TICKET-004] Threads OAuth Flow
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #002
+- Requires: #002 ✅
 
 ## Description
 Implement the full Threads OAuth 2.0 flow: redirect to Meta's consent screen, handle the callback to exchange the authorization code for a short-lived token, exchange for a long-lived token, create the user record in Supabase, and kick off the backfill job.

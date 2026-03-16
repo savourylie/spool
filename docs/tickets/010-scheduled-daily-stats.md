@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #002, #006
+- Requires: #002 ✅, #006
 
 ## Description
 Implement the daily cron job that polls follower count and refreshes demographic data for all users. This populates the `daily_stats` and `demographics` tables used by the Audience tab (#018, #019).
