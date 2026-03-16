@@ -1,7 +1,7 @@
 # [TICKET-005] Token Encryption
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #004 ✅
@@ -10,14 +10,14 @@
 Implement AES-256-GCM encryption for Threads access tokens at the application layer, as specified in CLAUDE.md. Tokens must be encrypted before storage and decrypted on read. Update the OAuth flow (#004) to use encryption when storing tokens.
 
 ## Acceptance Criteria
-- [ ] `lib/crypto.ts` exports `encrypt(plaintext: string): string` and `decrypt(ciphertext: string): string`
-- [ ] Encryption uses AES-256-GCM with a random 12-byte IV per encryption
-- [ ] Ciphertext format: `iv:authTag:encrypted` (base64-encoded, colon-delimited)
-- [ ] Encryption key sourced from `TOKEN_ENCRYPTION_KEY` environment variable (32-byte hex string)
-- [ ] OAuth callback (#004) updated to encrypt token before inserting into `users` table
-- [ ] All token reads decrypt before use (API service layer, token refresh)
-- [ ] Missing or invalid `TOKEN_ENCRYPTION_KEY` throws a clear startup error
-- [ ] Unit tests for encrypt/decrypt round-trip, invalid key handling, tampered ciphertext detection
+- [x] `lib/crypto.ts` exports `encrypt(plaintext: string): string` and `decrypt(ciphertext: string): string`
+- [x] Encryption uses AES-256-GCM with a random 12-byte IV per encryption
+- [x] Ciphertext format: `iv:authTag:encrypted` (base64-encoded, colon-delimited)
+- [x] Encryption key sourced from `TOKEN_ENCRYPTION_KEY` environment variable (32-byte hex string)
+- [x] OAuth callback (#004) updated to encrypt token before inserting into `users` table
+- [x] All token reads decrypt before use (API service layer, token refresh)
+- [x] Missing or invalid `TOKEN_ENCRYPTION_KEY` throws a clear startup error
+- [x] Unit tests for encrypt/decrypt round-trip, invalid key handling, tampered ciphertext detection
 
 ## Implementation Notes
 - Key files: `lib/crypto.ts`

@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #005, #006
+- Requires: #005 ✅, #006
 
 ## Description
 Implement the scheduled cron job that refreshes long-lived Threads tokens before they expire. Per CLAUDE.md, tokens are refreshed every 50 days (conservative buffer against the 60-day expiry). Refreshed tokens are re-encrypted before storage.

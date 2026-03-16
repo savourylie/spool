@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 4     |
+| ✅ Done        | 5     |
 | 🔧 In Progress | 0     |
-| 📋 Pending     | 4     |
+| 📋 Pending     | 3     |
 | 🚫 Blocked     | 14    |
 | ⏸️ Deferred    | 0     |
 
@@ -28,18 +28,18 @@
 | #   | Ticket                                                           | Status    | Depends On | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ---------- | ----- |
 | 004 | [Threads OAuth Flow](./004-threads-oauth.md)                     | `done` | #002 ✅    | OAuth flow, session cookies, loading stub |
-| 005 | [Token Encryption](./005-token-encryption.md)                    | `pending` | #004 ✅    | Unblocked — OAuth flow done |
+| 005 | [Token Encryption](./005-token-encryption.md)                    | `done` | #004 ✅    | AES-256-GCM encryption for tokens |
 | 006 | [Threads API Service Layer](./006-threads-api-service.md)        | `pending` | #001 ✅    | Unblocked — TypeScript + `src/lib/` structure ready |
 
 ## Phase 3 — Data Ingestion
 
 | #   | Ticket                                                           | Status    | Depends On   | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ------------ | ----- |
-| 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `blocked` | #002 ✅, #005, #006 |   |
+| 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `blocked` | #002 ✅, #005 ✅, #006 |   |
 | 008 | [Backfill Progress UI](./008-backfill-progress-ui.md)            | `blocked` | #003 ✅, #007   |       |
 | 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `blocked` | #002 ✅, #006   |       |
 | 010 | [Scheduled Daily Stats & Demographics](./010-scheduled-daily-stats.md) | `blocked` | #002 ✅, #006 |  |
-| 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `blocked` | #005, #006   |       |
+| 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `blocked` | #005 ✅, #006   |       |
 
 ## Phase 4 — Frontend Pages
 
@@ -69,7 +69,7 @@
 ```
 001 Project Scaffolding & Design Tokens  ✅ DONE
  ├── 002 Database Schema & Supabase Config  ✅ DONE
- │    ├── 004 Threads OAuth Flow  ✅ DONE ──► 005 Token Encryption  📋 PENDING
+ │    ├── 004 Threads OAuth Flow  ✅ DONE ──► 005 Token Encryption  ✅ DONE
  │    │                                    │
  │    │    006 Threads API Service  📋 PENDING
  │    │    ├── 007 Backfill Pipeline ──► 008 Backfill Progress UI
