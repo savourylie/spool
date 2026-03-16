@@ -1,10 +1,10 @@
 # [TICKET-005] Token Encryption
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #004
+- Requires: #004 ✅
 
 ## Description
 Implement AES-256-GCM encryption for Threads access tokens at the application layer, as specified in CLAUDE.md. Tokens must be encrypted before storage and decrypted on read. Update the OAuth flow (#004) to use encryption when storing tokens.

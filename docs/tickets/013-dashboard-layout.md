@@ -1,10 +1,10 @@
 # [TICKET-013] Dashboard Layout & Tab Navigation
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #003 ✅, #004
+- Requires: #003 ✅, #004 ✅
 
 ## Description
 Build the authenticated dashboard layout with tab navigation between the three MVP views: Posts, Timing, and Audience. This is a shared layout that wraps all dashboard pages and handles auth state.

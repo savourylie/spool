@@ -1,7 +1,7 @@
 # [TICKET-004] Threads OAuth Flow
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #002 ✅
@@ -10,16 +10,16 @@
 Implement the full Threads OAuth 2.0 flow: redirect to Meta's consent screen, handle the callback to exchange the authorization code for a short-lived token, exchange for a long-lived token, create the user record in Supabase, and kick off the backfill job.
 
 ## Acceptance Criteria
-- [ ] "Connect Threads" button redirects to Threads OAuth consent URL with scopes: `threads_basic`, `threads_manage_insights`
-- [ ] OAuth callback route (`/api/auth/callback`) receives the authorization code
-- [ ] Authorization code exchanged for short-lived token via Meta's token endpoint
-- [ ] Short-lived token exchanged for long-lived token (60-day expiry)
-- [ ] User record created/updated in `users` table with encrypted access token and `token_expires_at`
-- [ ] `threads_user_id` and `username` fetched from `GET /me` and stored
-- [ ] Backfill job record created in `backfill_jobs` table with status `pending`
-- [ ] User redirected to loading/backfill screen after successful auth
-- [ ] Error handling: invalid code, expired code, denied permissions → redirect to landing with error message
-- [ ] Environment variables: `THREADS_APP_ID`, `THREADS_APP_SECRET`, `THREADS_REDIRECT_URI`
+- [x] "Connect Threads" button redirects to Threads OAuth consent URL with scopes: `threads_basic`, `threads_manage_insights`
+- [x] OAuth callback route (`/api/auth/callback`) receives the authorization code
+- [x] Authorization code exchanged for short-lived token via Meta's token endpoint
+- [x] Short-lived token exchanged for long-lived token (60-day expiry)
+- [x] User record created/updated in `users` table with encrypted access token and `token_expires_at`
+- [x] `threads_user_id` and `username` fetched from `GET /me` and stored
+- [x] Backfill job record created in `backfill_jobs` table with status `pending`
+- [x] User redirected to loading/backfill screen after successful auth
+- [x] Error handling: invalid code, expired code, denied permissions → redirect to landing with error message
+- [x] Environment variables: `THREADS_APP_ID`, `THREADS_APP_SECRET`, `THREADS_REDIRECT_URI`
 
 ## Implementation Notes
 - Key files: `app/api/auth/threads/route.ts` (initiate), `app/api/auth/callback/route.ts` (handle callback), `lib/auth.ts` (token exchange helpers)
