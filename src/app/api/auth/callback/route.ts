@@ -6,6 +6,7 @@ import {
 } from "@/lib/threads";
 import { OAUTH_STATE_COOKIE_NAME, setSessionCookie } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
+import { encrypt } from "@/lib/crypto";
 
 function errorRedirect(error: string) {
   const url = new URL("/", process.env.THREADS_REDIRECT_URI!);
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
         {
           threads_user_id: profile.id,
           username: profile.username,
-          access_token: longLivedToken,
+          access_token: encrypt(longLivedToken),
           token_expires_at: tokenExpiresAt,
         },
         { onConflict: "threads_user_id" },
