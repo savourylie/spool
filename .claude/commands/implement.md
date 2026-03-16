@@ -1,6 +1,6 @@
 ---
 description: Implement all pending tickets from the ticket tracker, working through them one by one with QA review.
-allowed-tools: Read, Write, Edit, Grep, Glob, Bash, TodoList
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash, TodoList, Skill
 ---
 
 **Argument:** `$ARGUMENTS`
@@ -34,21 +34,27 @@ If an argument was provided (e.g., `TICKET-001`), implement ONLY that specific t
 4. If the ticket specifies tests, write them. If it doesn't but the project has a test suite, add tests for your changes anyway.
 5. Make sure any new files are properly exported/imported and integrated with the rest of the codebase.
 
-## Phase 4: QA Review (Self-Review as Senior QA)
+## Phase 4: Code Review
 
-Switch your mindset entirely. You are now a **senior QA engineer** reviewing someone else's work. Be critical and thorough.
+### 4a: Build Check
 
-1. **Correctness**: Re-read the ticket requirements. Does the implementation satisfy every acceptance criterion? Check line by line.
-2. **Code quality**: Are there any code smells, duplication, or violations of the project's conventions?
-3. **Edge cases**: What happens with empty inputs, nulls, boundary values, concurrent access, or malformed data?
-4. **Integration**: Does this change break anything else? Check imports, type contracts, and interfaces with adjacent code.
-5. **Tests**: Do the tests actually verify the right behavior? Are there missing test cases?
-6. **Build check**: If there is a build or lint command available (check `package.json`, `Makefile`, etc.), run it and fix any errors.
+Run lint, type-check, and build commands from `package.json` (e.g., `npm run lint`, `npm run build`). Fix any errors until the build is clean.
 
-If you find ANY issues during QA:
-- Fix them immediately.
-- Re-run the QA checklist on the fixed code.
-- Repeat until the implementation cleanly passes all checks.
+### 4b: Automated Code Review
+
+Invoke the `/code-review` skill using the `Skill` tool to review all uncommitted changes against the ticket requirements:
+
+```
+skill: "code-review"
+```
+
+### 4c: Fix and Re-review
+
+If the code review finds any issues:
+1. Fix them immediately.
+2. Re-run the build check (4a) until clean.
+3. Re-invoke `/code-review` (4b) to verify fixes.
+4. Repeat until both build and code review are clean.
 
 ## Phase 5: Commit
 
@@ -65,11 +71,15 @@ If you find ANY issues during QA:
 
 ## Phase 6: Update Ticket Status
 
-1. Update `docs/tickets/INDEX.md` to mark this ticket as **done** (or whatever status convention the file uses).
-2. Commit this status update separately:
-   ```
-   docs: mark TICKET-ID as done
-   ```
+Invoke the `/update` skill using the `Skill` tool to mark the ticket as done:
+
+```
+skill: "update", args: "TICKET-NNN done"
+```
+
+Replace `TICKET-NNN` with the actual ticket ID (e.g., `TICKET-005 done`).
+
+The `/update` skill handles everything: updating the ticket file status, cascading dependency changes, refreshing INDEX.md (tables, counts, graph), verification, and its own commit. Do **NOT** manually edit ticket files or `docs/tickets/INDEX.md`.
 
 ## Phase 7: Loop
 
