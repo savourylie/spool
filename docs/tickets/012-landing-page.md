@@ -1,7 +1,7 @@
 # [TICKET-012] Landing Page
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #003 ✅
@@ -10,18 +10,18 @@
 Build the public landing page at `/` that introduces Spool and provides the "Connect Threads" CTA. Follows the DESIGN.md Hero section pattern with playful geometric decorations, the Candy Button CTA, and feature highlights.
 
 ## Acceptance Criteria
-- [ ] Landing page renders at `/`
-- [ ] Hero section: text left, image/illustration right layout
-- [ ] Hero heading in Outfit 800 with a large yellow circle decorative element behind it
-- [ ] Hero subtext explains Spool's value proposition (from PRD: "Connect your Threads account. See what's working, when to post, and who's listening.")
-- [ ] Primary CTA: "Connect Threads" Candy Button with ArrowRight icon → links to OAuth flow (#004)
-- [ ] Dot-grid pattern fills background behind hero image area
-- [ ] Image area uses blob clip-path for playful shape
-- [ ] Features section: 3-column card grid highlighting the 3 MVP features (Post Performance, Best Time, Audience)
-- [ ] Feature cards use Sticker Card component with alternating header accent colors (violet → pink → yellow)
-- [ ] Dashed SVG connector lines between feature cards (per DESIGN.md)
-- [ ] Page uses warm cream background (`#FFFDF5`)
-- [ ] All decorative elements use absolute positioning behind content (z-index layered)
+- [x] Landing page renders at `/`
+- [x] Hero section: text left, image/illustration right layout
+- [x] Hero heading in Outfit 800 with a large yellow circle decorative element behind it
+- [x] Hero subtext explains Spool's value proposition (from PRD: "Connect your Threads account. See what's working, when to post, and who's listening.")
+- [x] Primary CTA: "Connect Threads" Candy Button with ArrowRight icon → links to OAuth flow (#004)
+- [x] Dot-grid pattern fills background behind hero image area
+- [x] Image area uses blob clip-path for playful shape
+- [x] Features section: 3-column card grid highlighting the 3 MVP features (Post Performance, Best Time, Audience)
+- [x] Feature cards use Sticker Card component with alternating header accent colors (violet → pink → yellow)
+- [x] Dashed SVG connector lines between feature cards (per DESIGN.md)
+- [x] Page uses warm cream background (`#FFFDF5`)
+- [x] All decorative elements use absolute positioning behind content (z-index layered)
 
 ## Design Reference
 - **Layout**: § Layout > Section Patterns > Hero (text left, image right, yellow circle, dot-grid, blob clip)

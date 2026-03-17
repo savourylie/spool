@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 10    |
+| ✅ Done        | 11    |
 | 🔧 In Progress | 0     |
-| 📋 Pending     | 3     |
+| 📋 Pending     | 2     |
 | 🚫 Blocked     | 9     |
 | ⏸️ Deferred    | 0     |
 
@@ -45,7 +45,7 @@
 
 | #   | Ticket                                                           | Status    | Depends On   | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ------------ | ----- |
-| 012 | [Landing Page](./012-landing-page.md)                            | `pending` | #003 ✅       | Unblocked — shared UI components done |
+| 012 | [Landing Page](./012-landing-page.md)                            | `done` | #003 ✅       | Implemented and verified |
 | 013 | [Dashboard Layout & Tab Navigation](./013-dashboard-layout.md)   | `pending` | #003 ✅, #004 ✅ | Unblocked — OAuth flow done |
 | 014 | [Post Performance Table](./014-post-performance-table.md)        | `blocked` | #002 ✅, #013   |       |
 | 015 | [Post Table Filters & Sorting](./015-post-filters.md)            | `blocked` | #014         |       |
@@ -60,7 +60,7 @@
 | --- | ---------------------------------------------------------------- | --------- | ---------------- | ----- |
 | 020 | [Edge Case & Empty States](./020-edge-cases-empty-states.md)     | `blocked` | #014, #017, #018, #019 |       |
 | 021 | [Responsive & Accessibility Pass](./021-responsive-accessibility.md) | `blocked` | #012–#020    |       |
-| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `blocked` | All (#008 ✅, #010 ✅, #011 ✅) |       |
+| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `blocked` | All (#008 ✅, #010 ✅, #011 ✅, #012 ✅) |       |
 
 ---
 
@@ -84,7 +84,7 @@
  │
  ├── 003 Shared UI Components  ✅ DONE
  │    ├── 008 Backfill Progress UI
- │    ├── 012 Landing Page  📋 PENDING
+ │    ├── 012 Landing Page  ✅ DONE
  │    └── 013 Dashboard Layout  📋 PENDING ──► 014, 015, 016, 017, 018, 019
  │
  └── All ──► 020 Edge Cases ──► 021 Responsive & A11y ──► 022 QA/Polish

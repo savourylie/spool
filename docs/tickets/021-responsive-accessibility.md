@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #012, #013, #014, #015, #016, #017, #018, #019, #020
+- Requires: #012 ✅, #013, #014, #015, #016, #017, #018, #019, #020
 
 ## Description
 Comprehensive pass across all pages and components to ensure DESIGN.md responsive rules are followed and accessibility requirements are met. This is a dedicated sweep — not incremental fixes.
