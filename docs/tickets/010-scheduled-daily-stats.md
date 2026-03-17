@@ -1,7 +1,7 @@
 # [TICKET-010] Scheduled Daily Stats & Demographics
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #002 ✅, #006 ✅
@@ -10,16 +10,16 @@
 Implement the daily cron job that polls follower count and refreshes demographic data for all users. This populates the `daily_stats` and `demographics` tables used by the Audience tab (#018, #019).
 
 ## Acceptance Criteria
-- [ ] Cron API route `GET /api/cron/daily` runs once per day
-- [ ] Route secured with `CRON_SECRET` header check
-- [ ] For each user with a non-expired token:
-  - [ ] Fetch `followers_count` via API → insert into `daily_stats` with today's date
-  - [ ] Fetch demographics for all 3 dimensions (country, city, gender) → upsert into `demographics`
-  - [ ] Handle `unique(user_id, date)` constraint gracefully (skip if already run today)
-- [ ] Demographics: 3 separate API calls per CLAUDE.md decision #8
-- [ ] Users with < 100 followers: skip demographics fetch (API requirement), still record follower count
-- [ ] Decrypt access tokens before API calls
-- [ ] Skip users with expired tokens (log warning)
+- [x] Cron API route `GET /api/cron/daily` runs once per day
+- [x] Route secured with `CRON_SECRET` header check
+- [x] For each user with a non-expired token:
+  - [x] Fetch `followers_count` via API → insert into `daily_stats` with today's date
+  - [x] Fetch demographics for all 3 dimensions (country, city, gender) → upsert into `demographics`
+  - [x] Handle `unique(user_id, date)` constraint gracefully (skip if already run today)
+- [x] Demographics: 3 separate API calls per CLAUDE.md decision #8
+- [x] Users with < 100 followers: skip demographics fetch (API requirement), still record follower count
+- [x] Decrypt access tokens before API calls
+- [x] Skip users with expired tokens (log warning)
 
 ## Implementation Notes
 - Key files: `app/api/cron/daily/route.ts`
