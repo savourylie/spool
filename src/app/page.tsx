@@ -1,14 +1,208 @@
-export default function Home() {
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar";
+import { Clock } from "@phosphor-icons/react/dist/ssr/Clock";
+import { Users } from "@phosphor-icons/react/dist/ssr/Users";
+
+import { buttonVariants } from "@/components/ui/button-variants";
+import {
+  StickerCard,
+  StickerCardHeader,
+  StickerCardTitle,
+  StickerCardDescription,
+  StickerCardIcon,
+} from "@/components/ui/card";
+import { SESSION_COOKIE_NAME } from "@/lib/session";
+
+export default async function Home() {
+  const cookieStore = await cookies();
+  if (cookieStore.get(SESSION_COOKIE_NAME)) {
+    redirect("/dashboard");
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <main className="flex flex-col items-center gap-4">
-        <h1 className="text-5xl font-extrabold tracking-tight text-foreground">
-          Spool
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Threads analytics, unraveled.
-        </p>
-      </main>
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      {/* ---- Floating decorations ---- */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-20 -top-20 -z-10 hidden size-72 rounded-full bg-secondary/20 md:block"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-24 -left-24 -z-10 hidden size-64 rounded-full bg-primary/15 md:block"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-1/3 top-1/2 -z-10 hidden size-4 rounded-full bg-quaternary md:block"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-1/3 left-1/4 -z-10 hidden size-16 rotate-12 rounded-[var(--radius-sm)] border-2 border-dashed border-secondary/40 md:block"
+      />
+
+      {/* ---- Hero ---- */}
+      <section className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 pb-20 pt-24 md:flex-row md:items-center md:gap-16 md:pt-32">
+        {/* Left column */}
+        <div className="flex flex-1 flex-col items-center text-center md:items-start md:text-left">
+          <div className="relative inline-block">
+            <div
+              aria-hidden
+              className="absolute -left-4 -top-4 -z-10 size-20 rounded-full bg-tertiary/60 md:size-24"
+            />
+            <h1 className="font-heading text-5xl font-extrabold tracking-tight md:text-7xl">
+              Spool
+            </h1>
+          </div>
+          <p className="mt-4 max-w-md text-lg text-muted-foreground">
+            Know what&apos;s working on Threads. Track post performance,
+            discover your best times to publish, and understand your audience —
+            all in one place.
+          </p>
+          <a
+            href="/api/auth/threads"
+            className={buttonVariants({ size: "lg", className: "mt-8" })}
+          >
+            Connect Threads
+            <span className="ml-1 inline-flex size-6 items-center justify-center rounded-full bg-white/30">
+              <ArrowRight
+                weight="bold"
+                className="size-3.5 text-primary-foreground"
+              />
+            </span>
+          </a>
+        </div>
+
+        {/* Right column — illustration placeholder */}
+        <div className="relative hidden flex-1 md:block">
+          <svg
+            viewBox="0 0 480 360"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full"
+            aria-hidden
+          >
+            {/* Dot-grid pattern */}
+            <defs>
+              <pattern
+                id="dot-grid"
+                x="0"
+                y="0"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+              >
+                <circle cx="2" cy="2" r="1.2" fill="#E2E8F0" />
+              </pattern>
+              <clipPath id="blob">
+                <ellipse cx="240" cy="180" rx="210" ry="160" />
+              </clipPath>
+            </defs>
+            <rect
+              width="480"
+              height="360"
+              fill="url(#dot-grid)"
+              clipPath="url(#blob)"
+            />
+            {/* Simplified dashboard shapes */}
+            <rect
+              x="120"
+              y="80"
+              width="240"
+              height="200"
+              rx="16"
+              fill="white"
+              stroke="#1E293B"
+              strokeWidth="2"
+            />
+            {/* Chart bars */}
+            <rect x="150" y="200" width="24" height="60" rx="4" fill="#8B5CF6" />
+            <rect x="186" y="170" width="24" height="90" rx="4" fill="#F472B6" />
+            <rect x="222" y="150" width="24" height="110" rx="4" fill="#FBBF24" />
+            <rect x="258" y="180" width="24" height="80" rx="4" fill="#34D399" />
+            <rect x="294" y="160" width="24" height="100" rx="4" fill="#8B5CF6" />
+            {/* Title bar lines */}
+            <rect x="150" y="105" width="80" height="8" rx="4" fill="#E2E8F0" />
+            <rect x="150" y="122" width="120" height="6" rx="3" fill="#F1F5F9" />
+          </svg>
+        </div>
+      </section>
+
+      {/* ---- Features ---- */}
+      <section className="relative mx-auto max-w-5xl px-6 pb-24">
+        <h2 className="mb-12 text-center font-heading text-3xl font-bold md:text-4xl">
+          Everything you need to grow on Threads
+        </h2>
+
+        <div className="relative grid gap-8 md:grid-cols-3">
+          {/* Dashed connector lines between cards */}
+          <svg
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 hidden h-full w-full md:block"
+          >
+            <line
+              x1="33%"
+              y1="50%"
+              x2="38%"
+              y2="50%"
+              stroke="#E2E8F0"
+              strokeWidth="2"
+              strokeDasharray="6 4"
+            />
+            <line
+              x1="62%"
+              y1="50%"
+              x2="67%"
+              y2="50%"
+              stroke="#E2E8F0"
+              strokeWidth="2"
+              strokeDasharray="6 4"
+            />
+          </svg>
+
+          {/* Card 1 — Post Performance */}
+          <StickerCard className="pt-8">
+            <StickerCardIcon color="primary">
+              <ChartBar weight="fill" className="size-6" />
+            </StickerCardIcon>
+            <StickerCardHeader>
+              <StickerCardTitle>Post Performance</StickerCardTitle>
+              <StickerCardDescription>
+                See likes, replies, reposts, and engagement rate for every post
+                at a glance.
+              </StickerCardDescription>
+            </StickerCardHeader>
+          </StickerCard>
+
+          {/* Card 2 — Best Time to Post */}
+          <StickerCard className="pt-8">
+            <StickerCardIcon color="secondary">
+              <Clock weight="fill" className="size-6" />
+            </StickerCardIcon>
+            <StickerCardHeader>
+              <StickerCardTitle>Best Time to Post</StickerCardTitle>
+              <StickerCardDescription>
+                Discover when your audience is most active so you can publish at
+                the perfect moment.
+              </StickerCardDescription>
+            </StickerCardHeader>
+          </StickerCard>
+
+          {/* Card 3 — Audience Snapshot */}
+          <StickerCard className="pt-8">
+            <StickerCardIcon color="tertiary">
+              <Users weight="fill" className="size-6" />
+            </StickerCardIcon>
+            <StickerCardHeader>
+              <StickerCardTitle>Audience Snapshot</StickerCardTitle>
+              <StickerCardDescription>
+                Understand where your followers are, their demographics, and how
+                your community is growing.
+              </StickerCardDescription>
+            </StickerCardHeader>
+          </StickerCard>
+        </div>
+      </section>
     </div>
   );
 }
