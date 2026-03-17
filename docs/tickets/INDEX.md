@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 9     |
+| ✅ Done        | 10    |
 | 🔧 In Progress | 0     |
-| 📋 Pending     | 4     |
+| 📋 Pending     | 3     |
 | 🚫 Blocked     | 9     |
 | ⏸️ Deferred    | 0     |
 
@@ -39,7 +39,7 @@
 | 008 | [Backfill Progress UI](./008-backfill-progress-ui.md)            | `done` | #003 ✅, #007 ✅ | Implemented and verified |
 | 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `pending` | #002 ✅, #006 ✅ | Unblocked — #006 done |
 | 010 | [Scheduled Daily Stats & Demographics](./010-scheduled-daily-stats.md) | `done` | #002 ✅, #006 ✅ | Implemented and verified |
-| 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `pending` | #005 ✅, #006 ✅ | Unblocked — #006 done |
+| 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `done` | #005 ✅, #006 ✅ | Implemented and verified |
 
 ## Phase 4 — Frontend Pages
 
@@ -60,7 +60,7 @@
 | --- | ---------------------------------------------------------------- | --------- | ---------------- | ----- |
 | 020 | [Edge Case & Empty States](./020-edge-cases-empty-states.md)     | `blocked` | #014, #017, #018, #019 |       |
 | 021 | [Responsive & Accessibility Pass](./021-responsive-accessibility.md) | `blocked` | #012–#020    |       |
-| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `blocked` | All (#008 ✅, #010 ✅) |       |
+| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `blocked` | All (#008 ✅, #010 ✅, #011 ✅) |       |
 
 ---
 
@@ -75,7 +75,7 @@
  │    │    ├── 007 Backfill Pipeline  ✅ DONE ──► 008 Backfill Progress UI  ✅ DONE
  │    │    ├── 009 Scheduled Metrics Refresh  📋 PENDING
  │    │    ├── 010 Scheduled Daily Stats & Demographics  ✅ DONE
- │    │    └── 011 Scheduled Token Refresh  📋 PENDING
+ │    │    └── 011 Scheduled Token Refresh  ✅ DONE
  │    │
  │    ├── 014 Post Performance Table
  │    ├── 017 Best Time Heatmap

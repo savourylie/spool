@@ -1,7 +1,7 @@
 # [TICKET-011] Scheduled Token Refresh
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #005 ✅, #006 ✅
@@ -10,17 +10,17 @@
 Implement the scheduled cron job that refreshes long-lived Threads tokens before they expire. Per CLAUDE.md, tokens are refreshed every 50 days (conservative buffer against the 60-day expiry). Refreshed tokens are re-encrypted before storage.
 
 ## Acceptance Criteria
-- [ ] Cron API route `GET /api/cron/token-refresh` runs daily
-- [ ] Route secured with `CRON_SECRET` header check
-- [ ] Identifies users whose `token_expires_at` is within the next 15 days (catches the 50-day mark with buffer)
-- [ ] For each eligible user:
-  - [ ] Decrypt current access token
-  - [ ] Call `GET /refresh_access_token` via ThreadsAPI service
-  - [ ] Encrypt the new token
-  - [ ] Update `users` row with new encrypted token and new `token_expires_at` (90 days from now)
-- [ ] Log successful refreshes and failures
-- [ ] Failed refresh: log error, do not update token (user retains current token until next attempt)
-- [ ] If token is already expired: log warning, skip (user needs to re-authenticate)
+- [x] Cron API route `GET /api/cron/token-refresh` runs daily
+- [x] Route secured with `CRON_SECRET` header check
+- [x] Identifies users whose `token_expires_at` is within the next 15 days (catches the 50-day mark with buffer)
+- [x] For each eligible user:
+  - [x] Decrypt current access token
+  - [x] Call `GET /refresh_access_token` via ThreadsAPI service
+  - [x] Encrypt the new token
+  - [x] Update `users` row with new encrypted token and new `token_expires_at` (90 days from now)
+- [x] Log successful refreshes and failures
+- [x] Failed refresh: log error, do not update token (user retains current token until next attempt)
+- [x] If token is already expired: log warning, skip (user needs to re-authenticate)
 
 ## Implementation Notes
 - Key files: `app/api/cron/token-refresh/route.ts`
