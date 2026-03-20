@@ -1,10 +1,10 @@
 # [TICKET-014] Post Performance Table
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #002 ✅, #013
+- Requires: #002 ✅, #013 ✅
 
 ## Description
 Build the Posts tab content: a sortable, paginated table showing all of the user's posts with their engagement metrics. This is the primary feature of Spool — answering "what content performs best?"

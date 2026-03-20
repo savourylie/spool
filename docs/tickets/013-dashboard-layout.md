@@ -1,7 +1,7 @@
 # [TICKET-013] Dashboard Layout & Tab Navigation
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #003 ✅, #004 ✅
@@ -10,16 +10,16 @@
 Build the authenticated dashboard layout with tab navigation between the three MVP views: Posts, Timing, and Audience. This is a shared layout that wraps all dashboard pages and handles auth state.
 
 ## Acceptance Criteria
-- [ ] Dashboard layout at `/dashboard` with shared header and tab navigation
-- [ ] Three tabs: "Posts" (`/dashboard/posts`), "Timing" (`/dashboard/timing`), "Audience" (`/dashboard/audience`)
-- [ ] Active tab indicated with accent color underline or highlight
-- [ ] Tab navigation uses Next.js App Router nested layouts
-- [ ] Header shows user's Threads username (from `users` table)
-- [ ] Header includes a "Disconnect" or "Sign out" option
-- [ ] Auth guard: unauthenticated users redirected to `/` (landing page)
-- [ ] Layout uses `max-w-6xl` centered container per DESIGN.md
-- [ ] Default route `/dashboard` redirects to `/dashboard/posts`
-- [ ] Tab transitions feel snappy (no full page reload)
+- [x] Dashboard layout at `/dashboard` with shared header and tab navigation
+- [x] Three tabs: "Posts" (`/dashboard/posts`), "Timing" (`/dashboard/timing`), "Audience" (`/dashboard/audience`)
+- [x] Active tab indicated with accent color underline or highlight
+- [x] Tab navigation uses Next.js App Router nested layouts
+- [x] Header shows user's Threads username (from `users` table)
+- [x] Header includes a "Disconnect" or "Sign out" option
+- [x] Auth guard: unauthenticated users redirected to `/` (landing page)
+- [x] Layout uses `max-w-6xl` centered container per DESIGN.md
+- [x] Default route `/dashboard` redirects to `/dashboard/posts`
+- [x] Tab transitions feel snappy (no full page reload)
 
 ## Design Reference
 - **Layout**: § Layout > Container (`max-w-6xl`, centered)

@@ -1,10 +1,10 @@
 # [TICKET-017] Best Time to Post Heatmap
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #002 ✅, #013
+- Requires: #002 ✅, #013 ✅
 
 ## Description
 Build the Timing tab content: a 7×24 heatmap showing average engagement rate by day-of-week and hour-of-day, derived from the user's post history. Includes a summary of the best posting times.
