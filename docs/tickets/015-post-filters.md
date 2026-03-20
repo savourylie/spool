@@ -1,7 +1,7 @@
 # [TICKET-015] Post Table Filters & Sorting
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #014 ✅
@@ -10,17 +10,17 @@
 Add filtering controls to the post performance table: media type multi-select filter and date range picker. These allow users to slice their post data to find patterns in specific content types or time periods.
 
 ## Acceptance Criteria
-- [ ] Media type filter: multi-select for Text, Image, Video, Carousel
-- [ ] All types selected by default; deselecting filters the table in real-time
-- [ ] Date range picker: start date and end date inputs
-- [ ] Date range defaults to "All time" (no constraint)
-- [ ] Filters persist across pagination (page resets to 1 when filter changes)
-- [ ] Active filters shown as removable chips/badges
-- [ ] "Clear all filters" button resets to defaults
-- [ ] Filters work in combination (e.g., "Image posts from last 30 days")
-- [ ] Filter UI uses DESIGN.md Input and Button component styles
-- [ ] URL query params encode filter state (shareable/bookmarkable)
-- [ ] When no posts match active filters, display empty state: "No posts match your filters. Try adjusting your criteria." with clear filters button
+- [x] Media type filter: multi-select for Text, Image, Video, Carousel
+- [x] All types selected by default; deselecting filters the table in real-time
+- [x] Date range picker: start date and end date inputs
+- [x] Date range defaults to "All time" (no constraint)
+- [x] Filters persist across pagination (page resets to 1 when filter changes)
+- [x] Active filters shown as removable chips/badges
+- [x] "Clear all filters" button resets to defaults
+- [x] Filters work in combination (e.g., "Image posts from last 30 days")
+- [x] Filter UI uses DESIGN.md Input and Button component styles
+- [x] URL query params encode filter state (shareable/bookmarkable)
+- [x] When no posts match active filters, display empty state: "No posts match your filters. Try adjusting your criteria." with clear filters button
 
 ## Design Reference
 - **Components**: § Components > Inputs (date picker styling)
