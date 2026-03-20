@@ -1,7 +1,7 @@
 # [TICKET-017] Best Time to Post Heatmap
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #002 ✅, #013 ✅
@@ -10,19 +10,19 @@
 Build the Timing tab content: a 7×24 heatmap showing average engagement rate by day-of-week and hour-of-day, derived from the user's post history. Includes a summary of the best posting times.
 
 ## Acceptance Criteria
-- [ ] Heatmap renders at `/dashboard/timing`
-- [ ] Grid: 7 rows (Monday–Sunday) × 24 columns (0–23 hours)
-- [ ] Each cell colored by average engagement rate: cool (low) → warm (high) color scale
-- [ ] Hover tooltip shows: number of posts in that slot, average engagement rate, average views
-- [ ] Cells with < 2 posts shown as gray ("insufficient data")
-- [ ] Summary text above heatmap: "Your best posting times are **[Day Time]** and **[Day Time]**" (top 3 slots)
-- [ ] Timezone: auto-detected from browser (`Intl.DateTimeFormat().resolvedOptions().timeZone`)
-- [ ] Manual timezone override dropdown
-- [ ] All timestamps converted to the selected timezone for bucketing
-- [ ] Data source: `posts.published_at` joined with latest `post_metrics` for engagement rate
-- [ ] Engagement rate formula per CLAUDE.md: `(likes + replies + reposts + quotes + shares) / views`
-- [ ] Banner shown when user has < 20 total posts: "Post more to improve accuracy. Based on N posts so far."
-- [ ] Recommendation shown when all posts occur at the same time: "You always post at [time]. Try varying your schedule to discover new opportunities."
+- [x] Heatmap renders at `/dashboard/timing`
+- [x] Grid: 7 rows (Monday–Sunday) × 24 columns (0–23 hours)
+- [x] Each cell colored by average engagement rate: cool (low) → warm (high) color scale
+- [x] Hover tooltip shows: number of posts in that slot, average engagement rate, average views
+- [x] Cells with < 2 posts shown as gray ("insufficient data")
+- [x] Summary text above heatmap: "Your best posting times are **[Day Time]** and **[Day Time]**" (top 3 slots)
+- [x] Timezone: auto-detected from browser (`Intl.DateTimeFormat().resolvedOptions().timeZone`)
+- [x] Manual timezone override dropdown
+- [x] All timestamps converted to the selected timezone for bucketing
+- [x] Data source: `posts.published_at` joined with latest `post_metrics` for engagement rate
+- [x] Engagement rate formula per CLAUDE.md: `(likes + replies + reposts + quotes + shares) / views`
+- [x] Banner shown when user has < 20 total posts: "Post more to improve accuracy. Based on N posts so far."
+- [x] Recommendation shown when all posts occur at the same time: "You always post at [time]. Try varying your schedule to discover new opportunities."
 
 ## Design Reference
 - **Layout**: § Layout > Container (`max-w-6xl`)
