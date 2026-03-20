@@ -29,7 +29,6 @@ export default async function LoadingPage() {
   return (
     <BackfillProgress
       jobId={job.id}
-      userId={userId}
       initialStatus={job.status}
       initialProcessed={job.processed_posts}
       initialTotal={job.total_posts}

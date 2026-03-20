@@ -63,7 +63,7 @@ function createMockFrom(table: string) {
 
   if (table === "posts") {
     return {
-      select: (...args: unknown[]) => ({
+      select: () => ({
         eq: () => ({
           order: () => ({
             limit: () => ({
@@ -377,7 +377,6 @@ describe("refreshAllUsers", () => {
     };
 
     // Make the first user fail by returning an error for the user query
-    let callCount = 0;
     mockUserResult = {
       data: {
         threads_user_id: "threads-123",

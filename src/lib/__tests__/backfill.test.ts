@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { runBackfill } from "../backfill";
+import { ThreadsAPIError } from "../threads";
 
 // --- Mock tracking ---
 
@@ -158,6 +159,7 @@ describe("runBackfill", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     calls.length = 0;
+    vi.spyOn(console, "log").mockImplementation(() => {});
 
     mockUserResult = {
       data: { threads_user_id: "threads-123", access_token: "encrypted" },
@@ -194,6 +196,10 @@ describe("runBackfill", () => {
         { key: "GB", value: 12 },
       ],
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("completes full backfill: posts, metrics, daily_stats, demographics", async () => {
@@ -310,6 +316,38 @@ describe("runBackfill", () => {
     );
 
     consoleSpy.mockRestore();
+  });
+
+  it("logs the failing post id and Threads API details when post insights fail", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockGetPostInsights.mockRejectedValue(
+      new ThreadsAPIError("Threads API error: 429", 429, {
+        error: { message: "Rate limited" },
+      }),
+    );
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "Backfill failed",
+      expect.objectContaining({
+        userId: "user-uuid",
+        jobId: "job-uuid",
+        stage: "fetching_post_insights",
+        postId: "media-1",
+        error: expect.objectContaining({
+          name: "ThreadsAPIError",
+          message: "Threads API error: 429",
+          status: 429,
+          body: { error: { message: "Rate limited" } },
+        }),
+      }),
+    );
+
+    const updates = getUpdateCalls();
+    expect(updates[updates.length - 1]).toEqual(
+      expect.objectContaining({ status: "failed" }),
+    );
   });
 
   it("marks job as failed when user not found", async () => {

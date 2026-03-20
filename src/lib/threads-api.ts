@@ -179,8 +179,9 @@ export class ThreadsAPI {
     metric: string,
     since?: Date,
     until?: Date,
+    extraParams?: Record<string, string>,
   ): Promise<ThreadsUserInsightValue[]> {
-    const params: Record<string, string> = { metric };
+    const params: Record<string, string> = { metric, ...extraParams };
     if (since) params.since = String(Math.floor(since.getTime() / 1000));
     if (until) params.until = String(Math.floor(until.getTime() / 1000));
 
@@ -200,7 +201,12 @@ export class ThreadsAPI {
   async getFollowerDemographics(
     dimension: string,
   ): Promise<ThreadsDemographicBreakdown> {
-    const data = await this.getUserInsights("follower_demographics");
+    const data = await this.getUserInsights(
+      "follower_demographics",
+      undefined,
+      undefined,
+      { breakdown: dimension },
+    );
     const breakdown = data[0]?.values[0]?.value as unknown as Record<
       string,
       number

@@ -13,17 +13,31 @@ export async function POST(request: NextRequest) {
 
   const supabase = createAdminClient();
 
-  // Find the most recent pending backfill job for this user
-  const { data: job, error } = await supabase
+  const { data: activeJob } = await supabase
     .from("backfill_jobs")
-    .select("id")
+    .select("id, status")
     .eq("user_id", userId)
-    .eq("status", "pending")
+    .in("status", ["pending", "running"])
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
-  if (error || !job) {
+  if (activeJob?.status === "running") {
+    console.log("Backfill start skipped: job already running", {
+      userId,
+      jobId: activeJob.id,
+    });
+    return NextResponse.json(
+      { jobId: activeJob.id, status: activeJob.status },
+      { status: 200 },
+    );
+  }
+
+  // Find the most recent pending backfill job for this user
+  const job = activeJob?.status === "pending" ? activeJob : null;
+
+  if (!job) {
+    console.warn("Backfill start requested without a pending job", { userId });
     return NextResponse.json(
       { error: "No pending backfill job found" },
       { status: 404 },

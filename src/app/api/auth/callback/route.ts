@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse, after } from "next/server";
 import {
   exchangeCodeForShortLivedToken,
   exchangeForLongLivedToken,
@@ -7,6 +7,7 @@ import {
 import { OAUTH_STATE_COOKIE_NAME, setSessionCookie } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
 import { encrypt } from "@/lib/crypto";
+import { runBackfill } from "@/lib/backfill";
 
 function errorRedirect(error: string) {
   const url = new URL("/", process.env.THREADS_REDIRECT_URI!);
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
 
   // 7. Upsert user and create backfill job
   let userId: string;
+  let backfillJobId: string;
   try {
     const supabase = createAdminClient();
 
@@ -96,16 +98,24 @@ export async function GET(request: NextRequest) {
 
     userId = user.id;
 
-    const { error: jobError } = await supabase
+    const { data: job, error: jobError } = await supabase
       .from("backfill_jobs")
-      .insert({ user_id: userId, status: "pending" });
+      .insert({ user_id: userId, status: "pending" })
+      .select("id")
+      .single();
 
-    if (jobError) {
+    if (jobError || !job) {
       throw jobError;
     }
+
+    backfillJobId = job.id;
   } catch {
     return errorRedirect("unknown");
   }
+
+  after(async () => {
+    await runBackfill(userId, backfillJobId);
+  });
 
   // 8. Set session cookie and redirect to loading page
   const loadingUrl = new URL("/loading", request.nextUrl.origin);

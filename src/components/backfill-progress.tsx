@@ -28,13 +28,11 @@ const springBounce = {
 
 export function BackfillProgress({
   jobId: initialJobId,
-  userId,
   initialStatus,
   initialProcessed,
   initialTotal,
 }: {
   jobId: string
-  userId: string
   initialStatus: string
   initialProcessed: number | null
   initialTotal: number | null
@@ -92,22 +90,17 @@ export function BackfillProgress({
     [],
   )
 
-  // Trigger backfill start if pending, and subscribe to realtime
+  // Subscribe to realtime updates for the current job
   useEffect(() => {
-    if (status === "pending") {
-      fetch("/api/backfill/start", { method: "POST" }).catch(() => {
-        // Job may already be running — subscribe will pick up state
-      })
-    }
-
+    const supabase = supabaseRef.current
     subscribe(jobId)
 
     return () => {
       if (channelRef.current) {
-        supabaseRef.current.removeChannel(channelRef.current)
+        supabase.removeChannel(channelRef.current)
       }
     }
-  }, [jobId, status, subscribe])
+  }, [jobId, subscribe])
 
   // Redirect on complete
   useEffect(() => {

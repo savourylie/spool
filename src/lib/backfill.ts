@@ -1,12 +1,18 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { ThreadsAPI } from "@/lib/threads-api";
 import { decrypt } from "@/lib/crypto";
+import { ThreadsAPIError } from "@/lib/threads";
 
 export async function runBackfill(userId: string, jobId: string) {
   const supabase = createAdminClient();
+  let stage = "initializing";
+  let currentPostId: string | null = null;
 
   try {
+    console.log("Backfill started", { userId, jobId });
+
     // 1. Update job to running
+    stage = "marking_job_running";
     const { error: startError } = await supabase
       .from("backfill_jobs")
       .update({ status: "running", started_at: new Date().toISOString() })
@@ -23,13 +29,21 @@ export async function runBackfill(userId: string, jobId: string) {
 
     if (userError || !user) throw userError ?? new Error("User not found");
 
+    stage = "decrypting_access_token";
     const accessToken = decrypt(user.access_token);
     const api = new ThreadsAPI(accessToken, user.threads_user_id);
 
     // 3. Fetch all posts (paginated, from April 2024 onward, repost facades excluded)
+    stage = "fetching_posts";
     const posts = await api.getUserPosts();
+    console.log("Backfill fetched posts", {
+      userId,
+      jobId,
+      totalPosts: posts.length,
+    });
 
     // 4. Set total_posts
+    stage = "saving_total_posts";
     await supabase
       .from("backfill_jobs")
       .update({ total_posts: posts.length })
@@ -39,9 +53,20 @@ export async function runBackfill(userId: string, jobId: string) {
     let processed = 0;
 
     for (const post of posts) {
+      currentPostId = post.id;
+      console.log("Backfill fetching post insights", {
+        userId,
+        jobId,
+        postId: currentPostId,
+        processed,
+        totalPosts: posts.length,
+      });
+
+      stage = "fetching_post_insights";
       const insights = await api.getPostInsights(post.id);
 
       // Upsert post (idempotent on threads_media_id)
+      stage = "saving_post";
       const { data: insertedPost } = await supabase
         .from("posts")
         .upsert(
@@ -73,15 +98,20 @@ export async function runBackfill(userId: string, jobId: string) {
 
       // Update progress
       processed++;
+      stage = "updating_progress";
       await supabase
         .from("backfill_jobs")
         .update({ processed_posts: processed })
         .eq("id", jobId);
+
+      currentPostId = null;
     }
 
     // 6. Fetch followers count and create initial daily_stats
+    stage = "fetching_followers_count";
     const followersCount = await api.getFollowersCount();
 
+    stage = "saving_daily_stats";
     await supabase.from("daily_stats").upsert(
       {
         user_id: userId,
@@ -94,9 +124,16 @@ export async function runBackfill(userId: string, jobId: string) {
     // 7. Fetch demographics (country, city, gender — 3 separate calls per CLAUDE.md #8)
     for (const dimension of ["country", "city", "gender"] as const) {
       try {
+        stage = `fetching_demographics_${dimension}`;
+        console.log("Backfill fetching demographics", {
+          userId,
+          jobId,
+          dimension,
+        });
         const demo = await api.getFollowerDemographics(dimension);
 
         if (demo.values.length > 0) {
+          stage = `saving_demographics_${dimension}`;
           await supabase.from("demographics").insert(
             demo.values.map(({ key, value }) => ({
               user_id: userId,
@@ -113,6 +150,7 @@ export async function runBackfill(userId: string, jobId: string) {
     }
 
     // 8. Mark complete
+    stage = "marking_job_complete";
     await supabase
       .from("backfill_jobs")
       .update({
@@ -120,8 +158,29 @@ export async function runBackfill(userId: string, jobId: string) {
         completed_at: new Date().toISOString(),
       })
       .eq("id", jobId);
+
+    console.log("Backfill completed", { userId, jobId });
   } catch (error) {
-    console.error("Backfill failed:", error);
+    console.error("Backfill failed", {
+      userId,
+      jobId,
+      stage,
+      postId: currentPostId,
+      error:
+        error instanceof ThreadsAPIError
+          ? {
+              name: error.name,
+              message: error.message,
+              status: error.status,
+              body: error.body,
+            }
+          : error instanceof Error
+            ? {
+                name: error.name,
+                message: error.message,
+              }
+            : error,
+    });
     const { error: failError } = await supabase
       .from("backfill_jobs")
       .update({ status: "failed" })

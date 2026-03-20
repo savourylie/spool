@@ -215,7 +215,7 @@ describe("ThreadsAPI", () => {
   });
 
   describe("getFollowerDemographics", () => {
-    it("transforms demographic object to array format", async () => {
+    it("transforms demographic object to array format and sends the breakdown param", async () => {
       fetchSpy.mockResolvedValueOnce(
         jsonResponse({
           data: [
@@ -234,6 +234,11 @@ describe("ThreadsAPI", () => {
         { key: "GB", value: 12 },
         { key: "JP", value: 8 },
       ]);
+
+      const url = new URL(fetchSpy.mock.calls[0][0] as string);
+      expect(url.pathname).toBe("/v1.0/user-123/threads_insights");
+      expect(url.searchParams.get("metric")).toBe("follower_demographics");
+      expect(url.searchParams.get("breakdown")).toBe("country");
     });
   });
 
