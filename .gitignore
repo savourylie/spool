@@ -44,3 +44,5 @@ supabase/.branches/
 .DS_Store
 *.pem
 Thumbs.db
+
+certificates
