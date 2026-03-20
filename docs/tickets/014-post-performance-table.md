@@ -1,7 +1,7 @@
 # [TICKET-014] Post Performance Table
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #002 ✅, #013 ✅
@@ -10,17 +10,17 @@
 Build the Posts tab content: a sortable, paginated table showing all of the user's posts with their engagement metrics. This is the primary feature of Spool — answering "what content performs best?"
 
 ## Acceptance Criteria
-- [ ] Posts table renders at `/dashboard/posts`
-- [ ] Table columns: Post preview (truncated text + media type icon), Published date, Views, Likes, Replies, Reposts, Quotes, Shares, Engagement rate
-- [ ] Post preview: first ~80 chars of text with media type icon (Lucide: FileText, Image, Video, LayoutGrid for carousel)
-- [ ] Engagement rate calculated as `(likes + replies + reposts + quotes + shares) / views` per CLAUDE.md decision #5
-- [ ] Engagement rate displayed as percentage with 2 decimal places
-- [ ] Default sort: by Published date, descending (newest first)
-- [ ] Sortable by any metric column (click column header to toggle asc/desc)
-- [ ] Pagination: 20 posts per page with page navigation
-- [ ] Metrics shown are from the most recent `post_metrics` snapshot for each post
-- [ ] Table uses DESIGN.md styling: 2px borders, Outfit headings, proper spacing
-- [ ] Empty state if no posts (see #020)
+- [x] Posts table renders at `/dashboard/posts`
+- [x] Table columns: Post preview (truncated text + media type icon), Published date, Views, Likes, Replies, Reposts, Quotes, Shares, Engagement rate
+- [x] Post preview: first ~80 chars of text with media type icon (Lucide: FileText, Image, Video, LayoutGrid for carousel)
+- [x] Engagement rate calculated as `(likes + replies + reposts + quotes + shares) / views` per CLAUDE.md decision #5
+- [x] Engagement rate displayed as percentage with 2 decimal places
+- [x] Default sort: by Published date, descending (newest first)
+- [x] Sortable by any metric column (click column header to toggle asc/desc)
+- [x] Pagination: 20 posts per page with page navigation
+- [x] Metrics shown are from the most recent `post_metrics` snapshot for each post
+- [x] Table uses DESIGN.md styling: 2px borders, Outfit headings, proper spacing
+- [x] Empty state if no posts (see #020)
 
 ## Design Reference
 - **Layout**: § Layout > Container, Grid

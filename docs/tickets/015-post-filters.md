@@ -1,10 +1,10 @@
 # [TICKET-015] Post Table Filters & Sorting
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #014
+- Requires: #014 ✅
 
 ## Description
 Add filtering controls to the post performance table: media type multi-select filter and date range picker. These allow users to slice their post data to find patterns in specific content types or time periods.

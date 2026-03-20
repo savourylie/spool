@@ -1,10 +1,10 @@
 # [TICKET-016] Post Detail Expansion & Sparkline
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #014
+- Requires: #014 ✅
 
 ## Description
 Add row expansion to the post performance table. Clicking a row reveals the full post text and a mini engagement-over-time sparkline chart built from historical `post_metrics` snapshots.
