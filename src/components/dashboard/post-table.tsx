@@ -1,11 +1,13 @@
 "use client";
 
+import React, { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { CaretUp, CaretDown, TextT, Image, VideoCamera, SquaresFour } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "./pagination";
+import { PostRowDetail } from "./post-row-detail";
 
 export interface PostRow {
   id: string;
@@ -87,6 +89,21 @@ function ClearFiltersButton({ pathname, searchParams }: { pathname: string; sear
 export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, hasFilters }: PostTableProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [mountedIds, setMountedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpand = useCallback((postId: string) => {
+    setExpandedId((prev) => {
+      if (prev === postId) return null;
+      setMountedIds((s) => {
+        if (s.has(postId)) return s;
+        const next = new Set(s);
+        next.add(postId);
+        return next;
+      });
+      return postId;
+    });
+  }, []);
 
   function sortHref(column: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -141,60 +158,76 @@ export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, h
               const media = MEDIA_ICONS[post.media_type] ?? MEDIA_ICONS.TEXT;
               const Icon = media.icon;
               const isTopPerformer = maxRate > 0 && post.engagement_rate === maxRate;
+              const isExpanded = expandedId === post.id;
 
               return (
-                <tr
-                  key={post.id}
-                  className={cn(
-                    "border-b border-border transition-colors",
-                    i % 2 === 1 ? "bg-muted" : "bg-white"
-                  )}
-                >
-                  <td className="px-3 py-3 max-w-[280px]">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          "flex-shrink-0 inline-flex items-center justify-center size-7 rounded-full text-white",
-                          media.color
-                        )}
-                      >
-                        <Icon weight="fill" className="size-3.5" />
-                      </span>
-                      {post.permalink ? (
-                        <a
-                          href={post.permalink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="truncate hover:text-accent transition-colors"
-                          title={post.text_preview ?? undefined}
+                <React.Fragment key={post.id}>
+                  <tr
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    onClick={() => toggleExpand(post.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleExpand(post.id);
+                      }
+                    }}
+                    className={cn(
+                      "cursor-pointer transition-colors",
+                      i % 2 === 1 ? "bg-muted" : "bg-white",
+                      isExpanded ? "bg-accent/5" : "hover:bg-accent/5",
+                      !isExpanded && "border-b border-border"
+                    )}
+                  >
+                    <td className="px-3 py-3 max-w-[280px]">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "flex-shrink-0 inline-flex items-center justify-center size-7 rounded-full text-white",
+                            media.color
+                          )}
                         >
-                          {post.text_preview || "—"}
-                        </a>
-                      ) : (
+                          <Icon weight="fill" className="size-3.5" />
+                        </span>
                         <span className="truncate" title={post.text_preview ?? undefined}>
                           {post.text_preview || "—"}
                         </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-right whitespace-nowrap text-muted-foreground">
+                      {formatDate(post.published_at)}
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.views)}</td>
+                    <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.likes)}</td>
+                    <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.replies)}</td>
+                    <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.reposts)}</td>
+                    <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.quotes)}</td>
+                    <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.shares)}</td>
+                    <td
+                      className={cn(
+                        "px-3 py-3 text-right tabular-nums font-bold",
+                        isTopPerformer ? "text-accent" : ""
                       )}
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-right whitespace-nowrap text-muted-foreground">
-                    {formatDate(post.published_at)}
-                  </td>
-                  <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.views)}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.likes)}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.replies)}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.reposts)}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.quotes)}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.shares)}</td>
-                  <td
-                    className={cn(
-                      "px-3 py-3 text-right tabular-nums font-bold",
-                      isTopPerformer ? "text-accent" : ""
-                    )}
-                  >
-                    {post.engagement_rate.toFixed(2)}%
-                  </td>
-                </tr>
+                    >
+                      {post.engagement_rate.toFixed(2)}%
+                    </td>
+                  </tr>
+                  <tr className="border-b border-border">
+                    <td colSpan={9} className="p-0">
+                      <div
+                        className="grid transition-[grid-template-rows] duration-300 [transition-timing-function:var(--ease-bounce)]"
+                        style={{
+                          gridTemplateRows: isExpanded ? "1fr" : "0fr",
+                        }}
+                      >
+                        <div className="overflow-hidden">
+                          {mountedIds.has(post.id) && <PostRowDetail post={post} />}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </React.Fragment>
               );
             })}
             {posts.length === 0 && (
