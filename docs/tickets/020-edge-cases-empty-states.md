@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #014 ✅, #017 ✅, #018, #019
+- Requires: #014 ✅, #017 ✅, #018 ✅, #019
 
 ## Description
 Handle all empty states, edge cases, and data-quality warnings across the dashboard. Every view should gracefully handle missing, insufficient, or unusual data patterns rather than showing blank screens or broken layouts.

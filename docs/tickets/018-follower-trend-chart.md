@@ -1,7 +1,7 @@
 # [TICKET-018] Follower Trend Line Chart
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #002 ✅, #013 ✅
@@ -10,16 +10,16 @@
 Build the follower count trend line chart for the Audience tab. Shows daily follower count over time from the `daily_stats` table, with notable spike annotations linked to posts published near those dates.
 
 ## Acceptance Criteria
-- [ ] Follower trend chart renders at `/dashboard/audience`
-- [ ] Line chart: x-axis = date, y-axis = follower count
-- [ ] Data source: `daily_stats.followers_count` ordered by `date`
-- [ ] Chart uses shadcn/ui chart component (Recharts LineChart)
-- [ ] Hover tooltip shows date and exact follower count
-- [ ] Notable spikes annotated: if follower count increases by >5% day-over-day, show a marker
-- [ ] Spike annotations link to the post published closest to that date (from `posts` table)
-- [ ] On first connect: only one data point (today) — show a message "Your follower trend will grow over time as we collect daily data"
-- [ ] Chart line uses accent color; area fill with accent at low opacity
-- [ ] Responsive: chart resizes to container width
+- [x] Follower trend chart renders at `/dashboard/audience`
+- [x] Line chart: x-axis = date, y-axis = follower count
+- [x] Data source: `daily_stats.followers_count` ordered by `date`
+- [x] Chart uses shadcn/ui chart component (Recharts LineChart)
+- [x] Hover tooltip shows date and exact follower count
+- [x] Notable spikes annotated: if follower count increases by >5% day-over-day, show a marker
+- [x] Spike annotations link to the post published closest to that date (from `posts` table)
+- [x] On first connect: only one data point (today) — show a message "Your follower trend will grow over time as we collect daily data"
+- [x] Chart line uses accent color; area fill with accent at low opacity
+- [x] Responsive: chart resizes to container width
 
 ## Design Reference
 - **Tokens**: § Tokens > Colors (accent for chart line)
