@@ -262,7 +262,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_posts_with_metrics: {
+        Args: {
+          p_limit: number
+          p_offset: number
+          p_sort_column: string
+          p_sort_order: string
+          p_user_id: string
+        }
+        Returns: {
+          engagement_rate: number
+          id: string
+          likes: number
+          media_type: string
+          permalink: string
+          published_at: string
+          quotes: number
+          replies: number
+          reposts: number
+          shares: number
+          text_preview: string
+          total_count: number
+          views: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

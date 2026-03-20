@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { CaretUp, CaretDown, TextT, Image, VideoCamera, SquaresFour } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Pagination } from "./pagination";
 
 export interface PostRow {
@@ -27,6 +28,7 @@ interface PostTableProps {
   totalPages: number;
   sortBy: string;
   sortOrder: string;
+  hasFilters?: boolean;
 }
 
 const MEDIA_ICONS: Record<string, { icon: typeof TextT; color: string }> = {
@@ -62,7 +64,27 @@ function formatDate(iso: string): string {
   });
 }
 
-export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder }: PostTableProps) {
+function ClearFiltersButton({ pathname, searchParams }: { pathname: string; searchParams: URLSearchParams }) {
+  const router = useRouter();
+
+  function handleClear() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("types");
+    params.delete("from");
+    params.delete("to");
+    params.delete("page");
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+  }
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleClear}>
+      Clear filters
+    </Button>
+  );
+}
+
+export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, hasFilters }: PostTableProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -178,7 +200,14 @@ export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder }:
             {posts.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-3 py-12 text-center text-muted-foreground">
-                  No posts found. Start a backfill to load your Threads data.
+                  {hasFilters ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <span>No posts match your filters. Try adjusting your criteria.</span>
+                      <ClearFiltersButton pathname={pathname} searchParams={searchParams} />
+                    </div>
+                  ) : (
+                    "No posts found. Start a backfill to load your Threads data."
+                  )}
                 </td>
               </tr>
             )}

@@ -10,8 +10,12 @@ import {
   StickerCardContent,
 } from "@/components/ui/card";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
+import { PostFilters } from "@/components/dashboard/post-filters";
 
 const PAGE_SIZE = 20;
+
+const VALID_MEDIA_TYPES = ["TEXT", "IMAGE", "VIDEO", "CAROUSEL"] as const;
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 const VALID_SORT_COLUMNS = [
   "published_at",
@@ -44,6 +48,26 @@ export default async function PostsPage({
   const sortBy: SortColumn = isValidSort(String(params.sort ?? "")) ? (String(params.sort) as SortColumn) : "published_at";
   const sortOrder = params.order === "asc" ? "asc" : "desc";
 
+  // Parse filter params
+  const typesParam = typeof params.types === "string" ? params.types : "";
+  const mediaTypes = typesParam
+    ? typesParam.split(",").filter((t): t is (typeof VALID_MEDIA_TYPES)[number] =>
+        (VALID_MEDIA_TYPES as readonly string[]).includes(t)
+      )
+    : null;
+  // Null when all types selected (or none specified) — means no filter
+  const p_media_types =
+    mediaTypes && mediaTypes.length > 0 && mediaTypes.length < VALID_MEDIA_TYPES.length
+      ? mediaTypes
+      : null;
+
+  const fromRaw = String(params.from ?? "");
+  const toRaw = String(params.to ?? "");
+  const p_date_from = DATE_REGEX.test(fromRaw) ? fromRaw : null;
+  const p_date_to = DATE_REGEX.test(toRaw) ? toRaw : null;
+
+  const hasFilters = p_media_types !== null || p_date_from !== null || p_date_to !== null;
+
   const supabase = createAdminClient();
   const userId = session.value;
   const offset = (page - 1) * PAGE_SIZE;
@@ -54,6 +78,9 @@ export default async function PostsPage({
     p_sort_order: sortOrder,
     p_limit: PAGE_SIZE,
     p_offset: offset,
+    p_media_types: p_media_types,
+    p_date_from: p_date_from,
+    p_date_to: p_date_to,
   } as never) as { data: Array<PostRow & { total_count: number }> | null; error: { message: string } | null };
 
   if (error || !rows) {
@@ -79,12 +106,14 @@ export default async function PostsPage({
         </StickerCardDescription>
       </StickerCardHeader>
       <StickerCardContent>
+        <PostFilters />
         <PostTable
           posts={posts}
           currentPage={page}
           totalPages={totalPages}
           sortBy={sortBy}
           sortOrder={sortOrder}
+          hasFilters={hasFilters}
         />
       </StickerCardContent>
     </StickerCard>
