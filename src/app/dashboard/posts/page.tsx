@@ -1,19 +1,92 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { createAdminClient } from "@/lib/supabase/server";
+import { SESSION_COOKIE_NAME } from "@/lib/session";
 import {
   StickerCard,
   StickerCardHeader,
   StickerCardTitle,
   StickerCardDescription,
+  StickerCardContent,
 } from "@/components/ui/card";
+import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 
-export default function PostsPage() {
+const PAGE_SIZE = 20;
+
+const VALID_SORT_COLUMNS = [
+  "published_at",
+  "views",
+  "likes",
+  "replies",
+  "reposts",
+  "quotes",
+  "shares",
+  "engagement_rate",
+] as const;
+
+type SortColumn = (typeof VALID_SORT_COLUMNS)[number];
+
+function isValidSort(s: string): s is SortColumn {
+  return (VALID_SORT_COLUMNS as readonly string[]).includes(s);
+}
+
+export default async function PostsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const cookieStore = await cookies();
+  const session = cookieStore.get(SESSION_COOKIE_NAME);
+  if (!session) redirect("/");
+
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+  const sortBy: SortColumn = isValidSort(String(params.sort ?? "")) ? (String(params.sort) as SortColumn) : "published_at";
+  const sortOrder = params.order === "asc" ? "asc" : "desc";
+
+  const supabase = createAdminClient();
+  const userId = session.value;
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const { data: rows, error } = await supabase.rpc("get_posts_with_metrics" as never, {
+    p_user_id: userId,
+    p_sort_column: sortBy,
+    p_sort_order: sortOrder,
+    p_limit: PAGE_SIZE,
+    p_offset: offset,
+  } as never) as { data: Array<PostRow & { total_count: number }> | null; error: { message: string } | null };
+
+  if (error || !rows) {
+    return (
+      <StickerCard className="hover:rotate-0 hover:scale-100">
+        <StickerCardContent>
+          <p className="text-destructive">Failed to load posts{error ? `: ${error.message}` : "."}</p>
+        </StickerCardContent>
+      </StickerCard>
+    );
+  }
+
+  const posts: PostRow[] = rows.map(({ total_count: _, ...rest }) => rest);
+  const totalCount = rows[0]?.total_count ?? 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
   return (
-    <StickerCard>
+    <StickerCard className="hover:rotate-0 hover:scale-100">
       <StickerCardHeader>
         <StickerCardTitle>Post Performance</StickerCardTitle>
         <StickerCardDescription>
-          Your post analytics will appear here once data has been loaded.
+          Sort by any metric to find your best-performing content.
         </StickerCardDescription>
       </StickerCardHeader>
+      <StickerCardContent>
+        <PostTable
+          posts={posts}
+          currentPage={page}
+          totalPages={totalPages}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+        />
+      </StickerCardContent>
     </StickerCard>
   );
 }
