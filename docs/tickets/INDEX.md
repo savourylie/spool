@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 14    |
+| ✅ Done        | 15    |
 | 🔧 In Progress | 0     |
-| 📋 Pending     | 5     |
+| 📋 Pending     | 4     |
 | 🚫 Blocked     | 3     |
 | ⏸️ Deferred    | 0     |
 
@@ -49,7 +49,7 @@
 | 013 | [Dashboard Layout & Tab Navigation](./013-dashboard-layout.md)   | `done` | #003 ✅, #004 ✅ | Implemented and verified |
 | 014 | [Post Performance Table](./014-post-performance-table.md)        | `done` | #002 ✅, #013 ✅ | Implemented and verified |
 | 015 | [Post Table Filters & Sorting](./015-post-filters.md)            | `done` | #014 ✅         | Implemented and verified |
-| 016 | [Post Detail Expansion & Sparkline](./016-post-detail-expansion.md) | `pending` | #014 ✅      | Unblocked — #014 done |
+| 016 | [Post Detail Expansion & Sparkline](./016-post-detail-expansion.md) | `done` | #014 ✅      | Implemented and verified |
 | 017 | [Best Time to Post Heatmap](./017-best-time-heatmap.md)          | `pending` | #002 ✅, #013 ✅ | Unblocked — #013 done |
 | 018 | [Follower Trend Line Chart](./018-follower-trend-chart.md)       | `pending` | #002 ✅, #013 ✅ | Unblocked — #013 done |
 | 019 | [Demographics Charts](./019-demographics-charts.md)              | `pending` | #002 ✅, #013 ✅ | Unblocked — #013 done |
@@ -59,8 +59,8 @@
 | #   | Ticket                                                           | Status    | Depends On       | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ---------------- | ----- |
 | 020 | [Edge Case & Empty States](./020-edge-cases-empty-states.md)     | `blocked` | #014 ✅, #017, #018, #019 |       |
-| 021 | [Responsive & Accessibility Pass](./021-responsive-accessibility.md) | `blocked` | #012–#020 (#014 ✅, #015 ✅)    |       |
-| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `blocked` | All (#008 ✅, #010 ✅, #011 ✅, #012 ✅, #014 ✅, #015 ✅) |       |
+| 021 | [Responsive & Accessibility Pass](./021-responsive-accessibility.md) | `blocked` | #012–#020 (#014 ✅, #015 ✅, #016 ✅)    |       |
+| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `blocked` | All (#008 ✅, #010 ✅, #011 ✅, #012 ✅, #014 ✅, #015 ✅, #016 ✅) |       |
 
 ---
 
@@ -77,7 +77,7 @@
  │    │    ├── 010 Scheduled Daily Stats & Demographics  ✅ DONE
  │    │    └── 011 Scheduled Token Refresh  ✅ DONE
  │    │
- │    ├── 014 Post Performance Table  ✅ DONE ──► 015 ✅ DONE, 016 📋 PENDING
+ │    ├── 014 Post Performance Table  ✅ DONE ──► 015 ✅ DONE, 016 ✅ DONE
  │    ├── 017 Best Time Heatmap
  │    ├── 018 Follower Trend Chart
  │    └── 019 Demographics Charts

@@ -1,7 +1,7 @@
 # [TICKET-016] Post Detail Expansion & Sparkline
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #014 ✅
@@ -10,16 +10,16 @@
 Add row expansion to the post performance table. Clicking a row reveals the full post text and a mini engagement-over-time sparkline chart built from historical `post_metrics` snapshots.
 
 ## Acceptance Criteria
-- [ ] Clicking a post row expands it to show detail content below the row
-- [ ] Expanded view shows full post text (not truncated)
-- [ ] Expanded view shows a sparkline chart: engagement metrics over time
-- [ ] Sparkline data source: all `post_metrics` snapshots for that post, ordered by `fetched_at`
-- [ ] Sparkline shows views (primary line) and engagement rate (secondary line) over time
-- [ ] Sparkline uses shadcn/ui chart (Recharts) with minimal styling (no axis labels, small form factor)
-- [ ] Sparkline tooltip on hover shows exact values at that snapshot
-- [ ] Only one row expanded at a time (clicking another row closes the first)
-- [ ] Expanded row has a subtle visual indicator (e.g., accent left border)
-- [ ] Permalink to original Threads post shown as a link in expanded view
+- [x] Clicking a post row expands it to show detail content below the row
+- [x] Expanded view shows full post text (not truncated)
+- [x] Expanded view shows a sparkline chart: engagement metrics over time
+- [x] Sparkline data source: all `post_metrics` snapshots for that post, ordered by `fetched_at`
+- [x] Sparkline shows views (primary line) and engagement rate (secondary line) over time
+- [x] Sparkline uses shadcn/ui chart (Recharts) with minimal styling (no axis labels, small form factor)
+- [x] Sparkline tooltip on hover shows exact values at that snapshot
+- [x] Only one row expanded at a time (clicking another row closes the first)
+- [x] Expanded row has a subtle visual indicator (e.g., accent left border)
+- [x] Permalink to original Threads post shown as a link in expanded view
 
 ## Design Reference
 - **Tokens**: § Tokens > Colors (accent for sparkline, muted-foreground for secondary line)
