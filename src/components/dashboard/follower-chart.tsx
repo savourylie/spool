@@ -16,6 +16,7 @@ import {
   StickerCardContent,
   StickerCardIcon,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export type DailyStatRow = { date: string; followers_count: number | null };
 export type PostSummary = {
@@ -166,9 +167,12 @@ export function FollowerChart({
       </StickerCardHeader>
       <StickerCardContent>
         {chartData.length <= 1 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">
-            Your follower trend will grow over time as we collect daily data.
-          </p>
+          <EmptyState
+            icon={<TrendUp weight="bold" className="size-7" />}
+            iconColor="quaternary"
+            title="Tracking your growth"
+            description="Your follower trend will build over time as we collect daily snapshots. Check back soon!"
+          />
         ) : (
           <ChartContainer config={chartConfig} className="h-[300px] w-full">
             <AreaChart

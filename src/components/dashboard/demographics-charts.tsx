@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { GlobeHemisphereWest, GenderIntersex, MapPin } from "@phosphor-icons/react";
+import { GlobeHemisphereWest, GenderIntersex, MapPin, UsersThree } from "@phosphor-icons/react";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Bar,
   BarChart,
@@ -116,9 +117,12 @@ function BarChartSection({
           <StickerCardDescription>{description}</StickerCardDescription>
         </StickerCardHeader>
         <StickerCardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No data available yet.
-          </p>
+          <EmptyState
+            icon={icon}
+            iconColor={iconColor}
+            title="No data available yet"
+            description="Demographics data will appear after your next audience sync."
+          />
         </StickerCardContent>
       </StickerCard>
     );
@@ -206,9 +210,12 @@ function GenderDonutChart({ data }: { data: DemographicRow[] }) {
           </StickerCardDescription>
         </StickerCardHeader>
         <StickerCardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No data available yet.
-          </p>
+          <EmptyState
+            icon={<GenderIntersex weight="bold" className="size-7" />}
+            iconColor="tertiary"
+            title="No data available yet"
+            description="Demographics data will appear after your next audience sync."
+          />
         </StickerCardContent>
       </StickerCard>
     );
@@ -289,13 +296,12 @@ export function DemographicsCharts({
         <h2 className="font-heading text-2xl font-bold">Demographics</h2>
         <StickerCard className="hover:rotate-0 hover:scale-100">
           <StickerCardContent>
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Audience insights unlock at 100 followers. You&apos;re at{" "}
-              <span className="font-semibold text-foreground">
-                {followersCount.toLocaleString()}
-              </span>
-              .
-            </p>
+            <EmptyState
+              icon={<UsersThree weight="bold" className="size-7" />}
+              iconColor="secondary"
+              title="Audience insights unlock at 100 followers"
+              description={`You're at ${followersCount.toLocaleString()} — keep growing!`}
+            />
           </StickerCardContent>
         </StickerCard>
       </div>

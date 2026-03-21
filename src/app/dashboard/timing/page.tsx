@@ -2,10 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
-import {
-  StickerCard,
-  StickerCardContent,
-} from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/error-state";
 import { TimingHeatmap, type TimingPost } from "@/components/dashboard/timing-heatmap";
 
 export default async function TimingPage() {
@@ -21,15 +18,7 @@ export default async function TimingPage() {
   } as never) as { data: TimingPost[] | null; error: { message: string } | null };
 
   if (error || !posts) {
-    return (
-      <StickerCard className="hover:rotate-0 hover:scale-100">
-        <StickerCardContent>
-          <p className="text-destructive">
-            Failed to load timing data{error ? `: ${error.message}` : "."}
-          </p>
-        </StickerCardContent>
-      </StickerCard>
-    );
+    return <ErrorState description="We couldn't load your timing data right now." />;
   }
 
   return <TimingHeatmap posts={posts} />;

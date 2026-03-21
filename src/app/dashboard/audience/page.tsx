@@ -2,10 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
-import {
-  StickerCard,
-  StickerCardContent,
-} from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/error-state";
 import {
   FollowerChart,
   type DailyStatRow,
@@ -42,15 +39,7 @@ export default async function AudiencePage() {
   ]);
 
   if (statsResult.error) {
-    return (
-      <StickerCard className="hover:rotate-0 hover:scale-100">
-        <StickerCardContent>
-          <p className="text-destructive">
-            Failed to load audience data: {statsResult.error.message}
-          </p>
-        </StickerCardContent>
-      </StickerCard>
-    );
+    return <ErrorState description="We couldn't load your audience data right now." />;
   }
 
   // Get the latest followers_count from daily_stats

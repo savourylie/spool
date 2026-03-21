@@ -9,6 +9,7 @@ import {
   StickerCardDescription,
   StickerCardContent,
 } from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/error-state";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 import { PostFilters } from "@/components/dashboard/post-filters";
 
@@ -84,13 +85,7 @@ export default async function PostsPage({
   } as never) as { data: Array<PostRow & { total_count: number }> | null; error: { message: string } | null };
 
   if (error || !rows) {
-    return (
-      <StickerCard className="hover:rotate-0 hover:scale-100">
-        <StickerCardContent>
-          <p className="text-destructive">Failed to load posts{error ? `: ${error.message}` : "."}</p>
-        </StickerCardContent>
-      </StickerCard>
-    );
+    return <ErrorState description="We couldn't load your posts right now." />;
   }
 
   const posts: PostRow[] = rows.map(({ total_count: _, ...rest }) => rest);

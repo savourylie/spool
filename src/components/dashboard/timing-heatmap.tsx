@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore, useMemo, useCallback } from "react";
+import { Clock } from "@phosphor-icons/react";
 import {
   StickerCard,
   StickerCardHeader,
@@ -8,6 +9,7 @@ import {
   StickerCardDescription,
   StickerCardContent,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -374,9 +376,13 @@ export function TimingHeatmap({ posts }: { posts: TimingPost[] }) {
         </div>
 
         {totalPosts === 0 && (
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            No posts found. Start posting to see your optimal times.
-          </p>
+          <EmptyState
+            icon={<Clock weight="bold" className="size-7" />}
+            iconColor="secondary"
+            title="No posting data yet"
+            description="Start posting on Threads and your optimal timing insights will appear here."
+            className="mt-4"
+          />
         )}
 
         {tooltip && (

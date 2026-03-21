@@ -3,9 +3,10 @@
 import React, { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { CaretUp, CaretDown, TextT, Image, VideoCamera, SquaresFour } from "@phosphor-icons/react";
+import { CaretUp, CaretDown, TextT, Image, VideoCamera, SquaresFour, NoteBlank, FunnelSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "./pagination";
 import { PostRowDetail } from "./post-row-detail";
 
@@ -89,6 +90,7 @@ function ClearFiltersButton({ pathname, searchParams }: { pathname: string; sear
 export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, hasFilters }: PostTableProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [mountedIds, setMountedIds] = useState<Set<string>>(new Set());
 
@@ -232,14 +234,33 @@ export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, h
             })}
             {posts.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-3 py-12 text-center text-muted-foreground">
+                <td colSpan={9} className="px-3">
                   {hasFilters ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <span>No posts match your filters. Try adjusting your criteria.</span>
-                      <ClearFiltersButton pathname={pathname} searchParams={searchParams} />
-                    </div>
+                    <EmptyState
+                      icon={<FunnelSimple weight="bold" className="size-7" />}
+                      iconColor="tertiary"
+                      title="No posts match your filters"
+                      description="Try adjusting your date range or media type selection."
+                      action={{
+                        label: "Clear filters",
+                        onClick: () => {
+                          const params = new URLSearchParams(searchParams.toString());
+                          params.delete("types");
+                          params.delete("from");
+                          params.delete("to");
+                          params.delete("page");
+                          const qs = params.toString();
+                          router.push(qs ? `${pathname}?${qs}` : pathname);
+                        },
+                      }}
+                    />
                   ) : (
-                    "No posts found. Start a backfill to load your Threads data."
+                    <EmptyState
+                      icon={<NoteBlank weight="bold" className="size-7" />}
+                      iconColor="primary"
+                      title="No posts yet"
+                      description="Connect your Threads account and run a backfill to see your post analytics here."
+                    />
                   )}
                 </td>
               </tr>
