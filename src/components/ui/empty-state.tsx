@@ -38,6 +38,7 @@ export function EmptyState({
       )}
     >
       <div
+        aria-hidden="true"
         className={cn(
           "flex size-14 items-center justify-center rounded-full text-white",
           iconColorMap[iconColor]

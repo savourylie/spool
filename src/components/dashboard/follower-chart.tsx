@@ -174,7 +174,13 @@ export function FollowerChart({
             description="Your follower trend will build over time as we collect daily snapshots. Check back soon!"
           />
         ) : (
-          <ChartContainer config={chartConfig} className="h-[300px] w-full">
+          <>
+          <ChartContainer
+            config={chartConfig}
+            className="h-[300px] w-full"
+            role="img"
+            aria-label={`Follower growth chart: ${chartData.length} days, from ${chartData[0]?.followers.toLocaleString()} to ${chartData[chartData.length - 1]?.followers.toLocaleString()} followers`}
+          >
             <AreaChart
               data={chartData}
               margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
@@ -225,6 +231,20 @@ export function FollowerChart({
               />
             </AreaChart>
           </ChartContainer>
+          {chartData.some((d) => d.isSpike) && (
+            <p className="sr-only">
+              Growth spikes detected on:{" "}
+              {chartData
+                .filter((d) => d.isSpike)
+                .map(
+                  (d) =>
+                    `${d.dateLabel} (+${d.spikeGain.toLocaleString()} followers)`
+                )
+                .join("; ")}
+              .
+            </p>
+          )}
+          </>
         )}
       </StickerCardContent>
     </StickerCard>

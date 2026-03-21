@@ -127,6 +127,7 @@ export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, h
               {COLUMNS.map((col) => (
                 <th
                   key={col.key}
+                  aria-sort={col.sortable && sortBy === col.key ? (sortOrder === "asc" ? "ascending" : "descending") : undefined}
                   className={cn(
                     "px-3 py-3 text-left font-heading font-bold text-xs uppercase tracking-wide text-muted-foreground",
                     col.key !== "text_preview" && "text-right"
@@ -176,7 +177,7 @@ export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, h
                       }
                     }}
                     className={cn(
-                      "cursor-pointer transition-colors",
+                      "cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-inset",
                       i % 2 === 1 ? "bg-muted" : "bg-white",
                       isExpanded ? "bg-accent/5" : "hover:bg-accent/5",
                       !isExpanded && "border-b border-border"
@@ -212,7 +213,9 @@ export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, h
                         isTopPerformer ? "text-accent" : ""
                       )}
                     >
+                      {isTopPerformer && <span aria-hidden="true">* </span>}
                       {post.engagement_rate.toFixed(2)}%
+                      {isTopPerformer && <span className="sr-only"> (top performer)</span>}
                     </td>
                   </tr>
                   <tr className="border-b border-border">

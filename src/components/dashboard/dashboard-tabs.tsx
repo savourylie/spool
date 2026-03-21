@@ -25,8 +25,9 @@ export function DashboardTabs() {
           <Link
             key={tab.href}
             href={tab.href}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2 pb-3 px-1 font-heading font-bold text-sm -mb-[2px] border-b-2 transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
+              "flex items-center gap-2 pb-3 px-1 font-heading font-bold text-sm -mb-[2px] border-b-2 transition-all duration-300 [transition-timing-function:var(--ease-bounce)] rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring",
               isActive
                 ? "text-primary border-primary"
                 : "text-muted-foreground border-transparent hover:text-foreground"

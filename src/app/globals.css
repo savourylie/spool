@@ -148,6 +148,17 @@
   100% { transform: translateX(400%); }
 }
 
+@media (max-width: 767px) {
+  :root {
+    --shadow-default: 2px 2px 0 0 #1E293B;
+    --shadow-hover: 3px 3px 0 0 #1E293B;
+    --shadow-active: 1px 1px 0 0 #1E293B;
+    --shadow-soft: 2px 2px 0 0 #E2E8F0;
+    --shadow-featured: 2px 2px 0 0 #F472B6;
+    --shadow-accent: 2px 2px 0 0 #8B5CF6;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     --ease-bounce: ease !important;

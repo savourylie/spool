@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { SpinnerGap } from "@phosphor-icons/react/dist/ssr/SpinnerGap"
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle"
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
@@ -38,6 +38,7 @@ export function BackfillProgress({
   initialTotal: number | null
 }) {
   const router = useRouter()
+  const shouldReduceMotion = useReducedMotion()
   const [status, setStatus] = useState(initialStatus)
   const [processed, setProcessed] = useState(initialProcessed ?? 0)
   const [total, setTotal] = useState(initialTotal)
@@ -150,9 +151,9 @@ export function BackfillProgress({
       </div>
 
       <motion.div
-        initial={{ scale: 0 }}
+        initial={shouldReduceMotion ? false : { scale: 0 }}
         animate={{ scale: 1 }}
-        transition={springBounce}
+        transition={shouldReduceMotion ? { duration: 0.01 } : springBounce}
         className="z-10 flex w-full max-w-md flex-col items-center gap-6"
       >
         {/* Icon */}
@@ -190,10 +191,10 @@ export function BackfillProgress({
           <AnimatePresence mode="wait">
             <motion.p
               key={status === "failed" ? "error" : getMessage(percentage)}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+              animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0.01 : 0.2 }}
               className="text-center text-sm text-muted-foreground"
             >
               {status === "failed"
@@ -206,9 +207,9 @@ export function BackfillProgress({
         {/* Retry button */}
         {status === "failed" && (
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, ...springBounce }}
+            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            transition={shouldReduceMotion ? { duration: 0.01 } : { delay: 0.2, ...springBounce }}
           >
             <Button onClick={handleRetry} disabled={retrying}>
               {retrying ? "Retrying..." : "Try Again"}

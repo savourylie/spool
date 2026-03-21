@@ -121,6 +121,8 @@ export function PostRowDetail({ post }: { post: PostRow }) {
           <ChartContainer
             config={chartConfig}
             className="h-[100px] w-full [&_.recharts-cartesian-grid_line]:stroke-transparent"
+            role="img"
+            aria-label={`Engagement sparkline: ${chartData.length} snapshots, latest ${chartData[chartData.length - 1]?.views.toLocaleString()} views`}
           >
             <LineChart
               data={chartData}

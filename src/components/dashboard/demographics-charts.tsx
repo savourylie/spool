@@ -139,6 +139,8 @@ function BarChartSection({
         <ChartContainer
           config={barChartConfig}
           className="h-[300px] w-full"
+          role="img"
+          aria-label={`${title} bar chart. Top entry: ${chartData[0]?.name} at ${total > 0 ? ((chartData[0]?.value / total) * 100).toFixed(1) : 0}%`}
         >
           <BarChart
             data={chartData}
@@ -237,6 +239,8 @@ function GenderDonutChart({ data }: { data: DemographicRow[] }) {
           <ChartContainer
             config={genderChartConfig}
             className="h-[200px] w-[200px]"
+            role="img"
+            aria-label={`Gender distribution: ${chartData.map((d) => `${d.name} ${d.percentage}%`).join(", ")}`}
           >
             <PieChart>
               <ChartTooltip

@@ -107,8 +107,8 @@ function CellTooltip({
 
   return (
     <div
-      className="pointer-events-none fixed z-50 rounded-[var(--radius-sm)] border-2 border-foreground bg-card px-3 py-2 text-xs shadow-[var(--shadow-default)]"
-      style={{ left: x, top: y, transform: "translate(-50%, -110%)" }}
+      className="pointer-events-none fixed z-50 max-w-[calc(100vw-2rem)] rounded-[var(--radius-sm)] border-2 border-foreground bg-card px-3 py-2 text-xs shadow-[var(--shadow-default)]"
+      style={{ left: Math.max(120, Math.min(x, typeof window !== "undefined" ? window.innerWidth - 120 : x)), top: y, transform: "translate(-50%, -110%)" }}
     >
       <p className="font-heading font-bold">
         {DAY_LABELS[day]} {hour === 0 ? "12:00 AM" : hour < 12 ? `${hour}:00 AM` : hour === 12 ? "12:00 PM" : `${hour - 12}:00 PM`}
@@ -254,9 +254,9 @@ export function TimingHeatmap({ posts }: { posts: TimingPost[] }) {
     return { minEng: min, maxEng: max };
   }, [grid]);
 
-  const handleCellHover = useCallback(
-    (e: React.MouseEvent, day: number, hour: number) => {
-      const rect = (e.target as HTMLElement).getBoundingClientRect();
+  const showTooltipForElement = useCallback(
+    (el: HTMLElement, day: number, hour: number) => {
+      const rect = el.getBoundingClientRect();
       setTooltip({
         bucket: grid[day][hour],
         day,
@@ -266,6 +266,20 @@ export function TimingHeatmap({ posts }: { posts: TimingPost[] }) {
       });
     },
     [grid]
+  );
+
+  const handleCellHover = useCallback(
+    (e: React.MouseEvent, day: number, hour: number) => {
+      showTooltipForElement(e.target as HTMLElement, day, hour);
+    },
+    [showTooltipForElement]
+  );
+
+  const handleCellFocus = useCallback(
+    (e: React.FocusEvent, day: number, hour: number) => {
+      showTooltipForElement(e.target as HTMLElement, day, hour);
+    },
+    [showTooltipForElement]
   );
 
   const handleCellLeave = useCallback(() => setTooltip(null), []);
@@ -288,9 +302,10 @@ export function TimingHeatmap({ posts }: { posts: TimingPost[] }) {
         <div className="flex items-center justify-between gap-4">
           <StickerCardTitle>Best Time to Post</StickerCardTitle>
           <select
+            aria-label="Select timezone"
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
-            className="h-9 rounded-[var(--radius-sm)] border-2 border-input-border bg-input px-2 text-sm outline-none focus:border-ring"
+            className="h-12 md:h-9 rounded-[var(--radius-sm)] border-2 border-input-border bg-input px-2 text-sm outline-none focus:border-ring focus-visible:ring-3 focus-visible:ring-ring"
           >
             {Object.entries(groupedTimezones).map(([continent, zones]) => (
               <optgroup key={continent} label={continent}>
@@ -310,7 +325,7 @@ export function TimingHeatmap({ posts }: { posts: TimingPost[] }) {
         {allSameSlot && <SameTimeBanner day={allSameSlot.day} hour={allSameSlot.hour} />}
 
         {/* Heatmap grid */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="grid" aria-label="Posting time heatmap: engagement rate by day and hour">
           {/* Hour labels */}
           <div
             className="grid gap-0.5 mb-0.5"
@@ -344,19 +359,37 @@ export function TimingHeatmap({ posts }: { posts: TimingPost[] }) {
                 return (
                   <div
                     key={hourIdx}
-                    className={`aspect-square rounded-sm transition-colors ${
+                    tabIndex={hasData ? 0 : -1}
+                    role="gridcell"
+                    aria-label={
                       hasData
-                        ? "cursor-pointer"
+                        ? `${dayLabel} ${HOUR_LABELS[hourIdx]}: ${bucket.count} posts, ${avgEng.toFixed(1)}% avg engagement`
+                        : `${dayLabel} ${HOUR_LABELS[hourIdx]}: no data`
+                    }
+                    className={`aspect-square rounded-sm transition-colors flex items-center justify-center text-[8px] font-bold leading-none ${
+                      hasData
+                        ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         : "border border-dashed border-border"
                     }`}
                     style={{
                       backgroundColor: hasData
                         ? interpolateColor(t)
                         : undefined,
+                      color: hasData
+                        ? t > 0.5
+                          ? "white"
+                          : "var(--foreground)"
+                        : undefined,
                     }}
                     onMouseEnter={(e) => handleCellHover(e, dayIdx, hourIdx)}
                     onMouseLeave={handleCellLeave}
-                  />
+                    onFocus={(e) => {
+                      if (hasData) handleCellFocus(e, dayIdx, hourIdx);
+                    }}
+                    onBlur={handleCellLeave}
+                  >
+                    {hasData && <span aria-hidden="true">{avgEng.toFixed(0)}%</span>}
+                  </div>
                 );
               })}
             </div>

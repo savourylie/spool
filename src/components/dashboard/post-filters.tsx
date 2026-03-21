@@ -100,22 +100,24 @@ export function PostFilters() {
           );
         })}
 
-        <div className="ml-auto flex items-center gap-2">
-          <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">From</label>
+        <div className="w-full sm:ml-auto sm:w-auto flex flex-wrap items-center gap-2">
+          <label htmlFor="filter-date-from" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">From</label>
           <Input
+            id="filter-date-from"
             type="date"
             min="2024-04-13"
             value={fromDate}
             onChange={(e) => navigate({ from: e.target.value || null })}
-            className="h-9 w-40"
+            className="h-12 w-full sm:w-40 md:h-9"
           />
-          <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">To</label>
+          <label htmlFor="filter-date-to" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">To</label>
           <Input
+            id="filter-date-to"
             type="date"
             min="2024-04-13"
             value={toDate}
             onChange={(e) => navigate({ to: e.target.value || null })}
-            className="h-9 w-40"
+            className="h-12 w-full sm:w-40 md:h-9"
           />
         </div>
       </div>
@@ -126,7 +128,7 @@ export function PostFilters() {
           {!allSelected && (
             <button
               onClick={() => navigate({ types: null })}
-              className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border-2 border-foreground bg-muted px-3 py-1 text-xs font-bold transition-colors hover:bg-muted/70"
+              className="inline-flex items-center gap-1 min-h-12 md:min-h-0 rounded-[var(--radius-sm)] border-2 border-foreground bg-muted px-3 py-1 text-xs font-bold transition-colors hover:bg-muted/70"
             >
               Types: {selectedTypes.map((t) => MEDIA_TYPES.find((m) => m.key === t)?.label).join(", ")}
               <X weight="bold" className="size-3" />
@@ -135,7 +137,7 @@ export function PostFilters() {
           {fromDate && (
             <button
               onClick={() => navigate({ from: null })}
-              className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border-2 border-foreground bg-muted px-3 py-1 text-xs font-bold transition-colors hover:bg-muted/70"
+              className="inline-flex items-center gap-1 min-h-12 md:min-h-0 rounded-[var(--radius-sm)] border-2 border-foreground bg-muted px-3 py-1 text-xs font-bold transition-colors hover:bg-muted/70"
             >
               From: {formatChipDate(fromDate)}
               <X weight="bold" className="size-3" />
@@ -144,7 +146,7 @@ export function PostFilters() {
           {toDate && (
             <button
               onClick={() => navigate({ to: null })}
-              className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border-2 border-foreground bg-muted px-3 py-1 text-xs font-bold transition-colors hover:bg-muted/70"
+              className="inline-flex items-center gap-1 min-h-12 md:min-h-0 rounded-[var(--radius-sm)] border-2 border-foreground bg-muted px-3 py-1 text-xs font-bold transition-colors hover:bg-muted/70"
             >
               To: {formatChipDate(toDate)}
               <X weight="bold" className="size-3" />

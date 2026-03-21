@@ -32,8 +32,9 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
     <nav className="flex items-center justify-center gap-2 pt-4" aria-label="Pagination">
       <Link
         href={buildHref(currentPage - 1)}
+        aria-label="Previous page"
         className={cn(
-          "inline-flex items-center justify-center size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
+          "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
           currentPage <= 1
             ? "pointer-events-none opacity-40"
             : "hover:bg-tertiary"
@@ -49,7 +50,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
           key={page}
           href={buildHref(page)}
           className={cn(
-            "inline-flex items-center justify-center size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
+            "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
             page === currentPage
               ? "bg-accent text-accent-foreground"
               : "hover:bg-tertiary"
@@ -62,8 +63,9 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
 
       <Link
         href={buildHref(currentPage + 1)}
+        aria-label="Next page"
         className={cn(
-          "inline-flex items-center justify-center size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
+          "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
           currentPage >= totalPages
             ? "pointer-events-none opacity-40"
             : "hover:bg-tertiary"

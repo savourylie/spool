@@ -112,6 +112,7 @@ function StickerCardIcon({
   return (
     <div
       data-slot="card-icon"
+      aria-hidden="true"
       className={cn(
         "absolute -top-6 left-6 flex size-12 items-center justify-center rounded-full text-white",
         iconColorMap[color],
