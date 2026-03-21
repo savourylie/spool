@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 20    |
+| ✅ Done        | 22    |
 | 🔧 In Progress | 0     |
-| 📋 Pending     | 1     |
-| 🚫 Blocked     | 1     |
+| 📋 Pending     | 0     |
+| 🚫 Blocked     | 0     |
 | ⏸️ Deferred    | 0     |
 
 ---
@@ -37,7 +37,7 @@
 | --- | ---------------------------------------------------------------- | --------- | ------------ | ----- |
 | 007 | [Backfill Pipeline](./007-backfill-pipeline.md)                  | `done` | #002 ✅, #005 ✅, #006 ✅ | Backfill service, API route, 7 tests |
 | 008 | [Backfill Progress UI](./008-backfill-progress-ui.md)            | `done` | #003 ✅, #007 ✅ | Implemented and verified |
-| 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `pending` | #002 ✅, #006 ✅ | Unblocked — #006 done |
+| 009 | [Scheduled Metrics Refresh](./009-scheduled-metrics-refresh.md)  | `done` | #002 ✅, #006 ✅ | Implemented and verified |
 | 010 | [Scheduled Daily Stats & Demographics](./010-scheduled-daily-stats.md) | `done` | #002 ✅, #006 ✅ | Implemented and verified |
 | 011 | [Scheduled Token Refresh](./011-scheduled-token-refresh.md)      | `done` | #005 ✅, #006 ✅ | Implemented and verified |
 
@@ -60,7 +60,7 @@
 | --- | ---------------------------------------------------------------- | --------- | ---------------- | ----- |
 | 020 | [Edge Case & Empty States](./020-edge-cases-empty-states.md)     | `done` | #014 ✅, #017 ✅, #018 ✅, #019 ✅ | Implemented and verified |
 | 021 | [Responsive & Accessibility Pass](./021-responsive-accessibility.md) | `done` | #012–#020 (#014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅, #020 ✅)    | Implemented and verified |
-| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `blocked` | All (#008 ✅, #010 ✅, #011 ✅, #012 ✅, #014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅, #020 ✅, #021 ✅) |       |
+| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `done` | All (#008 ✅, #009 ✅, #010 ✅, #011 ✅, #012 ✅, #014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅, #020 ✅, #021 ✅) | Implemented and verified |
 
 ---
 
@@ -73,7 +73,7 @@
  │    │                                    │
  │    │    006 Threads API Service  ✅ DONE
  │    │    ├── 007 Backfill Pipeline  ✅ DONE ──► 008 Backfill Progress UI  ✅ DONE
- │    │    ├── 009 Scheduled Metrics Refresh  📋 PENDING
+ │    │    ├── 009 Scheduled Metrics Refresh  ✅ DONE
  │    │    ├── 010 Scheduled Daily Stats & Demographics  ✅ DONE
  │    │    └── 011 Scheduled Token Refresh  ✅ DONE
  │    │
@@ -87,7 +87,7 @@
  │    ├── 012 Landing Page  ✅ DONE
  │    └── 013 Dashboard Layout  ✅ DONE ──► 014, 015, 016, 017, 018, 019
  │
- └── All ──► 020 Edge Cases  ✅ DONE ──► 021 Responsive & A11y  ✅ DONE ──► 022 QA/Polish
+ └── All ──► 020 Edge Cases  ✅ DONE ──► 021 Responsive & A11y  ✅ DONE ──► 022 QA/Polish  ✅ DONE
 ```
 
 ---

@@ -1,29 +1,29 @@
 # [TICKET-022] QA & Final Polish
 
 ## Status
-`blocked`
+`done`
 
 ## Dependencies
-- Requires: #001 ✅, #002 ✅, #003 ✅, #004 ✅, #005 ✅, #006 ✅, #007 ✅, #008 ✅, #009, #010 ✅, #011 ✅, #012 ✅, #013 ✅, #014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅, #020 ✅, #021 ✅
+- Requires: #001 ✅, #002 ✅, #003 ✅, #004 ✅, #005 ✅, #006 ✅, #007 ✅, #008 ✅, #009 ✅, #010 ✅, #011 ✅, #012 ✅, #013 ✅, #014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅, #020 ✅, #021 ✅
 
 ## Description
 Final quality assurance pass and polish before launch. Covers end-to-end user flow testing, performance optimization, visual consistency checks, and cleanup of any remaining rough edges.
 
 ## Acceptance Criteria
-- [ ] **E2E flow**: fresh user → landing page → Connect Threads → OAuth → backfill → dashboard (all 3 tabs) works without errors
-- [ ] **Returning user**: browser refresh → dashboard loads with persisted session
-- [ ] **Performance**: Lighthouse performance score ≥ 80 on all pages
-- [ ] **Bundle size**: no unnecessary dependencies; tree-shaking verified
-- [ ] **Loading states**: all async operations show loading indicators (not blank screens)
-- [ ] **Error boundaries**: unhandled errors caught by React error boundaries with friendly fallback UI
-- [ ] **Visual consistency**: all pages match DESIGN.md tokens (colors, fonts, shadows, radii)
-- [ ] **Console**: no errors or warnings in browser console during normal flows
-- [ ] **TypeScript**: no `any` types in production code; strict mode passes
-- [ ] **Environment**: `.env.local.example` lists all required environment variables with descriptions
-- [ ] **Cron jobs**: all 3 cron endpoints (`/api/cron/metrics`, `/api/cron/daily`, `/api/cron/token-refresh`) verified working
-- [ ] **Security**: no tokens or secrets exposed in client-side code or API responses
-- [ ] **Vercel config**: `vercel.json` has correct cron schedules for all scheduled jobs
-- [ ] **README**: basic setup instructions (clone, install, env vars, supabase start, npm run dev)
+- [x] **E2E flow**: fresh user → landing page → Connect Threads → OAuth → backfill → dashboard (all 3 tabs) works without errors
+- [x] **Returning user**: browser refresh → dashboard loads with persisted session
+- [x] **Performance**: Lighthouse performance score ≥ 80 on all pages
+- [x] **Bundle size**: no unnecessary dependencies; tree-shaking verified
+- [x] **Loading states**: all async operations show loading indicators (not blank screens)
+- [x] **Error boundaries**: unhandled errors caught by React error boundaries with friendly fallback UI
+- [x] **Visual consistency**: all pages match DESIGN.md tokens (colors, fonts, shadows, radii)
+- [x] **Console**: no errors or warnings in browser console during normal flows
+- [x] **TypeScript**: no `any` types in production code; strict mode passes
+- [x] **Environment**: `.env.local.example` lists all required environment variables with descriptions
+- [x] **Cron jobs**: all 3 cron endpoints (`/api/cron/metrics`, `/api/cron/daily`, `/api/cron/token-refresh`) verified working
+- [x] **Security**: no tokens or secrets exposed in client-side code or API responses
+- [x] **Vercel config**: `vercel.json` has correct cron schedules for all scheduled jobs
+- [x] **README**: basic setup instructions (clone, install, env vars, supabase start, npm run dev)
 
 ## Implementation Notes
 - Key files: various (this is a sweep, not a feature)
