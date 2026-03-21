@@ -88,7 +88,8 @@ export default async function PostsPage({
     return <ErrorState description="We couldn't load your posts right now." />;
   }
 
-  const posts: PostRow[] = rows.map(({ total_count: _, ...rest }) => rest);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const posts: PostRow[] = rows.map(({ total_count, ...rest }) => rest);
   const totalCount = rows[0]?.total_count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 

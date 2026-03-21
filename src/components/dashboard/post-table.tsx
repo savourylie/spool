@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { CaretUp, CaretDown, TextT, Image, VideoCamera, SquaresFour, NoteBlank, FunnelSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "./pagination";
 import { PostRowDetail } from "./post-row-detail";
@@ -65,26 +64,6 @@ function formatDate(iso: string): string {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function ClearFiltersButton({ pathname, searchParams }: { pathname: string; searchParams: URLSearchParams }) {
-  const router = useRouter();
-
-  function handleClear() {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("types");
-    params.delete("from");
-    params.delete("to");
-    params.delete("page");
-    const qs = params.toString();
-    router.push(qs ? `${pathname}?${qs}` : pathname);
-  }
-
-  return (
-    <Button variant="outline" size="sm" onClick={handleClear}>
-      Clear filters
-    </Button>
-  );
 }
 
 export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, hasFilters }: PostTableProps) {
