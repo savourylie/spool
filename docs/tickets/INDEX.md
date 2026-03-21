@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| ✅ Done        | 18    |
+| ✅ Done        | 19    |
 | 🔧 In Progress | 0     |
 | 📋 Pending     | 2     |
-| 🚫 Blocked     | 2     |
+| 🚫 Blocked     | 1     |
 | ⏸️ Deferred    | 0     |
 
 ---
@@ -58,9 +58,9 @@
 
 | #   | Ticket                                                           | Status    | Depends On       | Notes |
 | --- | ---------------------------------------------------------------- | --------- | ---------------- | ----- |
-| 020 | [Edge Case & Empty States](./020-edge-cases-empty-states.md)     | `pending` | #014 ✅, #017 ✅, #018 ✅, #019 ✅ | Unblocked — #019 done |
-| 021 | [Responsive & Accessibility Pass](./021-responsive-accessibility.md) | `blocked` | #012–#020 (#014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅)    |       |
-| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `blocked` | All (#008 ✅, #010 ✅, #011 ✅, #012 ✅, #014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅) |       |
+| 020 | [Edge Case & Empty States](./020-edge-cases-empty-states.md)     | `done` | #014 ✅, #017 ✅, #018 ✅, #019 ✅ | Implemented and verified |
+| 021 | [Responsive & Accessibility Pass](./021-responsive-accessibility.md) | `pending` | #012–#020 (#014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅, #020 ✅)    | Unblocked — #020 done |
+| 022 | [QA & Final Polish](./022-qa-final-polish.md)                    | `blocked` | All (#008 ✅, #010 ✅, #011 ✅, #012 ✅, #014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅, #020 ✅) |       |
 
 ---
 
@@ -87,7 +87,7 @@
  │    ├── 012 Landing Page  ✅ DONE
  │    └── 013 Dashboard Layout  ✅ DONE ──► 014, 015, 016, 017, 018, 019
  │
- └── All ──► 020 Edge Cases  📋 PENDING ──► 021 Responsive & A11y ──► 022 QA/Polish
+ └── All ──► 020 Edge Cases  ✅ DONE ──► 021 Responsive & A11y  📋 PENDING ──► 022 QA/Polish
 ```
 
 ---

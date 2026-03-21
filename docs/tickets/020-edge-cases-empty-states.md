@@ -1,7 +1,7 @@
 # [TICKET-020] Edge Case & Empty States
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #014 ✅, #017 ✅, #018 ✅, #019 ✅
@@ -10,11 +10,11 @@
 Handle all empty states, edge cases, and data-quality warnings across the dashboard. Every view should gracefully handle missing, insufficient, or unusual data patterns rather than showing blank screens or broken layouts.
 
 ## Acceptance Criteria
-- [ ] **Posts tab — no posts**: friendly empty state with illustration/icon and "No posts yet. Connect your Threads account to get started." message
-- [ ] **Backfill failed**: error state on loading screen with retry button
-- [ ] **Token expired**: banner across dashboard "Your Threads connection has expired. Reconnect to continue getting updates." with CTA
-- [ ] **API errors**: graceful error states (not raw error dumps) with retry options where applicable
-- [ ] All empty states use DESIGN.md styling: playful illustrations/icons, Outfit headings, warm tone
+- [x] **Posts tab — no posts**: friendly empty state with illustration/icon and "No posts yet. Connect your Threads account to get started." message
+- [x] **Backfill failed**: error state on loading screen with retry button
+- [x] **Token expired**: banner across dashboard "Your Threads connection has expired. Reconnect to continue getting updates." with CTA
+- [x] **API errors**: graceful error states (not raw error dumps) with retry options where applicable
+- [x] All empty states use DESIGN.md styling: playful illustrations/icons, Outfit headings, warm tone
 
 ## Design Reference
 - **Components**: § Components > Cards (empty state containers)
