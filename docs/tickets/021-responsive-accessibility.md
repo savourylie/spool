@@ -1,7 +1,7 @@
 # [TICKET-021] Responsive & Accessibility Pass
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #012 ✅, #013 ✅, #014 ✅, #015 ✅, #016 ✅, #017 ✅, #018 ✅, #019 ✅, #020 ✅
@@ -10,22 +10,22 @@
 Comprehensive pass across all pages and components to ensure DESIGN.md responsive rules are followed and accessibility requirements are met. This is a dedicated sweep — not incremental fixes.
 
 ## Acceptance Criteria
-- [ ] **Mobile**: all multi-column layouts stack to single column
-- [ ] **Mobile**: hard shadows reduced from 4–8px to 2px
-- [ ] **Mobile**: horizontal squiggle dividers converted to vertical
-- [ ] **Mobile**: minimum button/tap-target height of 48px
-- [ ] **Mobile**: complex background floating shapes hidden (no text overlap)
-- [ ] **Desktop**: full decorative treatment — shapes, patterns, full shadow depth
-- [ ] **Contrast**: Slate 800 on cream/white verified as AAA
-- [ ] **Contrast**: accent-on-white combinations verified (add dark text if needed)
-- [ ] **Color-only**: no information conveyed by color alone — paired with shape + text label
-- [ ] **Motion**: `prefers-reduced-motion` disables bounce, wiggle, marquee; falls back to opacity fades or no animation
-- [ ] **Focus**: thick colored border + hard shadow on all interactive elements — visually obvious
-- [ ] **Touch**: all tap targets minimum 48px on mobile
-- [ ] **Keyboard**: all interactive elements reachable and operable via keyboard
-- [ ] **Screen reader**: semantic HTML, proper heading hierarchy, ARIA labels on charts/icons
-- [ ] **Charts**: all charts have text alternatives (summary text, table fallback, or ARIA descriptions)
-- [ ] Post table is horizontally scrollable on mobile (not clipped)
+- [x] **Mobile**: all multi-column layouts stack to single column
+- [x] **Mobile**: hard shadows reduced from 4–8px to 2px
+- [x] **Mobile**: horizontal squiggle dividers converted to vertical
+- [x] **Mobile**: minimum button/tap-target height of 48px
+- [x] **Mobile**: complex background floating shapes hidden (no text overlap)
+- [x] **Desktop**: full decorative treatment — shapes, patterns, full shadow depth
+- [x] **Contrast**: Slate 800 on cream/white verified as AAA
+- [x] **Contrast**: accent-on-white combinations verified (add dark text if needed)
+- [x] **Color-only**: no information conveyed by color alone — paired with shape + text label
+- [x] **Motion**: `prefers-reduced-motion` disables bounce, wiggle, marquee; falls back to opacity fades or no animation
+- [x] **Focus**: thick colored border + hard shadow on all interactive elements — visually obvious
+- [x] **Touch**: all tap targets minimum 48px on mobile
+- [x] **Keyboard**: all interactive elements reachable and operable via keyboard
+- [x] **Screen reader**: semantic HTML, proper heading hierarchy, ARIA labels on charts/icons
+- [x] **Charts**: all charts have text alternatives (summary text, table fallback, or ARIA descriptions)
+- [x] Post table is horizontally scrollable on mobile (not clipped)
 
 ## Design Reference
 - **Responsive**: § Responsive Rules (all breakpoint adjustments)
