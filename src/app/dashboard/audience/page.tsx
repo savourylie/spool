@@ -11,6 +11,10 @@ import {
   type DailyStatRow,
   type PostSummary,
 } from "@/components/dashboard/follower-chart";
+import {
+  DemographicsCharts,
+  type DemographicRow,
+} from "@/components/dashboard/demographics-charts";
 
 export default async function AudiencePage() {
   const cookieStore = await cookies();
@@ -20,7 +24,7 @@ export default async function AudiencePage() {
   const supabase = createAdminClient();
   const userId = session.value;
 
-  const [statsResult, postsResult] = await Promise.all([
+  const [statsResult, postsResult, demographicsResult] = await Promise.all([
     supabase
       .from("daily_stats")
       .select("date, followers_count")
@@ -31,6 +35,10 @@ export default async function AudiencePage() {
       .select("id, text_preview, permalink, published_at")
       .eq("user_id", userId)
       .order("published_at", { ascending: true }),
+    supabase
+      .from("demographics")
+      .select("dimension, key, value, fetched_at")
+      .eq("user_id", userId),
   ]);
 
   if (statsResult.error) {
@@ -45,10 +53,21 @@ export default async function AudiencePage() {
     );
   }
 
+  // Get the latest followers_count from daily_stats
+  const dailyStats = (statsResult.data ?? []) as DailyStatRow[];
+  const latestStat = dailyStats.length > 0 ? dailyStats[dailyStats.length - 1] : null;
+  const followersCount = latestStat?.followers_count ?? null;
+
   return (
-    <FollowerChart
-      dailyStats={(statsResult.data ?? []) as DailyStatRow[]}
-      posts={(postsResult.data ?? []) as PostSummary[]}
-    />
+    <>
+      <FollowerChart
+        dailyStats={dailyStats}
+        posts={(postsResult.data ?? []) as PostSummary[]}
+      />
+      <DemographicsCharts
+        demographics={(demographicsResult.data ?? []) as DemographicRow[]}
+        followersCount={followersCount}
+      />
+    </>
   );
 }
