@@ -1,7 +1,7 @@
 # [TICKET-019] Demographics Charts
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #002 ✅, #013 ✅
@@ -10,16 +10,16 @@
 Build the demographics section of the Audience tab: horizontal bar chart for top 10 countries, horizontal bar chart for top 10 cities, and a donut chart for gender split. Data sourced from the `demographics` table.
 
 ## Acceptance Criteria
-- [ ] Demographics section renders below the follower trend chart at `/dashboard/audience`
-- [ ] Geography — Countries: horizontal bar chart showing top 10 countries by follower percentage
-- [ ] Geography — Cities: horizontal bar chart showing top 10 cities by follower percentage
-- [ ] Gender: donut chart showing gender split (percentages and labels)
-- [ ] Charts use shadcn/ui chart components (Recharts BarChart, PieChart)
-- [ ] Data source: `demographics` table filtered by dimension (`country`, `city`, `gender`)
-- [ ] Uses most recent data (latest `fetched_at` per dimension)
-- [ ] Country/city bars use accent color; gender donut uses secondary/tertiary/quaternary for segments
-- [ ] Users with < 100 followers: show placeholder "Audience insights unlock at 100 followers. You're at N."
-- [ ] Charts have proper labels and legends
+- [x] Demographics section renders below the follower trend chart at `/dashboard/audience`
+- [x] Geography — Countries: horizontal bar chart showing top 10 countries by follower percentage
+- [x] Geography — Cities: horizontal bar chart showing top 10 cities by follower percentage
+- [x] Gender: donut chart showing gender split (percentages and labels)
+- [x] Charts use shadcn/ui chart components (Recharts BarChart, PieChart)
+- [x] Data source: `demographics` table filtered by dimension (`country`, `city`, `gender`)
+- [x] Uses most recent data (latest `fetched_at` per dimension)
+- [x] Country/city bars use accent color; gender donut uses secondary/tertiary/quaternary for segments
+- [x] Users with < 100 followers: show placeholder "Audience insights unlock at 100 followers. You're at N."
+- [x] Charts have proper labels and legends
 
 ## Design Reference
 - **Tokens**: § Tokens > Colors (accent for bars, secondary/tertiary/quaternary for donut segments)
