@@ -20,6 +20,13 @@ export class ThreadsAPI {
     private userId: string,
   ) {}
 
+  private findInsightMetric(
+    data: ThreadsUserInsightValue[],
+    metric: string,
+  ): ThreadsUserInsightValue | undefined {
+    return data.find((entry) => entry.name === metric) ?? data[0];
+  }
+
   private async request<T>(
     path: string,
     params?: Record<string, string>,
@@ -195,7 +202,13 @@ export class ThreadsAPI {
 
   async getFollowersCount(): Promise<number> {
     const data = await this.getUserInsights("followers_count");
-    return data[0]?.values[0]?.value ?? 0;
+    const metric = this.findInsightMetric(data, "followers_count");
+
+    if (typeof metric?.total_value?.value === "number") {
+      return metric.total_value.value;
+    }
+
+    return metric?.values?.[0]?.value ?? 0;
   }
 
   async getFollowerDemographics(
@@ -207,14 +220,36 @@ export class ThreadsAPI {
       undefined,
       { breakdown: dimension },
     );
-    const breakdown = data[0]?.values[0]?.value as unknown as Record<
-      string,
-      number
-    >;
+    const metric = this.findInsightMetric(data, "follower_demographics");
+
+    const breakdownResults =
+      metric?.total_value?.breakdowns?.flatMap(
+        (breakdown) => breakdown.results ?? [],
+      ) ?? [];
+
+    if (breakdownResults.length > 0) {
+      return {
+        dimension,
+        values: breakdownResults
+          .map((result) => {
+            const key = result.dimension_values?.[0];
+            return typeof key === "string"
+              ? { key, value: result.value }
+              : null;
+          })
+          .filter((entry): entry is { key: string; value: number } => {
+            return entry !== null;
+          }),
+      };
+    }
+
+    const legacyBreakdown = metric?.values?.[0]?.value as
+      | Record<string, number>
+      | undefined;
 
     return {
       dimension,
-      values: Object.entries(breakdown ?? {}).map(([key, value]) => ({
+      values: Object.entries(legacyBreakdown ?? {}).map(([key, value]) => ({
         key,
         value,
       })),

@@ -4,6 +4,11 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { ErrorState } from "@/components/ui/error-state";
 import { TimingHeatmap, type TimingPost } from "@/components/dashboard/timing-heatmap";
+import {
+  BACKFILL_VISIBLE_STATUSES,
+  isImportingBackfillStatus,
+  toBackfillJob,
+} from "@/lib/backfill-job";
 
 export default async function TimingPage() {
   const cookieStore = await cookies();
@@ -13,13 +18,36 @@ export default async function TimingPage() {
   const supabase = createAdminClient();
   const userId = session.value;
 
-  const { data: posts, error } = await supabase.rpc("get_timing_heatmap_data" as never, {
-    p_user_id: userId,
-  } as never) as { data: TimingPost[] | null; error: { message: string } | null };
+  const [postsResult, backfillResult] = await Promise.all([
+    supabase.rpc("get_timing_heatmap_data" as never, {
+      p_user_id: userId,
+    } as never) as unknown as Promise<{
+      data: TimingPost[] | null;
+      error: { message: string } | null;
+    }>,
+    supabase
+      .from("backfill_jobs")
+      .select("id, status, processed_posts, total_posts")
+      .eq("user_id", userId)
+      .in("status", [...BACKFILL_VISIBLE_STATUSES])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  const { data: posts, error } = postsResult;
 
   if (error || !posts) {
     return <ErrorState description="We couldn't load your timing data right now." />;
   }
 
-  return <TimingHeatmap posts={posts} />;
+  const backfillJob = backfillResult.data
+    ? toBackfillJob(backfillResult.data)
+    : null;
+
+  return (
+    <TimingHeatmap
+      posts={posts}
+      isImporting={isImportingBackfillStatus(backfillJob?.status)}
+    />
+  );
 }

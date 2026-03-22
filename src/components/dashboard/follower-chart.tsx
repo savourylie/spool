@@ -17,6 +17,7 @@ import {
   StickerCardIcon,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getFollowerEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 
 export type DailyStatRow = { date: string; followers_count: number | null };
 export type PostSummary = {
@@ -144,15 +145,18 @@ function CustomTooltipContent({ active, payload }: any) {
 export function FollowerChart({
   dailyStats,
   posts,
+  isImporting = false,
 }: {
   dailyStats: DailyStatRow[];
   posts: PostSummary[];
+  isImporting?: boolean;
 }) {
   const gradientId = useId().replace(/:/g, "");
   const chartData = useMemo(
     () => processData(dailyStats, posts),
     [dailyStats, posts]
   );
+  const emptyStateCopy = getFollowerEmptyStateCopy(isImporting);
 
   return (
     <StickerCard className="hover:rotate-0 hover:scale-100">
@@ -170,8 +174,8 @@ export function FollowerChart({
           <EmptyState
             icon={<TrendUp weight="bold" className="size-7" />}
             iconColor="quaternary"
-            title="Tracking your growth"
-            description="Your follower trend will build over time as we collect daily snapshots. Check back soon!"
+            title={emptyStateCopy.title}
+            description={emptyStateCopy.description}
           />
         ) : (
           <>

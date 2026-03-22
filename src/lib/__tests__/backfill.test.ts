@@ -80,8 +80,8 @@ function createMockFrom(table: string) {
 
   if (table === "demographics") {
     return {
-      insert: (...args: unknown[]) => {
-        trackCall(table, "insert", ...args);
+      upsert: (...args: unknown[]) => {
+        trackCall(table, "upsert", ...args);
         return Promise.resolve({ error: null });
       },
     };
@@ -147,9 +147,9 @@ function getDailyStatsUpsertCalls() {
     .map((c) => c.args[0]);
 }
 
-function getDemographicsInsertCalls() {
+function getDemographicsUpsertCalls() {
   return calls
-    .filter((c) => c.table === "demographics" && c.op === "insert")
+    .filter((c) => c.table === "demographics" && c.op === "upsert")
     .map((c) => c.args[0]);
 }
 
@@ -261,9 +261,9 @@ describe("runBackfill", () => {
     expect(mockGetFollowerDemographics).toHaveBeenCalledWith("city");
     expect(mockGetFollowerDemographics).toHaveBeenCalledWith("gender");
 
-    // Demographics inserted (3 calls, each with 2 records)
-    const demoInserts = getDemographicsInsertCalls();
-    expect(demoInserts).toHaveLength(3);
+    // Demographics upserted (3 dimensions × 2 values)
+    const demoUpserts = getDemographicsUpsertCalls();
+    expect(demoUpserts).toHaveLength(6);
   });
 
   it("processes multiple posts sequentially with incremental progress", async () => {
@@ -367,7 +367,7 @@ describe("runBackfill", () => {
   it("continues on demographics failure (non-fatal)", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     mockGetFollowerDemographics.mockRejectedValue(
-      new Error("Under 100 followers"),
+      new Error("Threads insights temporarily unavailable"),
     );
 
     await runBackfill("user-uuid", "job-uuid");
@@ -382,8 +382,10 @@ describe("runBackfill", () => {
     warnSpy.mockRestore();
   });
 
-  it("handles zero posts gracefully", async () => {
+  it("handles zero posts and zero followers without warnings", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     mockGetUserPosts.mockResolvedValue([]);
+    mockGetFollowersCount.mockResolvedValue(0);
 
     await runBackfill("user-uuid", "job-uuid");
 
@@ -397,7 +399,29 @@ describe("runBackfill", () => {
 
     expect(mockGetPostInsights).not.toHaveBeenCalled();
     expect(mockGetFollowersCount).toHaveBeenCalledTimes(1);
-    expect(mockGetFollowerDemographics).toHaveBeenCalledTimes(3);
+    expect(mockGetFollowerDemographics).not.toHaveBeenCalled();
+    expect(getDemographicsUpsertCalls()).toHaveLength(0);
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+  });
+
+  it("skips demographics for accounts below 100 followers while still importing posts", async () => {
+    mockGetFollowersCount.mockResolvedValue(42);
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    expect(mockGetPostInsights).toHaveBeenCalledTimes(1);
+    expect(mockGetFollowerDemographics).not.toHaveBeenCalled();
+    expect(getDemographicsUpsertCalls()).toHaveLength(0);
+  });
+
+  it("upserts demographics so reruns stay idempotent", async () => {
+    await runBackfill("user-uuid", "job-uuid");
+    await runBackfill("user-uuid", "job-uuid");
+
+    expect(mockGetFollowerDemographics).toHaveBeenCalledTimes(6);
+    expect(getDemographicsUpsertCalls()).toHaveLength(12);
   });
 
   it("truncates text_preview to 280 characters", async () => {

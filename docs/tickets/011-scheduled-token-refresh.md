@@ -27,7 +27,7 @@ Implement the scheduled cron job that refreshes long-lived Threads tokens before
 - Per CLAUDE.md decision #7: "API extends token by 90 days on refresh; the 50-day refresh schedule is fine (conservative buffer)"
 - The cron runs daily but only acts on tokens expiring within 15 days — this means it effectively refreshes around the 45–50 day mark
 - Decrypt → refresh → re-encrypt cycle ensures the DB never has plaintext tokens
-- Vercel cron config in `vercel.json` with daily schedule
+- Supabase Cron job registered with a daily schedule
 
 ## Testing
 - Create a test user with `token_expires_at` set to 10 days from now

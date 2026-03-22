@@ -9,6 +9,7 @@ describe("BackfillProgress source", () => {
     );
 
     expect(source).not.toContain('fetch("/api/backfill/start"');
-    expect(source).toContain('fetch("/api/backfill/retry"');
+    expect(source).toContain("useBackfillJob");
+    expect(source).toContain("await retry()");
   });
 });

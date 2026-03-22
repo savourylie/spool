@@ -118,7 +118,7 @@ describe("GET /api/auth/callback", () => {
 
     const response = await GET(request);
 
-    expect(response.headers.get("location")).toBe("http://localhost/loading");
+    expect(response.headers.get("location")).toBe("http://localhost/dashboard/posts");
     expect(mocks.after).toHaveBeenCalledTimes(1);
     expect(mocks.runBackfill).not.toHaveBeenCalled();
     expect(mocks.setSessionCookie).toHaveBeenCalledWith(

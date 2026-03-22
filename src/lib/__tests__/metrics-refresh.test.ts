@@ -67,7 +67,7 @@ function createMockFrom(table: string) {
         eq: () => ({
           order: () => ({
             limit: () => ({
-              single: () => Promise.resolve(mockLatestPostResult),
+              maybeSingle: () => Promise.resolve(mockLatestPostResult),
             }),
           }),
           gte: () => Promise.resolve(mockRecentPostsResult),
@@ -241,6 +241,23 @@ describe("refreshMetrics", () => {
         views: 200,
       }),
     );
+  });
+
+  it("treats missing latest-post rows as a first sync", async () => {
+    mockLatestPostResult = {
+      data: null,
+      error: null,
+    };
+    mockRecentPostsResult = {
+      data: [],
+      error: null,
+    };
+
+    const result = await refreshMetrics("user-uuid");
+
+    expect(result.newPosts).toBe(1);
+    expect(result.updatedMetrics).toBe(0);
+    expect(mockGetUserPosts).toHaveBeenCalledWith(undefined);
   });
 
   it("skips users with expired tokens", async () => {

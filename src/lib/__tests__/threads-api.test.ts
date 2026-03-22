@@ -197,13 +197,13 @@ describe("ThreadsAPI", () => {
   });
 
   describe("getFollowersCount", () => {
-    it("extracts number from insights response", async () => {
+    it("extracts number from total_value insights response", async () => {
       fetchSpy.mockResolvedValueOnce(
         jsonResponse({
           data: [
             {
               name: "followers_count",
-              values: [{ value: 5432 }],
+              total_value: { value: 5432 },
             },
           ],
         }),
@@ -212,16 +212,43 @@ describe("ThreadsAPI", () => {
       const count = await api.getFollowersCount();
       expect(count).toBe(5432);
     });
+
+    it("falls back to the legacy values array shape", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          data: [
+            {
+              name: "followers_count",
+              values: [{ value: 1234 }],
+            },
+          ],
+        }),
+      );
+
+      const count = await api.getFollowersCount();
+      expect(count).toBe(1234);
+    });
   });
 
   describe("getFollowerDemographics", () => {
-    it("transforms demographic object to array format and sends the breakdown param", async () => {
+    it("transforms total_value breakdowns to array format and sends the breakdown param", async () => {
       fetchSpy.mockResolvedValueOnce(
         jsonResponse({
           data: [
             {
               name: "follower_demographics",
-              values: [{ value: { US: 45, GB: 12, JP: 8 } }],
+              total_value: {
+                breakdowns: [
+                  {
+                    dimension_keys: ["country"],
+                    results: [
+                      { dimension_values: ["US"], value: 45 },
+                      { dimension_values: ["GB"], value: 12 },
+                      { dimension_values: ["JP"], value: 8 },
+                    ],
+                  },
+                ],
+              },
             },
           ],
         }),
@@ -239,6 +266,25 @@ describe("ThreadsAPI", () => {
       expect(url.pathname).toBe("/v1.0/user-123/threads_insights");
       expect(url.searchParams.get("metric")).toBe("follower_demographics");
       expect(url.searchParams.get("breakdown")).toBe("country");
+    });
+
+    it("falls back to the legacy values object shape", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          data: [
+            {
+              name: "follower_demographics",
+              values: [{ value: { US: 45, GB: 12 } }],
+            },
+          ],
+        }),
+      );
+
+      const result = await api.getFollowerDemographics("country");
+      expect(result.values).toEqual([
+        { key: "US", value: 45 },
+        { key: "GB", value: 12 },
+      ]);
     });
   });
 

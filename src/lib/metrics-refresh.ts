@@ -25,13 +25,15 @@ export async function refreshMetrics(
   const api = new ThreadsAPI(accessToken, user.threads_user_id);
 
   // 2. Fetch new posts since the most recent one we have
-  const { data: latestPost } = await supabase
+  const { data: latestPost, error: latestPostError } = await supabase
     .from("posts")
     .select("published_at")
     .eq("user_id", userId)
     .order("published_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
+
+  if (latestPostError) throw latestPostError;
 
   const since = latestPost ? new Date(latestPost.published_at) : undefined;
   const newPostsData = await api.getUserPosts(since);

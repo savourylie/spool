@@ -22,7 +22,7 @@ Final quality assurance pass and polish before launch. Covers end-to-end user fl
 - [x] **Environment**: `.env.local.example` lists all required environment variables with descriptions
 - [x] **Cron jobs**: all 3 cron endpoints (`/api/cron/metrics`, `/api/cron/daily`, `/api/cron/token-refresh`) verified working
 - [x] **Security**: no tokens or secrets exposed in client-side code or API responses
-- [x] **Vercel config**: `vercel.json` has correct cron schedules for all scheduled jobs
+- [x] **Supabase Cron**: scheduled jobs are registered with the correct cadences
 - [x] **README**: basic setup instructions (clone, install, env vars, supabase start, npm run dev)
 
 ## Implementation Notes

@@ -26,6 +26,7 @@ import {
   StickerCardContent,
   StickerCardIcon,
 } from "@/components/ui/card";
+import { getDemographicsEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 
 export type DemographicRow = {
   dimension: string;
@@ -37,6 +38,7 @@ export type DemographicRow = {
 interface DemographicsChartsProps {
   demographics: DemographicRow[];
   followersCount: number | null;
+  isImporting?: boolean;
 }
 
 const DONUT_COLORS = [
@@ -87,12 +89,14 @@ function BarChartSection({
   description,
   icon,
   iconColor,
+  isImporting,
 }: {
   data: DemographicRow[];
   title: string;
   description: string;
   icon: React.ReactNode;
   iconColor: "primary" | "secondary" | "tertiary" | "quaternary";
+  isImporting: boolean;
 }) {
   const chartData = useMemo(
     () =>
@@ -107,6 +111,7 @@ function BarChartSection({
     () => chartData.reduce((sum, d) => sum + d.value, 0),
     [chartData]
   );
+  const emptyStateCopy = getDemographicsEmptyStateCopy(isImporting);
 
   if (chartData.length === 0) {
     return (
@@ -120,8 +125,8 @@ function BarChartSection({
           <EmptyState
             icon={icon}
             iconColor={iconColor}
-            title="No data available yet"
-            description="Demographics data will appear after your next audience sync."
+            title={emptyStateCopy.title}
+            description={emptyStateCopy.description}
           />
         </StickerCardContent>
       </StickerCard>
@@ -188,7 +193,13 @@ function BarChartSection({
   );
 }
 
-function GenderDonutChart({ data }: { data: DemographicRow[] }) {
+function GenderDonutChart({
+  data,
+  isImporting,
+}: {
+  data: DemographicRow[];
+  isImporting: boolean;
+}) {
   const chartData = useMemo(() => {
     const total = data.reduce((sum, r) => sum + r.value, 0);
     return data.map((row, i) => ({
@@ -198,6 +209,7 @@ function GenderDonutChart({ data }: { data: DemographicRow[] }) {
       fill: DONUT_COLORS[i % DONUT_COLORS.length],
     }));
   }, [data]);
+  const emptyStateCopy = getDemographicsEmptyStateCopy(isImporting);
 
   if (chartData.length === 0) {
     return (
@@ -215,8 +227,8 @@ function GenderDonutChart({ data }: { data: DemographicRow[] }) {
           <EmptyState
             icon={<GenderIntersex weight="bold" className="size-7" />}
             iconColor="tertiary"
-            title="No data available yet"
-            description="Demographics data will appear after your next audience sync."
+            title={emptyStateCopy.title}
+            description={emptyStateCopy.description}
           />
         </StickerCardContent>
       </StickerCard>
@@ -293,6 +305,7 @@ function GenderDonutChart({ data }: { data: DemographicRow[] }) {
 export function DemographicsCharts({
   demographics,
   followersCount,
+  isImporting = false,
 }: DemographicsChartsProps) {
   if (followersCount !== null && followersCount < 100) {
     return (
@@ -327,6 +340,7 @@ export function DemographicsCharts({
           description="Where your followers are located"
           icon={<GlobeHemisphereWest weight="bold" className="size-6" />}
           iconColor="primary"
+          isImporting={isImporting}
         />
         <BarChartSection
           data={cities}
@@ -334,11 +348,12 @@ export function DemographicsCharts({
           description="Cities with the most followers"
           icon={<MapPin weight="bold" className="size-6" />}
           iconColor="quaternary"
+          isImporting={isImporting}
         />
       </div>
 
       <div className="mx-auto max-w-lg pt-4">
-        <GenderDonutChart data={genderData} />
+        <GenderDonutChart data={genderData} isImporting={isImporting} />
       </div>
     </div>
   );

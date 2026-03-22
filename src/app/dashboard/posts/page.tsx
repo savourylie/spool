@@ -12,6 +12,11 @@ import {
 import { ErrorState } from "@/components/ui/error-state";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 import { PostFilters } from "@/components/dashboard/post-filters";
+import {
+  BACKFILL_VISIBLE_STATUSES,
+  isImportingBackfillStatus,
+  toBackfillJob,
+} from "@/lib/backfill-job";
 
 const PAGE_SIZE = 20;
 
@@ -73,25 +78,43 @@ export default async function PostsPage({
   const userId = session.value;
   const offset = (page - 1) * PAGE_SIZE;
 
-  const { data: rows, error } = await supabase.rpc("get_posts_with_metrics" as never, {
-    p_user_id: userId,
-    p_sort_column: sortBy,
-    p_sort_order: sortOrder,
-    p_limit: PAGE_SIZE,
-    p_offset: offset,
-    p_media_types: p_media_types,
-    p_date_from: p_date_from,
-    p_date_to: p_date_to,
-  } as never) as { data: Array<PostRow & { total_count: number }> | null; error: { message: string } | null };
+  const [postsResult, backfillResult] = await Promise.all([
+    supabase.rpc("get_posts_with_metrics" as never, {
+      p_user_id: userId,
+      p_sort_column: sortBy,
+      p_sort_order: sortOrder,
+      p_limit: PAGE_SIZE,
+      p_offset: offset,
+      p_media_types: p_media_types,
+      p_date_from: p_date_from,
+      p_date_to: p_date_to,
+    } as never) as unknown as Promise<{
+      data: Array<PostRow & { total_count: number }> | null;
+      error: { message: string } | null;
+    }>,
+    supabase
+      .from("backfill_jobs")
+      .select("id, status, processed_posts, total_posts")
+      .eq("user_id", userId)
+      .in("status", [...BACKFILL_VISIBLE_STATUSES])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  const { data: rows, error } = postsResult;
 
   if (error || !rows) {
     return <ErrorState description="We couldn't load your posts right now." />;
   }
 
+  const backfillJob = backfillResult.data
+    ? toBackfillJob(backfillResult.data)
+    : null;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const posts: PostRow[] = rows.map(({ total_count, ...rest }) => rest);
   const totalCount = rows[0]?.total_count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const isImporting = isImportingBackfillStatus(backfillJob?.status);
 
   return (
     <StickerCard className="hover:rotate-0 hover:scale-100">
@@ -110,6 +133,7 @@ export default async function PostsPage({
           sortBy={sortBy}
           sortOrder={sortOrder}
           hasFilters={hasFilters}
+          isImporting={isImporting}
         />
       </StickerCardContent>
     </StickerCard>

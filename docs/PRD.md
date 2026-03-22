@@ -141,7 +141,7 @@ Dashboard (3 tabs)
 | Charts | shadcn/ui charts (built on Recharts) | Heatmap, line chart, bar chart, donut chart, sparklines |
 | Database | Supabase (local) | Postgres with row-level security, real-time subscriptions, free local dev |
 | Auth | Threads OAuth 2.0 → tokens stored in Supabase | Single OAuth provider |
-| Scheduling | Vercel Cron (prod) / pg_cron (local) | Poll metrics every 6 hours, refresh tokens before expiry |
+| Scheduling | Supabase Cron (`pg_cron` + `pg_net`) | Poll metrics every 6 hours, refresh tokens before expiry |
 | Hosting | Vercel | Zero-config Next.js deployment |
 
 ### Data Model

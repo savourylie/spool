@@ -121,31 +121,33 @@ export async function runBackfill(userId: string, jobId: string) {
       { onConflict: "user_id,date" },
     );
 
-    // 7. Fetch demographics (country, city, gender — 3 separate calls per CLAUDE.md #8)
-    for (const dimension of ["country", "city", "gender"] as const) {
-      try {
-        stage = `fetching_demographics_${dimension}`;
-        console.log("Backfill fetching demographics", {
-          userId,
-          jobId,
-          dimension,
-        });
-        const demo = await api.getFollowerDemographics(dimension);
+    // 7. Fetch demographics only when the account meets Threads eligibility.
+    if (followersCount >= 100) {
+      for (const dimension of ["country", "city", "gender"] as const) {
+        try {
+          stage = `fetching_demographics_${dimension}`;
+          console.log("Backfill fetching demographics", {
+            userId,
+            jobId,
+            dimension,
+          });
+          const demo = await api.getFollowerDemographics(dimension);
 
-        if (demo.values.length > 0) {
           stage = `saving_demographics_${dimension}`;
-          await supabase.from("demographics").insert(
-            demo.values.map(({ key, value }) => ({
-              user_id: userId,
-              dimension,
-              key,
-              value,
-            })),
-          );
+          for (const { key, value } of demo.values) {
+            await supabase.from("demographics").upsert(
+              {
+                user_id: userId,
+                dimension,
+                key,
+                value,
+              },
+              { onConflict: "user_id,dimension,key" },
+            );
+          }
+        } catch (err) {
+          console.warn(`Failed to fetch ${dimension} demographics:`, err);
         }
-      } catch (err) {
-        // Demographics may fail for users with < 100 followers — non-fatal
-        console.warn(`Failed to fetch ${dimension} demographics:`, err);
       }
     }
 

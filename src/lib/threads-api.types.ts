@@ -30,7 +30,17 @@ export interface ThreadsPostInsights {
 
 export interface ThreadsUserInsightValue {
   name: string;
-  values: { value: number; end_time?: string }[];
+  values?: { value: number; end_time?: string }[];
+  total_value?: {
+    value?: number;
+    breakdowns?: {
+      dimension_keys?: string[];
+      results?: {
+        dimension_values?: string[];
+        value: number;
+      }[];
+    }[];
+  };
 }
 
 export interface ThreadsDemographicBreakdown {

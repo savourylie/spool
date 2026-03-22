@@ -4,10 +4,15 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
+import { DashboardBackfillBanner } from "@/components/dashboard/backfill-status-banner";
 import {
   TokenExpiryBanner,
   getTokenStatus,
 } from "@/components/dashboard/token-expiry-banner";
+import {
+  BACKFILL_VISIBLE_STATUSES,
+  toBackfillJob,
+} from "@/lib/backfill-job";
 
 export default async function DashboardLayout({
   children,
@@ -19,11 +24,21 @@ export default async function DashboardLayout({
   if (!session) redirect("/");
 
   const supabase = createAdminClient();
-  const { data: user } = await supabase
-    .from("users")
-    .select("username, token_expires_at")
-    .eq("id", session.value)
-    .single();
+  const [{ data: user }, { data: backfillJob }] = await Promise.all([
+    supabase
+      .from("users")
+      .select("username, token_expires_at")
+      .eq("id", session.value)
+      .single(),
+    supabase
+      .from("backfill_jobs")
+      .select("id, status, processed_posts, total_posts")
+      .eq("user_id", session.value)
+      .in("status", [...BACKFILL_VISIBLE_STATUSES])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   if (!user?.username) redirect("/");
 
@@ -40,6 +55,9 @@ export default async function DashboardLayout({
             <TokenExpiryBanner status={tokenStatus} />
           </div>
         )}
+        <DashboardBackfillBanner
+          initialJob={backfillJob ? toBackfillJob(backfillJob) : null}
+        />
         <DashboardTabs />
         {children}
       </div>

@@ -10,6 +10,7 @@ import {
   StickerCardContent,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getTimingEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -152,7 +153,13 @@ const subscribeBrowserTz = () => () => {};
 const getBrowserTz = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 const getServerTz = () => "UTC";
 
-export function TimingHeatmap({ posts }: { posts: TimingPost[] }) {
+export function TimingHeatmap({
+  posts,
+  isImporting = false,
+}: {
+  posts: TimingPost[];
+  isImporting?: boolean;
+}) {
   const initialTz = useSyncExternalStore(subscribeBrowserTz, getBrowserTz, getServerTz);
   const [timezone, setTimezone] = useState(initialTz);
   const [tooltip, setTooltip] = useState<{
@@ -164,6 +171,7 @@ export function TimingHeatmap({ posts }: { posts: TimingPost[] }) {
   } | null>(null);
 
   const groupedTimezones = useMemo(() => getGroupedTimezones(), []);
+  const emptyStateCopy = getTimingEmptyStateCopy(isImporting);
 
   // Build the 7x24 grid
   const { grid, totalPosts, allSameSlot, bestSlots } = useMemo(() => {
@@ -412,8 +420,8 @@ export function TimingHeatmap({ posts }: { posts: TimingPost[] }) {
           <EmptyState
             icon={<Clock weight="bold" className="size-7" />}
             iconColor="secondary"
-            title="No posting data yet"
-            description="Start posting on Threads and your optimal timing insights will appear here."
+            title={emptyStateCopy.title}
+            description={emptyStateCopy.description}
             className="mt-4"
           />
         )}

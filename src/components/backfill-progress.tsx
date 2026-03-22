@@ -1,14 +1,15 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { SpinnerGap } from "@phosphor-icons/react/dist/ssr/SpinnerGap"
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle"
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr/CheckCircle"
-import { createClient } from "@/lib/supabase/client"
 import { ProgressBar } from "@/components/ui/progress-bar"
 import { Button } from "@/components/ui/button"
+import { useBackfillJob } from "@/hooks/use-backfill-job"
+import { getBackfillPercentage, toBackfillJob } from "@/lib/backfill-job"
 
 function getMessage(percentage: number | null) {
   if (percentage === null) return "Warming up the thread spool..."
@@ -39,69 +40,16 @@ export function BackfillProgress({
 }) {
   const router = useRouter()
   const shouldReduceMotion = useReducedMotion()
-  const [status, setStatus] = useState(initialStatus)
-  const [processed, setProcessed] = useState(initialProcessed ?? 0)
-  const [total, setTotal] = useState(initialTotal)
-  const [jobId, setJobId] = useState(initialJobId)
-  const [retrying, setRetrying] = useState(false)
-  const channelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null)
-  const supabaseRef = useRef(createClient())
-
-  const percentage =
-    status === "complete"
-      ? 100
-      : total && total > 0
-        ? Math.round((processed / total) * 100)
-        : null
-
-  const subscribe = useCallback(
-    (id: string) => {
-      const supabase = supabaseRef.current
-
-      // Clean up previous channel
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
-      }
-
-      const channel = supabase
-        .channel(`backfill-${id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "backfill_jobs",
-            filter: `id=eq.${id}`,
-          },
-          (payload) => {
-            const row = payload.new as {
-              status: string
-              processed_posts: number | null
-              total_posts: number | null
-            }
-            setStatus(row.status)
-            setProcessed(row.processed_posts ?? 0)
-            setTotal(row.total_posts)
-          },
-        )
-        .subscribe()
-
-      channelRef.current = channel
-    },
-    [],
+  const { job, retrying, retry } = useBackfillJob(
+    toBackfillJob({
+      id: initialJobId,
+      status: initialStatus,
+      processed_posts: initialProcessed ?? 0,
+      total_posts: initialTotal,
+    }),
   )
-
-  // Subscribe to realtime updates for the current job
-  useEffect(() => {
-    const supabase = supabaseRef.current
-    subscribe(jobId)
-
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
-      }
-    }
-  }, [jobId, subscribe])
+  const status = job?.status ?? initialStatus
+  const percentage = getBackfillPercentage(job ?? null)
 
   // Redirect on complete
   useEffect(() => {
@@ -112,20 +60,10 @@ export function BackfillProgress({
   }, [status, router])
 
   async function handleRetry() {
-    setRetrying(true)
     try {
-      const res = await fetch("/api/backfill/retry", { method: "POST" })
-      if (!res.ok) throw new Error("Retry failed")
-      const { jobId: newJobId } = await res.json()
-      setJobId(newJobId)
-      setStatus("pending")
-      setProcessed(0)
-      setTotal(null)
-      subscribe(newJobId)
+      await retry()
     } catch {
       // Stay on error state
-    } finally {
-      setRetrying(false)
     }
   }
 

@@ -27,7 +27,7 @@ Implement the daily cron job that polls follower count and refreshes demographic
 - Per CLAUDE.md decision #8: demographics requires 3 separate API calls (country, city, gender)
 - Per Threads API: `follower_demographics` requires minimum 100 followers
 - Demographics upsert: replace previous values for each dimension (latest data is authoritative)
-- Vercel cron config in `vercel.json` with daily schedule (e.g., `0 6 * * *`)
+- Supabase Cron job registered with a daily schedule (e.g., `0 6 * * *`)
 
 ## Testing
 - Manually trigger `GET /api/cron/daily` with correct `CRON_SECRET`

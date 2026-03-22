@@ -117,9 +117,9 @@ export async function GET(request: NextRequest) {
     await runBackfill(userId, backfillJobId);
   });
 
-  // 8. Set session cookie and redirect to loading page
-  const loadingUrl = new URL("/loading", request.nextUrl.origin);
-  const response = NextResponse.redirect(loadingUrl);
+  // 8. Set session cookie and redirect to dashboard while backfill runs
+  const dashboardUrl = new URL("/dashboard/posts", request.nextUrl.origin);
+  const response = NextResponse.redirect(dashboardUrl);
   setSessionCookie(response, userId);
   response.cookies.delete(OAUTH_STATE_COOKIE_NAME);
 

@@ -21,6 +21,7 @@ cp .env.local.example .env.local
 # Fill in values — see .env.local.example for descriptions
 
 # 3. Start local Supabase
+export SUPABASE_VAULT_SECRET_KEY=<run: openssl rand -hex 32>
 npx supabase start
 # Copy the anon key, service role key, and API URL into .env.local
 
@@ -35,6 +36,88 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Supabase Cron
+
+Spool uses Supabase Cron as the scheduler of record for recurring jobs. The
+database schedules HTTP calls to the existing internal cron routes:
+
+- `/api/cron/metrics`
+- `/api/cron/daily`
+- `/api/cron/token-refresh`
+
+### Local setup
+
+After starting local Supabase and applying migrations, store the scheduler
+secrets in Vault:
+
+```sql
+select vault.create_secret(
+  'http://host.docker.internal:3000',
+  'cron_app_base_url',
+  'Spool local app base URL'
+);
+
+select vault.create_secret(
+  '<same value as CRON_SECRET in .env.local>',
+  'cron_secret',
+  'Spool cron route auth secret'
+);
+```
+
+`host.docker.internal` is required for local database-originated HTTP calls on
+macOS. Do not use `localhost` for the Vault `cron_app_base_url` value.
+
+The local Vault key must be configured before starting Supabase:
+
+```bash
+export SUPABASE_VAULT_SECRET_KEY=<run: openssl rand -hex 32>
+npx supabase stop
+npx supabase start
+```
+
+If you previously created cron secrets before configuring the Vault key, recreate
+them after the restart so `vault.decrypted_secrets` can return usable values.
+
+### Production setup
+
+Store the same secrets in your hosted Supabase project:
+
+```sql
+select vault.create_secret(
+  'https://<your-app-domain>',
+  'cron_app_base_url',
+  'Spool production app base URL'
+);
+
+select vault.create_secret(
+  '<your-production-cron-secret>',
+  'cron_secret',
+  'Spool production cron route auth secret'
+);
+```
+
+### Observability
+
+Inspect scheduled jobs:
+
+```sql
+select jobid, jobname, schedule, active
+from cron.job
+order by jobid;
+```
+
+Inspect recent job runs:
+
+```sql
+select jobid, status, start_time, end_time, return_message
+from cron.job_run_details
+order by start_time desc
+limit 20;
+```
+
+The HTTP execution details still live in your app logs because Supabase Cron is
+calling the existing `/api/cron/*` routes.
 
 ## Scripts
 

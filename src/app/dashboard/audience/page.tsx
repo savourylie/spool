@@ -12,6 +12,11 @@ import {
   DemographicsCharts,
   type DemographicRow,
 } from "@/components/dashboard/demographics-charts";
+import {
+  BACKFILL_VISIBLE_STATUSES,
+  isImportingBackfillStatus,
+  toBackfillJob,
+} from "@/lib/backfill-job";
 
 export default async function AudiencePage() {
   const cookieStore = await cookies();
@@ -21,7 +26,7 @@ export default async function AudiencePage() {
   const supabase = createAdminClient();
   const userId = session.value;
 
-  const [statsResult, postsResult, demographicsResult] = await Promise.all([
+  const [statsResult, postsResult, demographicsResult, backfillResult] = await Promise.all([
     supabase
       .from("daily_stats")
       .select("date, followers_count")
@@ -36,6 +41,14 @@ export default async function AudiencePage() {
       .from("demographics")
       .select("dimension, key, value, fetched_at")
       .eq("user_id", userId),
+    supabase
+      .from("backfill_jobs")
+      .select("id, status, processed_posts, total_posts")
+      .eq("user_id", userId)
+      .in("status", [...BACKFILL_VISIBLE_STATUSES])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   if (statsResult.error) {
@@ -46,16 +59,22 @@ export default async function AudiencePage() {
   const dailyStats = (statsResult.data ?? []) as DailyStatRow[];
   const latestStat = dailyStats.length > 0 ? dailyStats[dailyStats.length - 1] : null;
   const followersCount = latestStat?.followers_count ?? null;
+  const backfillJob = backfillResult.data
+    ? toBackfillJob(backfillResult.data)
+    : null;
+  const isImporting = isImportingBackfillStatus(backfillJob?.status);
 
   return (
     <>
       <FollowerChart
         dailyStats={dailyStats}
         posts={(postsResult.data ?? []) as PostSummary[]}
+        isImporting={isImporting}
       />
       <DemographicsCharts
         demographics={(demographicsResult.data ?? []) as DemographicRow[]}
         followersCount={followersCount}
+        isImporting={isImporting}
       />
     </>
   );

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "./pagination";
 import { PostRowDetail } from "./post-row-detail";
+import { getPostsEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 
 export interface PostRow {
   id: string;
@@ -31,6 +32,7 @@ interface PostTableProps {
   sortBy: string;
   sortOrder: string;
   hasFilters?: boolean;
+  isImporting?: boolean;
 }
 
 const MEDIA_ICONS: Record<string, { icon: typeof TextT; color: string }> = {
@@ -66,12 +68,21 @@ function formatDate(iso: string): string {
   });
 }
 
-export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, hasFilters }: PostTableProps) {
+export function PostTable({
+  posts,
+  currentPage,
+  totalPages,
+  sortBy,
+  sortOrder,
+  hasFilters,
+  isImporting = false,
+}: PostTableProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [mountedIds, setMountedIds] = useState<Set<string>>(new Set());
+  const emptyStateCopy = getPostsEmptyStateCopy(isImporting);
 
   const toggleExpand = useCallback((postId: string) => {
     setExpandedId((prev) => {
@@ -240,8 +251,8 @@ export function PostTable({ posts, currentPage, totalPages, sortBy, sortOrder, h
                     <EmptyState
                       icon={<NoteBlank weight="bold" className="size-7" />}
                       iconColor="primary"
-                      title="No posts yet"
-                      description="Connect your Threads account and run a backfill to see your post analytics here."
+                      title={emptyStateCopy.title}
+                      description={emptyStateCopy.description}
                     />
                   )}
                 </td>
