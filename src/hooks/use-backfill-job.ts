@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/database.types";
 import {
+  BACKFILL_JOB_SELECT_FIELDS,
   createBackfillJobController,
   toBackfillJob,
   type BackfillJob,
@@ -35,12 +37,7 @@ export function useBackfillJob(
             (payload) => {
               handleUpdate(
                 toBackfillJob(
-                  payload.new as {
-                    id: string;
-                    status: string;
-                    processed_posts: number | null;
-                    total_posts: number | null;
-                  },
+                  payload.new as Database["public"]["Tables"]["backfill_jobs"]["Row"],
                 ),
               );
             },
@@ -50,6 +47,19 @@ export function useBackfillJob(
         return () => {
           supabase.removeChannel(channel);
         };
+      },
+      fetchJob: async (jobId) => {
+        const { data, error } = await supabase
+          .from("backfill_jobs")
+          .select(BACKFILL_JOB_SELECT_FIELDS)
+          .eq("id", jobId)
+          .maybeSingle();
+
+        if (error || !data) {
+          return null;
+        }
+
+        return toBackfillJob(data);
       },
       retryBackfill: async () => {
         const response = await fetch("/api/backfill/retry", { method: "POST" });

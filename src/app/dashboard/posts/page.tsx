@@ -13,6 +13,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 import { PostFilters } from "@/components/dashboard/post-filters";
 import {
+  BACKFILL_JOB_SELECT_FIELDS,
   BACKFILL_VISIBLE_STATUSES,
   isImportingBackfillStatus,
   toBackfillJob,
@@ -94,7 +95,7 @@ export default async function PostsPage({
     }>,
     supabase
       .from("backfill_jobs")
-      .select("id, status, processed_posts, total_posts")
+      .select(BACKFILL_JOB_SELECT_FIELDS)
       .eq("user_id", userId)
       .in("status", [...BACKFILL_VISIBLE_STATUSES])
       .order("created_at", { ascending: false })

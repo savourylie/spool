@@ -34,12 +34,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      backfill_job_events: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          job_id: string
+          level: string
+          message: string
+          stage: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          job_id: string
+          level: string
+          message: string
+          stage: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          job_id?: string
+          level?: string
+          message?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backfill_job_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "backfill_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backfill_jobs: {
         Row: {
           completed_at: string | null
+          current_post_id: string | null
           created_at: string | null
           id: string
+          last_error_message: string | null
+          last_error_payload: Json | null
+          last_error_status: number | null
+          last_heartbeat_at: string
           processed_posts: number | null
+          stage: string
           started_at: string | null
           status: string
           total_posts: number | null
@@ -47,9 +91,15 @@ export type Database = {
         }
         Insert: {
           completed_at?: string | null
+          current_post_id?: string | null
           created_at?: string | null
           id?: string
+          last_error_message?: string | null
+          last_error_payload?: Json | null
+          last_error_status?: number | null
+          last_heartbeat_at?: string
           processed_posts?: number | null
+          stage?: string
           started_at?: string | null
           status?: string
           total_posts?: number | null
@@ -57,9 +107,15 @@ export type Database = {
         }
         Update: {
           completed_at?: string | null
+          current_post_id?: string | null
           created_at?: string | null
           id?: string
+          last_error_message?: string | null
+          last_error_payload?: Json | null
+          last_error_status?: number | null
+          last_heartbeat_at?: string
           processed_posts?: number | null
+          stage?: string
           started_at?: string | null
           status?: string
           total_posts?: number | null
@@ -461,4 +517,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

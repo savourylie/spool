@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
 import { BackfillProgress } from "@/components/backfill-progress";
+import { BACKFILL_JOB_SELECT_FIELDS, toBackfillJob } from "@/lib/backfill-job";
 
 export default async function LoadingPage() {
   const cookieStore = await cookies();
@@ -16,7 +17,7 @@ export default async function LoadingPage() {
 
   const { data: job } = await supabase
     .from("backfill_jobs")
-    .select("id, status, processed_posts, total_posts")
+    .select(BACKFILL_JOB_SELECT_FIELDS)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -27,11 +28,6 @@ export default async function LoadingPage() {
   }
 
   return (
-    <BackfillProgress
-      jobId={job.id}
-      initialStatus={job.status}
-      initialProcessed={job.processed_posts}
-      initialTotal={job.total_posts}
-    />
+    <BackfillProgress initialJob={toBackfillJob(job)} />
   );
 }

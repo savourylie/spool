@@ -10,6 +10,7 @@ import {
   getTokenStatus,
 } from "@/components/dashboard/token-expiry-banner";
 import {
+  BACKFILL_JOB_SELECT_FIELDS,
   BACKFILL_VISIBLE_STATUSES,
   toBackfillJob,
 } from "@/lib/backfill-job";
@@ -32,7 +33,7 @@ export default async function DashboardLayout({
       .single(),
     supabase
       .from("backfill_jobs")
-      .select("id, status, processed_posts, total_posts")
+      .select(BACKFILL_JOB_SELECT_FIELDS)
       .eq("user_id", session.value)
       .in("status", [...BACKFILL_VISIBLE_STATUSES])
       .order("created_at", { ascending: false })

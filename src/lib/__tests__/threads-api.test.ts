@@ -319,6 +319,32 @@ describe("ThreadsAPI", () => {
   });
 
   describe("rate limiting and errors", () => {
+    it("times out hung requests instead of hanging forever", async () => {
+      vi.useFakeTimers();
+
+      fetchSpy.mockImplementationOnce((_, init) => {
+        const signal = init?.signal as AbortSignal | undefined;
+
+        return new Promise<Response>((_, reject) => {
+          signal?.addEventListener("abort", () => {
+            const error = new Error("Aborted");
+            error.name = "AbortError";
+            reject(error);
+          });
+        });
+      });
+
+      const promise = api.getUserProfile().catch((error: Error) => error);
+      await vi.advanceTimersByTimeAsync(30_000);
+
+      const error = await promise;
+      expect(error).toBeInstanceOf(ThreadsAPIError);
+      expect((error as ThreadsAPIError).status).toBe(408);
+      expect((error as Error).message).toContain("timed out");
+
+      vi.useRealTimers();
+    });
+
     it("retries on 429 and succeeds", async () => {
       vi.useFakeTimers();
 

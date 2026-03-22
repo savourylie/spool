@@ -11,6 +11,7 @@ import type {
 
 const BASE_URL = "https://graph.threads.net/v1.0";
 const MAX_RETRIES = 3;
+const REQUEST_TIMEOUT_MS = 30_000;
 
 export const THREADS_API_LAUNCH = new Date("2024-04-13T00:00:00Z");
 
@@ -50,7 +51,7 @@ export class ThreadsAPI {
         );
       }
 
-      const response = await fetch(url.toString());
+      const response = await this.fetchWithTimeout(url.toString());
 
       // Log rate limit warnings
       const appUsage = response.headers.get("x-app-usage");
@@ -103,6 +104,31 @@ export class ThreadsAPI {
     }
 
     throw lastError ?? new ThreadsAPIError("Request failed");
+  }
+
+  private async fetchWithTimeout(url: string): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, REQUEST_TIMEOUT_MS);
+
+    try {
+      return await fetch(url, { signal: controller.signal });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        (error.name === "AbortError" || controller.signal.aborted)
+      ) {
+        throw new ThreadsAPIError(
+          `Threads API request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`,
+          408,
+        );
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   async getUserProfile(): Promise<ThreadsUserProfile> {
@@ -265,7 +291,30 @@ export class ThreadsAPI {
     url.searchParams.set("grant_type", "th_refresh_token");
     url.searchParams.set("access_token", token);
 
-    const response = await fetch(url.toString());
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, REQUEST_TIMEOUT_MS);
+
+    let response: Response;
+
+    try {
+      response = await fetch(url.toString(), { signal: controller.signal });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        (error.name === "AbortError" || controller.signal.aborted)
+      ) {
+        throw new ThreadsAPIError(
+          `Threads API request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`,
+          408,
+        );
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const body = await response.json().catch(() => null);
