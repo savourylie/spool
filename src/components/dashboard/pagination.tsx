@@ -29,52 +29,58 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
   for (let i = start; i <= end; i++) pages.push(i);
 
   return (
-    <nav className="flex items-center justify-center gap-2 pt-4" aria-label="Pagination">
-      <Link
-        href={buildHref(currentPage - 1)}
-        aria-label="Previous page"
-        className={cn(
-          "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
-          currentPage <= 1
-            ? "pointer-events-none opacity-40"
-            : "hover:bg-tertiary"
-        )}
-        aria-disabled={currentPage <= 1}
-        tabIndex={currentPage <= 1 ? -1 : undefined}
+    <div className="pt-4">
+      <div className="mb-2 flex items-center justify-center text-sm font-medium text-muted-foreground">
+        Page {currentPage} of {totalPages}
+      </div>
+      <nav
+        className="flex items-center justify-center gap-2"
+        aria-label="Pagination"
       >
-        <CaretLeft weight="bold" className="size-4" />
-      </Link>
-
-      {pages.map((page) => (
         <Link
-          key={page}
-          href={buildHref(page)}
+          href={buildHref(currentPage - 1)}
+          aria-label="Previous page"
           className={cn(
             "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
-            page === currentPage
-              ? "bg-accent text-accent-foreground"
+            currentPage <= 1 ? "pointer-events-none opacity-40" : "hover:bg-tertiary"
+          )}
+          aria-disabled={currentPage <= 1}
+          tabIndex={currentPage <= 1 ? -1 : undefined}
+        >
+          <CaretLeft weight="bold" className="size-4" />
+        </Link>
+
+        {pages.map((page) => (
+          <Link
+            key={page}
+            href={buildHref(page)}
+            className={cn(
+              "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
+              page === currentPage
+                ? "bg-accent text-accent-foreground"
+                : "hover:bg-tertiary"
+            )}
+            aria-current={page === currentPage ? "page" : undefined}
+          >
+            {page}
+          </Link>
+        ))}
+
+        <Link
+          href={buildHref(currentPage + 1)}
+          aria-label="Next page"
+          className={cn(
+            "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
+            currentPage >= totalPages
+              ? "pointer-events-none opacity-40"
               : "hover:bg-tertiary"
           )}
-          aria-current={page === currentPage ? "page" : undefined}
+          aria-disabled={currentPage >= totalPages}
+          tabIndex={currentPage >= totalPages ? -1 : undefined}
         >
-          {page}
+          <CaretRight weight="bold" className="size-4" />
         </Link>
-      ))}
-
-      <Link
-        href={buildHref(currentPage + 1)}
-        aria-label="Next page"
-        className={cn(
-          "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
-          currentPage >= totalPages
-            ? "pointer-events-none opacity-40"
-            : "hover:bg-tertiary"
-        )}
-        aria-disabled={currentPage >= totalPages}
-        tabIndex={currentPage >= totalPages ? -1 : undefined}
-      >
-        <CaretRight weight="bold" className="size-4" />
-      </Link>
-    </nav>
+      </nav>
+    </div>
   );
 }

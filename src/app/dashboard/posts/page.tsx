@@ -18,8 +18,10 @@ import {
   isImportingBackfillStatus,
   toBackfillJob,
 } from "@/lib/backfill-job";
-
-const PAGE_SIZE = 20;
+import {
+  POSTS_PAGE_SIZE,
+  getPostsTotalPages,
+} from "@/lib/posts-pagination";
 
 const VALID_MEDIA_TYPES = ["TEXT", "IMAGE", "VIDEO", "CAROUSEL"] as const;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -77,14 +79,14 @@ export default async function PostsPage({
 
   const supabase = createAdminClient();
   const userId = session.value;
-  const offset = (page - 1) * PAGE_SIZE;
+  const offset = (page - 1) * POSTS_PAGE_SIZE;
 
   const [postsResult, backfillResult] = await Promise.all([
     supabase.rpc("get_posts_with_metrics" as never, {
       p_user_id: userId,
       p_sort_column: sortBy,
       p_sort_order: sortOrder,
-      p_limit: PAGE_SIZE,
+      p_limit: POSTS_PAGE_SIZE,
       p_offset: offset,
       p_media_types: p_media_types,
       p_date_from: p_date_from,
@@ -114,7 +116,7 @@ export default async function PostsPage({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const posts: PostRow[] = rows.map(({ total_count, ...rest }) => rest);
   const totalCount = rows[0]?.total_count ?? 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const totalPages = getPostsTotalPages(totalCount);
   const isImporting = isImportingBackfillStatus(backfillJob?.status);
 
   return (
@@ -130,6 +132,7 @@ export default async function PostsPage({
         <PostTable
           posts={posts}
           currentPage={page}
+          totalCount={totalCount}
           totalPages={totalPages}
           sortBy={sortBy}
           sortOrder={sortOrder}

@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "./pagination";
 import { PostRowDetail } from "./post-row-detail";
 import { getPostsEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
+import { getPostsPageRange } from "@/lib/posts-pagination";
 
 export interface PostRow {
   id: string;
@@ -28,6 +29,7 @@ export interface PostRow {
 interface PostTableProps {
   posts: PostRow[];
   currentPage: number;
+  totalCount: number;
   totalPages: number;
   sortBy: string;
   sortOrder: string;
@@ -71,6 +73,7 @@ function formatDate(iso: string): string {
 export function PostTable({
   posts,
   currentPage,
+  totalCount,
   totalPages,
   sortBy,
   sortOrder,
@@ -107,9 +110,27 @@ export function PostTable({
 
   // Find top engagement rate for accent highlighting
   const maxRate = Math.max(...posts.map((p) => p.engagement_rate), 0);
+  const visibleRange = getPostsPageRange({
+    currentPage,
+    totalCount,
+    pageItemCount: posts.length,
+  });
 
   return (
     <div>
+      {visibleRange && (
+        <div className="mb-3 flex items-center justify-between gap-3 text-sm text-muted-foreground">
+          <p>
+            Showing {visibleRange.start}-{visibleRange.end} of{" "}
+            {totalCount.toLocaleString()} posts
+          </p>
+          {totalPages > 1 && (
+            <p className="hidden sm:block">
+              Page {currentPage} of {totalPages}
+            </p>
+          )}
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
