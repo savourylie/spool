@@ -230,6 +230,8 @@ export function getBackfillStageLabel(job: BackfillJob | null): string | null {
       return "Fetching your Threads posts";
     case "saving_total_posts":
       return "Counting discovered posts";
+    case "analyzing_existing_coverage":
+      return "Checking saved post coverage";
     case "fetching_post_insights":
       return job.current_post_id
         ? `Fetching insights for post ${job.current_post_id}`

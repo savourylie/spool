@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { ThreadsAPI } from "@/lib/threads-api";
 import { decrypt } from "@/lib/crypto";
+import { normalizeThreadsMediaType } from "@/lib/post-media-type";
 
 export async function refreshMetrics(
   userId: string,
@@ -46,7 +47,7 @@ export async function refreshMetrics(
         {
           user_id: userId,
           threads_media_id: post.id,
-          media_type: post.media_type,
+          media_type: normalizeThreadsMediaType(post.media_type),
           text_preview: post.text?.substring(0, 280) ?? null,
           permalink: post.permalink,
           published_at: post.timestamp,

@@ -15,6 +15,74 @@ const REQUEST_TIMEOUT_MS = 30_000;
 
 export const THREADS_API_LAUNCH = new Date("2024-04-13T00:00:00Z");
 
+function getErrorCode(error: unknown): string | null {
+  if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  if ("code" in error && typeof error.code === "string") {
+    return error.code;
+  }
+
+  if (
+    "cause" in error &&
+    error.cause &&
+    typeof error.cause === "object" &&
+    "code" in error.cause &&
+    typeof error.cause.code === "string"
+  ) {
+    return error.cause.code;
+  }
+
+  return null;
+}
+
+function getErrorCauseMessage(error: unknown): string | null {
+  if (!error || typeof error !== "object" || !("cause" in error)) {
+    return null;
+  }
+
+  const cause = error.cause;
+  if (!cause || typeof cause !== "object" || !("message" in cause)) {
+    return null;
+  }
+
+  return typeof cause.message === "string" ? cause.message : null;
+}
+
+function createNetworkRequestError(url: string, error: unknown) {
+  if (error instanceof ThreadsAPIError) {
+    return error;
+  }
+
+  const baseMessage =
+    error instanceof Error ? error.message : "Network request failed";
+  const code = getErrorCode(error);
+  const causeMessage = getErrorCauseMessage(error);
+  const detail = code
+    ? causeMessage
+      ? `${code}: ${causeMessage}`
+      : code
+    : causeMessage;
+
+  return new ThreadsAPIError(
+    detail
+      ? `Threads API network request failed: ${baseMessage} (${detail})`
+      : `Threads API network request failed: ${baseMessage}`,
+    undefined,
+    {
+      reason: "network_error",
+      url,
+      code,
+      causeMessage,
+    },
+  );
+}
+
+function isRetryableFetchError(error: unknown) {
+  return error instanceof TypeError;
+}
+
 export class ThreadsAPI {
   constructor(
     private accessToken: string,
@@ -51,7 +119,19 @@ export class ThreadsAPI {
         );
       }
 
-      const response = await this.fetchWithTimeout(url.toString());
+      let response: Response;
+      try {
+        response = await this.fetchWithTimeout(url.toString());
+      } catch (error) {
+        const requestError = createNetworkRequestError(url.toString(), error);
+
+        if (attempt === MAX_RETRIES || !isRetryableFetchError(error)) {
+          throw requestError;
+        }
+
+        lastError = requestError;
+        continue;
+      }
 
       // Log rate limit warnings
       const appUsage = response.headers.get("x-app-usage");
@@ -311,7 +391,7 @@ export class ThreadsAPI {
         );
       }
 
-      throw error;
+      throw createNetworkRequestError(url.toString(), error);
     } finally {
       clearTimeout(timeoutId);
     }

@@ -396,6 +396,67 @@ describe("ThreadsAPI", () => {
       vi.useRealTimers();
     });
 
+    it("retries transient network failures and succeeds", async () => {
+      vi.useFakeTimers();
+      vi.spyOn(Math, "random").mockReturnValue(0);
+
+      const error = new TypeError("fetch failed");
+      Object.assign(error, {
+        cause: {
+          code: "ECONNRESET",
+          message: "socket hang up",
+        },
+      });
+
+      fetchSpy
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce(
+          jsonResponse({ id: "user-123", username: "testuser" }),
+        );
+
+      const promise = api.getUserProfile();
+      await vi.advanceTimersByTimeAsync(1_000);
+
+      const profile = await promise;
+      expect(profile).toEqual({ id: "user-123", username: "testuser" });
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+
+      vi.useRealTimers();
+    });
+
+    it("surfaces persistent network failures with cause details", async () => {
+      vi.useFakeTimers();
+      vi.spyOn(Math, "random").mockReturnValue(0);
+
+      const error = new TypeError("fetch failed");
+      Object.assign(error, {
+        cause: {
+          code: "ECONNRESET",
+          message: "socket hang up",
+        },
+      });
+
+      fetchSpy.mockRejectedValue(error);
+
+      const promise = api.getUserProfile().catch((err: Error) => err);
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      const result = await promise;
+      expect(result).toBeInstanceOf(ThreadsAPIError);
+      expect((result as Error).message).toBe(
+        "Threads API network request failed: fetch failed (ECONNRESET: socket hang up)",
+      );
+      expect((result as ThreadsAPIError).body).toEqual({
+        reason: "network_error",
+        url: "https://graph.threads.net/v1.0/me?fields=id%2Cusername&access_token=test-token",
+        code: "ECONNRESET",
+        causeMessage: "socket hang up",
+      });
+      expect(fetchSpy).toHaveBeenCalledTimes(4);
+
+      vi.useRealTimers();
+    });
+
     it("logs warning when x-app-usage exceeds 80%", async () => {
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 

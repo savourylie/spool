@@ -147,6 +147,7 @@ export function DashboardBackfillBanner({
     now,
   );
   const staleMessage = getBackfillStaleMessage(job, now);
+  const showResumeAction = job.status !== "failed" && staleMessage !== null;
 
   if (job.status === "failed") {
     return (
@@ -245,8 +246,20 @@ export function DashboardBackfillBanner({
             )}
           </div>
           {staleMessage && (
-            <div className="rounded-[var(--radius-sm)] border border-amber-400/40 bg-amber-100/70 px-3 py-2 text-xs font-medium text-amber-950">
-              {staleMessage}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-amber-400/40 bg-amber-100/70 px-3 py-2 text-xs font-medium text-amber-950">
+              <p>{staleMessage}</p>
+              {showResumeAction && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    void retry();
+                  }}
+                  disabled={retrying}
+                >
+                  {retrying ? "Resuming..." : "Resume import"}
+                </Button>
+              )}
             </div>
           )}
         </div>

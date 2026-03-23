@@ -17,6 +17,9 @@ let mockUserResult: { data: unknown; error: unknown } = {
   error: null,
 };
 let mockPostUpsertData: { id: string } | null = { id: "post-uuid-1" };
+let mockPostUpsertError: unknown = null;
+let mockExistingPostsData: Array<{ id: string; threads_media_id: string }> = [];
+let mockExistingMetricsData: Array<{ post_id: string }> = [];
 
 function createMockFrom(table: string) {
   if (table === "users") {
@@ -31,12 +34,22 @@ function createMockFrom(table: string) {
 
   if (table === "posts") {
     return {
+      select: (...args: unknown[]) => {
+        trackCall(table, "select", ...args);
+        return {
+          eq: () =>
+            Promise.resolve({ data: mockExistingPostsData, error: null }),
+        };
+      },
       upsert: (...args: unknown[]) => {
         trackCall(table, "upsert", ...args);
         return {
           select: () => ({
             single: () =>
-              Promise.resolve({ data: mockPostUpsertData, error: null }),
+              Promise.resolve({
+                data: mockPostUpsertData,
+                error: mockPostUpsertError,
+              }),
           }),
         };
       },
@@ -65,6 +78,13 @@ function createMockFrom(table: string) {
 
   if (table === "post_metrics") {
     return {
+      select: (...args: unknown[]) => {
+        trackCall(table, "select", ...args);
+        return {
+          in: () =>
+            Promise.resolve({ data: mockExistingMetricsData, error: null }),
+        };
+      },
       insert: (...args: unknown[]) => {
         trackCall(table, "insert", ...args);
         return Promise.resolve({ error: null });
@@ -142,6 +162,12 @@ function getPostUpsertCalls() {
     .map((call) => call.args[0] as Record<string, unknown>);
 }
 
+function getPostMetricsInsertCalls() {
+  return calls
+    .filter((call) => call.table === "post_metrics" && call.op === "insert")
+    .map((call) => call.args[0] as Record<string, unknown>);
+}
+
 function getDemographicsUpsertCalls() {
   return calls
     .filter((call) => call.table === "demographics" && call.op === "upsert")
@@ -159,11 +185,14 @@ describe("runBackfill", () => {
       error: null,
     };
     mockPostUpsertData = { id: "post-uuid-1" };
+    mockPostUpsertError = null;
+    mockExistingPostsData = [];
+    mockExistingMetricsData = [];
 
     mockGetUserPosts.mockResolvedValue([
       {
         id: "media-1",
-        media_type: "TEXT",
+        media_type: "TEXT_POST",
         text: "Hello world",
         timestamp: "2024-12-01T10:00:00Z",
         permalink: "https://threads.net/@user/1",
@@ -200,6 +229,7 @@ describe("runBackfill", () => {
 
     const updates = getUpdateCalls();
     const events = getEventInsertCalls();
+    const postUpserts = getPostUpsertCalls();
 
     expect(updates).toEqual(
       expect.arrayContaining([
@@ -211,6 +241,7 @@ describe("runBackfill", () => {
         expect.objectContaining({
           total_posts: 1,
           stage: "saving_total_posts",
+          processed_posts: 0,
         }),
         expect.objectContaining({
           processed_posts: 1,
@@ -224,6 +255,12 @@ describe("runBackfill", () => {
         }),
       ]),
     );
+
+    expect(postUpserts).toEqual([
+      expect.objectContaining({
+        media_type: "TEXT",
+      }),
+    ]);
 
     expect(events).toEqual(
       expect.arrayContaining([
@@ -246,6 +283,16 @@ describe("runBackfill", () => {
           details: expect.objectContaining({
             totalPosts: 1,
             followersCount: 500,
+          }),
+        }),
+        expect.objectContaining({
+          stage: "saving_total_posts",
+          message: "Existing post coverage analyzed",
+          details: expect.objectContaining({
+            coveredPosts: 0,
+            missingPosts: 1,
+            partialPosts: 0,
+            totalPosts: 1,
           }),
         }),
       ]),
@@ -312,6 +359,56 @@ describe("runBackfill", () => {
     );
 
     consoleSpy.mockRestore();
+  });
+
+  it("records PostgREST-style save errors with their real message", async () => {
+    mockPostUpsertData = null;
+    mockPostUpsertError = {
+      code: "23514",
+      hint: null,
+      details: "Failing row contains (..., TEXT_POST, ...)",
+      message:
+        'new row for relation "posts" violates check constraint "posts_media_type_check"',
+    };
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    const updates = getUpdateCalls();
+    const events = getEventInsertCalls();
+
+    expect(updates[updates.length - 1]).toEqual(
+      expect.objectContaining({
+        status: "failed",
+        stage: "saving_post",
+        current_post_id: "media-1",
+        last_error_message:
+          'new row for relation "posts" violates check constraint "posts_media_type_check"',
+        last_error_status: null,
+        last_error_payload: expect.objectContaining({
+          code: "23514",
+          message:
+            'new row for relation "posts" violates check constraint "posts_media_type_check"',
+        }),
+      }),
+    );
+
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          level: "error",
+          stage: "saving_post",
+          message: "Backfill failed",
+          details: expect.objectContaining({
+            postId: "media-1",
+            error: expect.objectContaining({
+              name: "23514",
+              message:
+                'new row for relation "posts" violates check constraint "posts_media_type_check"',
+            }),
+          }),
+        }),
+      ]),
+    );
   });
 
   it("continues on demographics failure and records a warning event", async () => {
@@ -383,5 +480,100 @@ describe("runBackfill", () => {
         text_preview: "a".repeat(280),
       }),
     );
+  });
+
+  it("resumes from existing coverage, repairs partial posts, and skips covered ones", async () => {
+    mockExistingPostsData = [
+      { id: "covered-post-uuid", threads_media_id: "media-covered" },
+      { id: "partial-post-uuid", threads_media_id: "media-partial" },
+    ];
+    mockExistingMetricsData = [{ post_id: "covered-post-uuid" }];
+    mockGetFollowersCount.mockResolvedValue(0);
+    mockPostUpsertData = { id: "missing-post-uuid" };
+    mockGetUserPosts.mockResolvedValue([
+      {
+        id: "media-covered",
+        media_type: "TEXT_POST",
+        text: "Already imported",
+        timestamp: "2024-12-03T10:00:00Z",
+        permalink: "https://threads.net/@user/covered",
+        shortcode: "covered",
+      },
+      {
+        id: "media-partial",
+        media_type: "IMAGE",
+        text: "Needs metrics",
+        timestamp: "2024-12-02T10:00:00Z",
+        permalink: "https://threads.net/@user/partial",
+        shortcode: "partial",
+      },
+      {
+        id: "media-missing",
+        media_type: "VIDEO",
+        text: "Missing entirely",
+        timestamp: "2024-12-01T10:00:00Z",
+        permalink: "https://threads.net/@user/missing",
+        shortcode: "missing",
+      },
+    ]);
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    const updates = getUpdateCalls();
+    const events = getEventInsertCalls();
+    const postUpserts = getPostUpsertCalls();
+    const postMetricsInserts = getPostMetricsInsertCalls();
+
+    expect(mockGetPostInsights.mock.calls.map((call) => call[0])).toEqual([
+      "media-partial",
+      "media-missing",
+    ]);
+
+    expect(postUpserts).toHaveLength(1);
+    expect(postUpserts[0]).toEqual(
+      expect.objectContaining({
+        threads_media_id: "media-missing",
+      }),
+    );
+
+    expect(postMetricsInserts).toEqual([
+      expect.objectContaining({ post_id: "partial-post-uuid" }),
+      expect.objectContaining({ post_id: "missing-post-uuid" }),
+    ]);
+
+    expect(updates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          stage: "saving_total_posts",
+          total_posts: 3,
+          processed_posts: 1,
+        }),
+        expect.objectContaining({
+          stage: "updating_progress",
+          processed_posts: 2,
+        }),
+        expect.objectContaining({
+          stage: "updating_progress",
+          processed_posts: 3,
+        }),
+      ]),
+    );
+
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          stage: "saving_total_posts",
+          message: "Existing post coverage analyzed",
+          details: expect.objectContaining({
+            coveredPosts: 1,
+            partialPosts: 1,
+            missingPosts: 1,
+            totalPosts: 3,
+          }),
+        }),
+      ]),
+    );
+
+    expect(mockGetFollowerDemographics).not.toHaveBeenCalled();
   });
 });

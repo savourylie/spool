@@ -176,7 +176,7 @@ describe("refreshMetrics", () => {
     mockGetUserPosts.mockResolvedValue([
       {
         id: "media-new-1",
-        media_type: "TEXT",
+        media_type: "TEXT_POST",
         text: "New post",
         timestamp: "2024-12-15T10:00:00Z",
         permalink: "https://threads.net/@user/new1",
@@ -318,7 +318,7 @@ describe("refreshMetrics", () => {
     mockGetUserPosts.mockResolvedValue([
       {
         id: "media-new-1",
-        media_type: "TEXT",
+        media_type: "TEXT_POST",
         text: "New post",
         timestamp: "2024-12-15T10:00:00Z",
         permalink: "https://threads.net/@user/new1",

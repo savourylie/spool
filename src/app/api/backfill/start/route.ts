@@ -3,6 +3,10 @@ import { after } from "next/server";
 import { getSession } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
 import { runBackfill } from "@/lib/backfill";
+import {
+  getMostRecentActiveBackfillJob,
+  markStaleBackfillJobFailed,
+} from "@/lib/backfill-recovery";
 
 export async function POST(request: NextRequest) {
   const userId = getSession(request);
@@ -12,15 +16,19 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminClient();
+  let activeJob = await getMostRecentActiveBackfillJob(supabase, userId);
 
-  const { data: activeJob } = await supabase
-    .from("backfill_jobs")
-    .select("id, status")
-    .eq("user_id", userId)
-    .in("status", ["pending", "running"])
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  if (activeJob) {
+    const staleActiveJob = await markStaleBackfillJobFailed(
+      supabase,
+      userId,
+      activeJob,
+    );
+
+    if (staleActiveJob.status === "failed") {
+      activeJob = null;
+    }
+  }
 
   if (activeJob?.status === "running") {
     console.log("Backfill start skipped: job already running", {

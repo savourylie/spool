@@ -83,6 +83,7 @@ export function BackfillProgress({
     now,
   )
   const staleMessage = getBackfillStaleMessage(currentJob, now)
+  const showResumeAction = status !== "failed" && staleMessage !== null
 
   useEffect(() => {
     if (!isImportingBackfillStatus(status)) return
@@ -218,7 +219,7 @@ export function BackfillProgress({
           )}
         </div>
 
-        {status === "failed" && (
+        {(status === "failed" || showResumeAction) && (
           <motion.div
             initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
             animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
@@ -229,7 +230,13 @@ export function BackfillProgress({
             }
           >
             <Button onClick={handleRetry} disabled={retrying}>
-              {retrying ? "Retrying..." : "Try Again"}
+              {showResumeAction
+                ? retrying
+                  ? "Resuming..."
+                  : "Resume import"
+                : retrying
+                  ? "Retrying..."
+                  : "Retry import"}
             </Button>
           </motion.div>
         )}

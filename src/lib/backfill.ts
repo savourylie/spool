@@ -1,8 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/database.types";
 import { ThreadsAPI } from "@/lib/threads-api";
+import type { ThreadsPost } from "@/lib/threads-api.types";
 import { decrypt } from "@/lib/crypto";
 import { ThreadsAPIError } from "@/lib/threads";
+import { normalizeThreadsMediaType } from "@/lib/post-media-type";
 
 type BackfillEventLevel = "info" | "warn" | "error";
 
@@ -76,12 +78,100 @@ function serializeBackfillError(error: unknown) {
     };
   }
 
+  if (error && typeof error === "object") {
+    const message =
+      "message" in error && typeof error.message === "string"
+        ? error.message
+        : null;
+    const status =
+      "status" in error && typeof error.status === "number"
+        ? error.status
+        : null;
+    const name =
+      "code" in error && typeof error.code === "string"
+        ? error.code
+        : "UnknownError";
+
+    if (message) {
+      return {
+        name,
+        message,
+        status,
+        payload: sanitizeDebugValue(error),
+      };
+    }
+  }
+
   return {
     name: "UnknownError",
     message: "Unknown error",
     status: null,
     payload: sanitizeDebugValue(error),
   };
+}
+
+type ExistingPostRow = {
+  id: string;
+  threads_media_id: string;
+};
+
+type ExistingMetricRow = {
+  post_id: string;
+};
+
+type ExistingPostCoverage = {
+  existingPostId: string;
+  hasMetrics: boolean;
+};
+
+type QueuedBackfillPost = {
+  post: ThreadsPost;
+  existingPostId: string | null;
+};
+
+async function getExistingPostCoverage(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+) {
+  const { data: existingPosts, error: existingPostsError } = await supabase
+    .from("posts")
+    .select("id, threads_media_id")
+    .eq("user_id", userId);
+
+  if (existingPostsError) {
+    throw existingPostsError;
+  }
+
+  const typedExistingPosts = (existingPosts ?? []) as ExistingPostRow[];
+  if (typedExistingPosts.length === 0) {
+    return new Map<string, ExistingPostCoverage>();
+  }
+
+  const { data: existingMetrics, error: existingMetricsError } = await supabase
+    .from("post_metrics")
+    .select("post_id")
+    .in(
+      "post_id",
+      typedExistingPosts.map((post) => post.id),
+    );
+
+  if (existingMetricsError) {
+    throw existingMetricsError;
+  }
+
+  const postIdsWithMetrics = new Set(
+    ((existingMetrics ?? []) as ExistingMetricRow[]).map((metric) => metric.post_id),
+  );
+
+  return new Map(
+    typedExistingPosts.map((post) => [
+      post.threads_media_id,
+      {
+        existingPostId: post.id,
+        hasMetrics: postIdsWithMetrics.has(post.id),
+      },
+    ]),
+  );
 }
 
 export async function runBackfill(userId: string, jobId: string) {
@@ -233,17 +323,61 @@ export async function runBackfill(userId: string, jobId: string) {
     });
 
     await checkpoint({
-      nextStage: "saving_total_posts",
-      message: "Stored total post count",
-      details: { totalPosts: posts.length },
-      jobPatch: {
-        total_posts: posts.length,
-      },
+      nextStage: "analyzing_existing_coverage",
+      message: "Checking which posts already have saved coverage",
     });
 
-    let processed = 0;
+    const coverageByMediaId = await getExistingPostCoverage(supabase, userId);
+    const postsToProcess: QueuedBackfillPost[] = [];
+    let coveredPosts = 0;
+    let partialPosts = 0;
+    let missingPosts = 0;
 
     for (const post of posts) {
+      const coverage = coverageByMediaId.get(post.id);
+
+      if (!coverage) {
+        missingPosts += 1;
+        postsToProcess.push({ post, existingPostId: null });
+        continue;
+      }
+
+      if (coverage.hasMetrics) {
+        coveredPosts += 1;
+        continue;
+      }
+
+      partialPosts += 1;
+      postsToProcess.push({
+        post,
+        existingPostId: coverage.existingPostId,
+      });
+    }
+
+    await checkpoint({
+      nextStage: "saving_total_posts",
+      message: "Stored total post count",
+      details: {
+        totalPosts: posts.length,
+        coveredPosts,
+        partialPosts,
+        missingPosts,
+      },
+      jobPatch: {
+        total_posts: posts.length,
+        processed_posts: coveredPosts,
+      },
+    });
+    await appendEvent("info", "Existing post coverage analyzed", {
+      coveredPosts,
+      missingPosts,
+      partialPosts,
+      totalPosts: posts.length,
+    });
+
+    let processed = coveredPosts;
+
+    for (const { post, existingPostId } of postsToProcess) {
       currentPostId = post.id;
 
       console.log("Backfill fetching post insights", {
@@ -270,30 +404,40 @@ export async function runBackfill(userId: string, jobId: string) {
         views: insights.views,
       });
 
-      await checkpoint({
-        nextStage: "saving_post",
-        nextCurrentPostId: currentPostId,
-        message: "Saving post metadata",
-        details: { postId: currentPostId },
-      });
-      const { data: insertedPost, error: postError } = await supabase
-        .from("posts")
-        .upsert(
-          {
-            user_id: userId,
-            threads_media_id: post.id,
-            media_type: post.media_type,
-            text_preview: post.text?.substring(0, 280) ?? null,
-            permalink: post.permalink,
-            published_at: post.timestamp,
-          },
-          { onConflict: "threads_media_id" },
-        )
-        .select("id")
-        .single();
+      let postId = existingPostId;
 
-      if (postError || !insertedPost) {
-        throw postError ?? new Error("Failed to save post");
+      if (!postId) {
+        await checkpoint({
+          nextStage: "saving_post",
+          nextCurrentPostId: currentPostId,
+          message: "Saving post metadata",
+          details: { postId: currentPostId },
+        });
+        const { data: insertedPost, error: postError } = await supabase
+          .from("posts")
+          .upsert(
+            {
+              user_id: userId,
+              threads_media_id: post.id,
+              media_type: normalizeThreadsMediaType(post.media_type),
+              text_preview: post.text?.substring(0, 280) ?? null,
+              permalink: post.permalink,
+              published_at: post.timestamp,
+            },
+            { onConflict: "threads_media_id" },
+          )
+          .select("id")
+          .single();
+
+        if (postError || !insertedPost) {
+          throw postError ?? new Error("Failed to save post");
+        }
+
+        postId = insertedPost.id;
+      }
+
+      if (!postId) {
+        throw new Error("Missing post id for metrics insert");
       }
 
       await checkpoint({
@@ -303,7 +447,7 @@ export async function runBackfill(userId: string, jobId: string) {
         details: { postId: currentPostId },
       });
       const { error: metricsError } = await supabase.from("post_metrics").insert({
-        post_id: insertedPost.id,
+        post_id: postId,
         views: insights.views,
         likes: insights.likes,
         replies: insights.replies,

@@ -1,13 +1,14 @@
+import type { StoredPostMediaType } from "@/lib/post-media-type";
+
 export interface ThreadsUserProfile {
   id: string;
   username: string;
 }
 
 export type ThreadsMediaType =
-  | "TEXT"
-  | "IMAGE"
-  | "VIDEO"
-  | "CAROUSEL"
+  | StoredPostMediaType
+  | `${StoredPostMediaType}_POST`
+  | "CAROUSEL_ALBUM"
   | "REPOST_FACADE";
 
 export interface ThreadsPost {
