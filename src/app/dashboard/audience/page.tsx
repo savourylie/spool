@@ -13,11 +13,9 @@ import {
   type DemographicRow,
 } from "@/components/dashboard/demographics-charts";
 import {
-  BACKFILL_JOB_SELECT_FIELDS,
-  BACKFILL_VISIBLE_STATUSES,
   isImportingBackfillStatus,
-  toBackfillJob,
 } from "@/lib/backfill-job";
+import { getMostRecentBackfillJob } from "@/lib/backfill-recovery";
 
 export default async function AudiencePage() {
   const cookieStore = await cookies();
@@ -42,14 +40,7 @@ export default async function AudiencePage() {
       .from("demographics")
       .select("dimension, key, value, fetched_at")
       .eq("user_id", userId),
-    supabase
-      .from("backfill_jobs")
-      .select(BACKFILL_JOB_SELECT_FIELDS)
-      .eq("user_id", userId)
-      .in("status", [...BACKFILL_VISIBLE_STATUSES])
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    getMostRecentBackfillJob(supabase, userId),
   ]);
 
   if (statsResult.error) {
@@ -60,10 +51,7 @@ export default async function AudiencePage() {
   const dailyStats = (statsResult.data ?? []) as DailyStatRow[];
   const latestStat = dailyStats.length > 0 ? dailyStats[dailyStats.length - 1] : null;
   const followersCount = latestStat?.followers_count ?? null;
-  const backfillJob = backfillResult.data
-    ? toBackfillJob(backfillResult.data)
-    : null;
-  const isImporting = isImportingBackfillStatus(backfillJob?.status);
+  const isImporting = isImportingBackfillStatus(backfillResult?.status);
 
   return (
     <>

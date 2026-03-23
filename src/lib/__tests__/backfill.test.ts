@@ -20,6 +20,7 @@ let mockPostUpsertData: { id: string } | null = { id: "post-uuid-1" };
 let mockPostUpsertError: unknown = null;
 let mockExistingPostsData: Array<{ id: string; threads_media_id: string }> = [];
 let mockExistingMetricsData: Array<{ post_id: string }> = [];
+let mockPostMetricsSelectBatches: Array<Array<{ post_id: string }>> | null = null;
 
 function createMockFrom(table: string) {
   if (table === "users") {
@@ -81,8 +82,18 @@ function createMockFrom(table: string) {
       select: (...args: unknown[]) => {
         trackCall(table, "select", ...args);
         return {
-          in: () =>
-            Promise.resolve({ data: mockExistingMetricsData, error: null }),
+          in: (...inArgs: unknown[]) => {
+            trackCall(table, "in", ...inArgs);
+
+            const batchIndex = calls.filter(
+              (call) => call.table === "post_metrics" && call.op === "in",
+            ).length;
+            const data =
+              mockPostMetricsSelectBatches?.[batchIndex - 1] ??
+              mockExistingMetricsData;
+
+            return Promise.resolve({ data, error: null });
+          },
         };
       },
       insert: (...args: unknown[]) => {
@@ -168,6 +179,12 @@ function getPostMetricsInsertCalls() {
     .map((call) => call.args[0] as Record<string, unknown>);
 }
 
+function getPostMetricsCoverageInCalls() {
+  return calls
+    .filter((call) => call.table === "post_metrics" && call.op === "in")
+    .map((call) => call.args[1] as string[]);
+}
+
 function getDemographicsUpsertCalls() {
   return calls
     .filter((call) => call.table === "demographics" && call.op === "upsert")
@@ -188,6 +205,7 @@ describe("runBackfill", () => {
     mockPostUpsertError = null;
     mockExistingPostsData = [];
     mockExistingMetricsData = [];
+    mockPostMetricsSelectBatches = null;
 
     mockGetUserPosts.mockResolvedValue([
       {
@@ -575,5 +593,117 @@ describe("runBackfill", () => {
     );
 
     expect(mockGetFollowerDemographics).not.toHaveBeenCalled();
+  });
+
+  it("completes cleanly when every discovered post is already covered", async () => {
+    mockExistingPostsData = [
+      { id: "covered-post-1", threads_media_id: "media-covered-1" },
+      { id: "covered-post-2", threads_media_id: "media-covered-2" },
+    ];
+    mockExistingMetricsData = [
+      { post_id: "covered-post-1" },
+      { post_id: "covered-post-2" },
+    ];
+    mockGetFollowersCount.mockResolvedValue(0);
+    mockGetUserPosts.mockResolvedValue([
+      {
+        id: "media-covered-1",
+        media_type: "TEXT_POST",
+        text: "Already imported 1",
+        timestamp: "2024-12-03T10:00:00Z",
+        permalink: "https://threads.net/@user/covered-1",
+        shortcode: "covered-1",
+      },
+      {
+        id: "media-covered-2",
+        media_type: "IMAGE",
+        text: "Already imported 2",
+        timestamp: "2024-12-02T10:00:00Z",
+        permalink: "https://threads.net/@user/covered-2",
+        shortcode: "covered-2",
+      },
+    ]);
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    const updates = getUpdateCalls();
+    const events = getEventInsertCalls();
+
+    expect(getPostUpsertCalls()).toHaveLength(0);
+    expect(getPostMetricsInsertCalls()).toHaveLength(0);
+    expect(mockGetPostInsights).not.toHaveBeenCalled();
+    expect(updates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          stage: "saving_total_posts",
+          total_posts: 2,
+          processed_posts: 2,
+        }),
+        expect.objectContaining({
+          status: "complete",
+          stage: "complete",
+        }),
+      ]),
+    );
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          stage: "saving_total_posts",
+          message: "No missing post coverage detected",
+          details: expect.objectContaining({
+            coveredPosts: 2,
+            totalPosts: 2,
+          }),
+        }),
+      ]),
+    );
+  });
+
+  it("batches coverage lookup for large fully covered accounts", async () => {
+    const existingPosts = Array.from({ length: 205 }, (_, index) => ({
+      id: `post-id-${index + 1}`,
+      threads_media_id: `media-${index + 1}`,
+    }));
+
+    mockExistingPostsData = existingPosts;
+    mockPostMetricsSelectBatches = [
+      existingPosts.slice(0, 100).map((post) => ({ post_id: post.id })),
+      existingPosts.slice(100, 200).map((post) => ({ post_id: post.id })),
+      existingPosts.slice(200).map((post) => ({ post_id: post.id })),
+    ];
+    mockGetFollowersCount.mockResolvedValue(0);
+    mockGetUserPosts.mockResolvedValue(
+      existingPosts.map((post) => ({
+        id: post.threads_media_id,
+        media_type: "TEXT_POST" as const,
+        text: `Post ${post.threads_media_id}`,
+        timestamp: "2024-12-01T10:00:00Z",
+        permalink: `https://threads.net/@user/${post.threads_media_id}`,
+        shortcode: post.threads_media_id,
+      })),
+    );
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    const coverageInCalls = getPostMetricsCoverageInCalls();
+    const updates = getUpdateCalls();
+
+    expect(coverageInCalls).toHaveLength(3);
+    expect(coverageInCalls.map((batch) => batch.length)).toEqual([100, 100, 5]);
+    expect(getPostUpsertCalls()).toHaveLength(0);
+    expect(getPostMetricsInsertCalls()).toHaveLength(0);
+    expect(updates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          stage: "saving_total_posts",
+          total_posts: 205,
+          processed_posts: 205,
+        }),
+        expect.objectContaining({
+          status: "complete",
+          stage: "complete",
+        }),
+      ]),
+    );
   });
 });

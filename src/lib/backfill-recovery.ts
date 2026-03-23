@@ -6,6 +6,7 @@ import {
   isBackfillJobStale,
   toBackfillJob,
   type BackfillJob,
+  type BackfillJobStatus,
 } from "@/lib/backfill-job";
 import type { Json } from "@/lib/supabase/database.types";
 
@@ -33,15 +34,21 @@ export function getStaleBackfillFailureMessage(job: BackfillJob) {
   return `This import stopped reporting progress before it finished. Resume the import to continue from the posts already saved. Last recorded stage: ${stageLabel}.`;
 }
 
-export async function getMostRecentActiveBackfillJob(
+export async function getMostRecentBackfillJob(
   supabase: AdminClient,
   userId: string,
+  statuses?: readonly BackfillJobStatus[],
 ) {
-  const { data, error } = await supabase
+  let query = supabase
     .from("backfill_jobs")
     .select(BACKFILL_JOB_SELECT_FIELDS)
-    .eq("user_id", userId)
-    .in("status", [...BACKFILL_IMPORTING_STATUSES])
+    .eq("user_id", userId);
+
+  if (statuses && statuses.length > 0) {
+    query = query.in("status", [...statuses]);
+  }
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -51,6 +58,17 @@ export async function getMostRecentActiveBackfillJob(
   }
 
   return data ? toBackfillJob(data) : null;
+}
+
+export async function getMostRecentActiveBackfillJob(
+  supabase: AdminClient,
+  userId: string,
+) {
+  return getMostRecentBackfillJob(
+    supabase,
+    userId,
+    BACKFILL_IMPORTING_STATUSES,
+  );
 }
 
 export async function markStaleBackfillJobFailed(

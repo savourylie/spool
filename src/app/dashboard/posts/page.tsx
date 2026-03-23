@@ -13,11 +13,9 @@ import { ErrorState } from "@/components/ui/error-state";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 import { PostFilters } from "@/components/dashboard/post-filters";
 import {
-  BACKFILL_JOB_SELECT_FIELDS,
-  BACKFILL_VISIBLE_STATUSES,
   isImportingBackfillStatus,
-  toBackfillJob,
 } from "@/lib/backfill-job";
+import { getMostRecentBackfillJob } from "@/lib/backfill-recovery";
 import {
   POSTS_PAGE_SIZE,
   getPostsTotalPages,
@@ -95,14 +93,7 @@ export default async function PostsPage({
       data: Array<PostRow & { total_count: number }> | null;
       error: { message: string } | null;
     }>,
-    supabase
-      .from("backfill_jobs")
-      .select(BACKFILL_JOB_SELECT_FIELDS)
-      .eq("user_id", userId)
-      .in("status", [...BACKFILL_VISIBLE_STATUSES])
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    getMostRecentBackfillJob(supabase, userId),
   ]);
   const { data: rows, error } = postsResult;
 
@@ -110,9 +101,7 @@ export default async function PostsPage({
     return <ErrorState description="We couldn't load your posts right now." />;
   }
 
-  const backfillJob = backfillResult.data
-    ? toBackfillJob(backfillResult.data)
-    : null;
+  const backfillJob = backfillResult;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const posts: PostRow[] = rows.map(({ total_count, ...rest }) => rest);
   const totalCount = rows[0]?.total_count ?? 0;

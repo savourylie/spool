@@ -10,10 +10,8 @@ import {
   getTokenStatus,
 } from "@/components/dashboard/token-expiry-banner";
 import {
-  BACKFILL_JOB_SELECT_FIELDS,
-  BACKFILL_VISIBLE_STATUSES,
-  toBackfillJob,
-} from "@/lib/backfill-job";
+  getMostRecentBackfillJob,
+} from "@/lib/backfill-recovery";
 
 export default async function DashboardLayout({
   children,
@@ -25,20 +23,13 @@ export default async function DashboardLayout({
   if (!session) redirect("/");
 
   const supabase = createAdminClient();
-  const [{ data: user }, { data: backfillJob }] = await Promise.all([
+  const [{ data: user }, backfillJob] = await Promise.all([
     supabase
       .from("users")
       .select("username, token_expires_at")
       .eq("id", session.value)
       .single(),
-    supabase
-      .from("backfill_jobs")
-      .select(BACKFILL_JOB_SELECT_FIELDS)
-      .eq("user_id", session.value)
-      .in("status", [...BACKFILL_VISIBLE_STATUSES])
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    getMostRecentBackfillJob(supabase, session.value),
   ]);
 
   if (!user?.username) redirect("/");
@@ -57,7 +48,7 @@ export default async function DashboardLayout({
           </div>
         )}
         <DashboardBackfillBanner
-          initialJob={backfillJob ? toBackfillJob(backfillJob) : null}
+          initialJob={backfillJob}
         />
         <DashboardTabs />
         {children}

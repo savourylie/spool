@@ -5,11 +5,9 @@ import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { ErrorState } from "@/components/ui/error-state";
 import { TimingHeatmap, type TimingPost } from "@/components/dashboard/timing-heatmap";
 import {
-  BACKFILL_JOB_SELECT_FIELDS,
-  BACKFILL_VISIBLE_STATUSES,
   isImportingBackfillStatus,
-  toBackfillJob,
 } from "@/lib/backfill-job";
+import { getMostRecentBackfillJob } from "@/lib/backfill-recovery";
 
 export default async function TimingPage() {
   const cookieStore = await cookies();
@@ -26,14 +24,7 @@ export default async function TimingPage() {
       data: TimingPost[] | null;
       error: { message: string } | null;
     }>,
-    supabase
-      .from("backfill_jobs")
-      .select(BACKFILL_JOB_SELECT_FIELDS)
-      .eq("user_id", userId)
-      .in("status", [...BACKFILL_VISIBLE_STATUSES])
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    getMostRecentBackfillJob(supabase, userId),
   ]);
   const { data: posts, error } = postsResult;
 
@@ -41,14 +32,10 @@ export default async function TimingPage() {
     return <ErrorState description="We couldn't load your timing data right now." />;
   }
 
-  const backfillJob = backfillResult.data
-    ? toBackfillJob(backfillResult.data)
-    : null;
-
   return (
     <TimingHeatmap
       posts={posts}
-      isImporting={isImportingBackfillStatus(backfillJob?.status)}
+      isImporting={isImportingBackfillStatus(backfillResult?.status)}
     />
   );
 }

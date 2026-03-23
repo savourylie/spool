@@ -129,6 +129,18 @@ type QueuedBackfillPost = {
   existingPostId: string | null;
 };
 
+const POST_METRICS_COVERAGE_BATCH_SIZE = 100;
+
+function getCoverageBatches<T>(items: T[], batchSize: number) {
+  const batches: T[][] = [];
+
+  for (let index = 0; index < items.length; index += batchSize) {
+    batches.push(items.slice(index, index + batchSize));
+  }
+
+  return batches;
+}
+
 async function getExistingPostCoverage(
   supabase: ReturnType<typeof createAdminClient>,
   userId: string,
@@ -147,21 +159,25 @@ async function getExistingPostCoverage(
     return new Map<string, ExistingPostCoverage>();
   }
 
-  const { data: existingMetrics, error: existingMetricsError } = await supabase
-    .from("post_metrics")
-    .select("post_id")
-    .in(
-      "post_id",
-      typedExistingPosts.map((post) => post.id),
-    );
+  const postIdsWithMetrics = new Set<string>();
 
-  if (existingMetricsError) {
-    throw existingMetricsError;
+  for (const postIdBatch of getCoverageBatches(
+    typedExistingPosts.map((post) => post.id),
+    POST_METRICS_COVERAGE_BATCH_SIZE,
+  )) {
+    const { data: existingMetrics, error: existingMetricsError } = await supabase
+      .from("post_metrics")
+      .select("post_id")
+      .in("post_id", postIdBatch);
+
+    if (existingMetricsError) {
+      throw existingMetricsError;
+    }
+
+    for (const metric of (existingMetrics ?? []) as ExistingMetricRow[]) {
+      postIdsWithMetrics.add(metric.post_id);
+    }
   }
-
-  const postIdsWithMetrics = new Set(
-    ((existingMetrics ?? []) as ExistingMetricRow[]).map((metric) => metric.post_id),
-  );
 
   return new Map(
     typedExistingPosts.map((post) => [
@@ -374,6 +390,13 @@ export async function runBackfill(userId: string, jobId: string) {
       partialPosts,
       totalPosts: posts.length,
     });
+
+    if (postsToProcess.length === 0) {
+      await appendEvent("info", "No missing post coverage detected", {
+        coveredPosts,
+        totalPosts: posts.length,
+      });
+    }
 
     let processed = coveredPosts;
 
