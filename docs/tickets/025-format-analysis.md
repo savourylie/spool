@@ -1,7 +1,7 @@
 # [TICKET-025] Format Analysis
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,14 +10,14 @@
 Build the Optimal Post Format Analysis feature — a library of pure analysis functions and a dashboard UI section that breaks down engagement by media type and post length. Shows which content formats perform best for the user's audience. Renders below the post table on the Posts tab.
 
 ## Acceptance Criteria
-- [ ] `computeFormatBreakdown()` returns average views, average WES, and post count per media type (TEXT, IMAGE, VIDEO, CAROUSEL)
-- [ ] `computeTextLengthBuckets()` buckets posts by character count (0-50 short, 50-150 medium, 150-280 long) with average engagement per bucket
-- [ ] `generateFormatRecommendation()` produces recommendation text comparing best vs. worst performing types and lengths
-- [ ] A StickerCard titled "Content Format Analysis" renders below the PostTable on `/dashboard/posts`
-- [ ] Grouped bar chart shows avg views + avg WES per media type (uses shadcn `ChartContainer`)
-- [ ] Text length analysis section shows engagement by length bucket
-- [ ] Recommendation text renders below charts with specific percentage comparisons
-- [ ] Empty state renders when fewer than 5 posts exist across all types
+- [x] `computeFormatBreakdown()` returns average views, average WES, and post count per media type (TEXT, IMAGE, VIDEO, CAROUSEL)
+- [x] `computeTextLengthBuckets()` buckets posts by character count (0-50 short, 50-150 medium, 150-280 long) with average engagement per bucket
+- [x] `generateFormatRecommendation()` produces recommendation text comparing best vs. worst performing types and lengths
+- [x] A StickerCard titled "Content Format Analysis" renders below the PostTable on `/dashboard/posts`
+- [x] Grouped bar chart shows avg views + avg WES per media type (uses shadcn `ChartContainer`)
+- [x] Text length analysis section shows engagement by length bucket
+- [x] Recommendation text renders below charts with specific percentage comparisons
+- [x] Empty state renders when fewer than 5 posts exist across all types
 
 ## Design Reference
 - **Components**: § Components > Cards ("Sticker Card")
