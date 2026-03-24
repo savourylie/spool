@@ -10,6 +10,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import type { PostRow } from "./post-table";
+import { CommentQuality } from "./comment-quality";
 
 interface MetricSnapshot {
   views: number | null;
@@ -179,6 +180,11 @@ export function PostRowDetail({ post }: { post: PostRow }) {
             </span>
           </div>
         )}
+      </div>
+
+      {/* Comment quality */}
+      <div className="mb-4">
+        <CommentQuality postId={post.id} />
       </div>
 
       {/* View on Threads link */}
