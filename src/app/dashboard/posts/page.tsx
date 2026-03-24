@@ -12,6 +12,7 @@ import {
 import { ErrorState } from "@/components/ui/error-state";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 import { PostFilters } from "@/components/dashboard/post-filters";
+import { FormatAnalysis } from "@/components/dashboard/format-analysis";
 import {
   isImportingBackfillStatus,
 } from "@/lib/backfill-job";
@@ -79,7 +80,7 @@ export default async function PostsPage({
   const userId = session.value;
   const offset = (page - 1) * POSTS_PAGE_SIZE;
 
-  const [postsResult, backfillResult] = await Promise.all([
+  const [postsResult, allPostsResult, backfillResult] = await Promise.all([
     supabase.rpc("get_posts_with_metrics" as never, {
       p_user_id: userId,
       p_sort_column: sortBy,
@@ -89,6 +90,20 @@ export default async function PostsPage({
       p_media_types: p_media_types,
       p_date_from: p_date_from,
       p_date_to: p_date_to,
+    } as never) as unknown as Promise<{
+      data: Array<PostRow & { total_count: number }> | null;
+      error: { message: string } | null;
+    }>,
+    // Fetch all posts (unfiltered) for format analysis
+    supabase.rpc("get_posts_with_metrics" as never, {
+      p_user_id: userId,
+      p_sort_column: "published_at",
+      p_sort_order: "desc",
+      p_limit: 10000,
+      p_offset: 0,
+      p_media_types: null,
+      p_date_from: null,
+      p_date_to: null,
     } as never) as unknown as Promise<{
       data: Array<PostRow & { total_count: number }> | null;
       error: { message: string } | null;
@@ -104,31 +119,36 @@ export default async function PostsPage({
   const backfillJob = backfillResult;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const posts: PostRow[] = rows.map(({ total_count, ...rest }) => rest);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const allPosts: PostRow[] = (allPostsResult.data ?? []).map(({ total_count, ...rest }) => rest);
   const totalCount = rows[0]?.total_count ?? 0;
   const totalPages = getPostsTotalPages(totalCount);
   const isImporting = isImportingBackfillStatus(backfillJob?.status);
 
   return (
-    <StickerCard className="hover:rotate-0 hover:scale-100">
-      <StickerCardHeader>
-        <StickerCardTitle>Post Performance</StickerCardTitle>
-        <StickerCardDescription>
-          Sort by any metric to find your best-performing content.
-        </StickerCardDescription>
-      </StickerCardHeader>
-      <StickerCardContent>
-        <PostFilters />
-        <PostTable
-          posts={posts}
-          currentPage={page}
-          totalCount={totalCount}
-          totalPages={totalPages}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          hasFilters={hasFilters}
-          isImporting={isImporting}
-        />
-      </StickerCardContent>
-    </StickerCard>
+    <>
+      <StickerCard className="hover:rotate-0 hover:scale-100">
+        <StickerCardHeader>
+          <StickerCardTitle>Post Performance</StickerCardTitle>
+          <StickerCardDescription>
+            Sort by any metric to find your best-performing content.
+          </StickerCardDescription>
+        </StickerCardHeader>
+        <StickerCardContent>
+          <PostFilters />
+          <PostTable
+            posts={posts}
+            currentPage={page}
+            totalCount={totalCount}
+            totalPages={totalPages}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            hasFilters={hasFilters}
+            isImporting={isImporting}
+          />
+        </StickerCardContent>
+      </StickerCard>
+      <FormatAnalysis posts={allPosts} isImporting={isImporting} />
+    </>
   );
 }

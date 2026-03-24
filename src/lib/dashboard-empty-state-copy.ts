@@ -78,6 +78,22 @@ export function getCadenceEmptyStateCopy(isImporting: boolean) {
   };
 }
 
+export function getFormatEmptyStateCopy(isImporting: boolean) {
+  if (isImporting) {
+    return {
+      title: "Importing posting data",
+      description:
+        "Format analysis will appear automatically as the backfill continues.",
+    };
+  }
+
+  return {
+    title: "Not enough posts for format analysis",
+    description:
+      "Post at least 5 times with different formats to see which content types and lengths perform best for your audience.",
+  };
+}
+
 export function getScannerEmptyStateCopy() {
   return {
     title: "Content Quality Scanner",
