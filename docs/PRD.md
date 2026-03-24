@@ -1,8 +1,8 @@
-# Spool — PRD v0
+# Spool — PRD v1
 
-**Personal brand analytics for Threads.**
+**Algorithm-aware analytics and content intelligence for Threads.**
 
-Connect your Threads account. See what's working, when to post, and who's listening.
+Connect your Threads account. See what's working, when to post, who's listening — and what to say next.
 
 ---
 
@@ -13,8 +13,10 @@ Threads offers no native analytics beyond basic per-post counts. Creators and pe
 - Compare post performance across content types
 - Understand which time slots drive the most engagement
 - Visualize their audience demographics and follower growth
+- Know how the algorithm actually scores their content (signal weights, diversity filtering, semantic clustering)
+- Get actionable guidance on what to post next based on what's already working
 
-They're left guessing. Spool turns their posting history into actionable insights.
+They're left guessing. Spool turns their posting history into actionable insights — and eventually into algorithm-aware content recommendations powered by LLM analysis of their performance data.
 
 ## Target User
 
@@ -28,9 +30,18 @@ Individual creators and personal brand marketers on Threads with 100+ followers 
 | Weekly active users | 40% of connected accounts |
 | Median time-to-value (connect → first insight viewed) | < 60 seconds |
 
+**Post-MVP success metrics (v1 intelligence features):**
+
+| Metric | Target |
+| --- | --- |
+| Users who view WES at least once/week | 30% of WAU |
+| Content Scanner analyses per active user | 3+/week |
+| AI Composer drafts adopted (copy-pasted) | 20% of generated drafts |
+| Avg engagement rate lift after 30 days of Spool usage | +15% vs pre-Spool baseline |
+
 ---
 
-## MVP Features
+## MVP Features (v0 — Complete)
 
 ### 1. Post Performance Ranking
 
@@ -47,7 +58,8 @@ Individual creators and personal brand marketers on Threads with 100+ followers 
   - Reposts
   - Quotes
   - Shares
-  - Engagement rate (likes + replies + reposts + quotes) / views
+  - Engagement rate (likes + replies + reposts + quotes + shares) / views
+  - Weighted Engagement Score (WES) — algorithm-weighted metric (see [SEO_FEATURES.md](SEO_FEATURES.md) §1.1)
 - Filter by:
   - Media type: Text, Image, Video, Carousel (multi-select)
   - Date range picker
@@ -95,15 +107,19 @@ Individual creators and personal brand marketers on Threads with 100+ followers 
 
 ---
 
-## Explicitly Out of Scope (v0)
+## Out of Scope
 
+**Remains out of scope:**
 - Competitor / peer tracking
-- AI-powered content recommendations
-- Reply and conversation depth analysis
 - Multi-account support
-- Hashtag / topic classification
 - Webhook-driven real-time updates (polling is sufficient)
 - Mobile app (web-only)
+- Direct publishing to Threads (v1 composer generates text for copy-paste only)
+
+**Now planned for v1+ (see [SEO_FEATURES.md](SEO_FEATURES.md)):**
+- AI-powered content recommendations → Phase 3: AI Content Composer (§3.3) + Topic Suggestion Engine (§3.4)
+- Reply and conversation depth analysis → Phase 2: Comment Quality Monitor (§2.2)
+- Hashtag / topic classification → Phase 2: Semantic Focus Score (§2.3), auto-populates `topic_tag`
 
 ---
 
@@ -122,10 +138,12 @@ Callback → store tokens → kick off backfill job
 Loading screen: "Analyzing your posts..." (progress bar, ~30s)
   │
   ▼
-Dashboard (3 tabs)
-  ├── [Posts]      Sortable performance table
-  ├── [Timing]    Day/hour engagement heatmap
-  └── [Audience]  Follower trend + demographics
+Dashboard
+  ├── [Posts]      Sortable performance table + WES + format analysis
+  ├── [Timing]    Day/hour engagement heatmap + cadence optimizer
+  ├── [Audience]  Follower trend + demographics + audience fit
+  ├── [Scanner]   Content quality analysis (v1 Phase 3)
+  └── [Compose]   AI-powered drafting + predictions (v1 Phase 3)
 ```
 
 ---
@@ -142,6 +160,7 @@ Dashboard (3 tabs)
 | Database | Supabase (local) | Postgres with row-level security, real-time subscriptions, free local dev |
 | Auth | Threads OAuth 2.0 → tokens stored in Supabase | Single OAuth provider |
 | Scheduling | Supabase Cron (`pg_cron` + `pg_net`) | Poll metrics every 6 hours, refresh tokens before expiry |
+| LLM (v1 Phase 3) | Claude API | Content quality analysis, draft generation, topic suggestions |
 | Hosting | Vercel | Zero-config Next.js deployment |
 
 ### Data Model
@@ -202,6 +221,15 @@ create table demographics (
   value       numeric not null,           -- count or percentage
   fetched_at  timestamptz default now()
 );
+
+-- v1 Phase 2: Reply threads for comment quality analysis
+-- create table post_replies ( ... see SEO_FEATURES.md §2.2 )
+
+-- v1 Phase 2: Demographics snapshots over time
+-- create table demographics_history ( ... see SEO_FEATURES.md §2.4 )
+
+-- v1 Phase 3: AI-generated content drafts
+-- create table drafts ( ... see SEO_FEATURES.md §3.3 )
 ```
 
 ### Ingestion Pipeline
@@ -229,14 +257,20 @@ Scheduled (daily):
 
 Scheduled (every 50 days):
   1. Refresh long-lived tokens before 60-day expiry
+
+v1 Phase 2 additions:
+  Scheduled (every 30 minutes):
+    1. For posts published in last 3 hours: fetch metrics for velocity tracking
+  Extended 6-hour job:
+    1. Fetch reply threads for recent posts (comment quality)
 ```
 
 ### API Rate Limit Awareness
 
 | Operation | Limit | Our usage |
 | --- | --- | --- |
-| Publishing | 250/24h | N/A (read-only app) |
-| Keyword search | 2,200/24h | N/A (not in MVP) |
+| Publishing | 250/24h | N/A (read-only in v0; v1 composer is copy-paste only) |
+| Reply fetching | Standard limits | v1 Phase 2: fetch replies for comment quality analysis |
 | General API calls | Standard Graph API limits | Backfill is bursty; schedule polls to stay well under |
 
 The backfill fetches posts + insights in sequence. For a user with 500 posts, that's ~501 API calls (1 paginated list + 500 insight fetches). This is well within standard rate limits when spread over the backfill window.
@@ -255,9 +289,21 @@ The backfill fetches posts + insights in sequence. For a user with 500 posts, th
 
 ---
 
+## Post-MVP Roadmap
+
+See **[SEO_FEATURES.md](SEO_FEATURES.md)** for the full algorithm-aware intelligence roadmap, synthesized from Meta patent analysis and Threads algorithm research (`docs/seo/`).
+
+| Phase | Theme | Key Features | New Infra |
+| --- | --- | --- | --- |
+| 1 | Algorithmic Scoring | Weighted Engagement Score, Cadence Optimizer, Format Analysis, Reselection Alerts, Viral Recovery | None — existing data only |
+| 2 | Enhanced Data | First-3-Hour Velocity, Comment Quality, Semantic Focus, Audience Fit | New API scopes, schema migrations, cron jobs |
+| 3 | AI Intelligence | Content Quality Scanner, Engagement Prediction, AI Composer, Topic Suggestions | LLM API (Claude), streaming, new tables |
+
+---
+
 ## Open Questions
 
-1. **Monetization model?** Free tier with limits (e.g., 90-day history) + paid for full history and daily email digests?
-2. **Do we want a "post composer" later?** The publishing API exists — could tie insights directly to a "post at your best time" workflow.
-3. **Onboarding for < 100 follower users?** The audience tab is empty for them. Should we still allow signup or gate it?
-4. **Data retention policy?** How long do we keep metric snapshots? Indefinitely (storage cost) or rolling window?
+1. **Monetization model?** Free tier with limits (e.g., 90-day history) + paid for full history and daily email digests? Phase 3 AI features (scanner, composer) are natural premium tier candidates.
+2. ~~**Do we want a "post composer" later?**~~ **Resolved.** Yes — planned as Phase 3 capstone feature. v1 generates text for copy-paste; future version may publish directly via Threads Publishing API.
+3. **Onboarding for < 100 follower users?** The audience tab is empty for them. Should we still allow signup or gate it? Phase 1 features (WES, cadence, format analysis) work regardless of follower count, making sub-100 accounts more viable.
+4. **Data retention policy?** How long do we keep metric snapshots? Indefinitely (storage cost) or rolling window? Phase 2 velocity tracking adds more frequent snapshots — retention policy becomes more urgent.

@@ -4,6 +4,8 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { ChartBar } from "@phosphor-icons/react/dist/ssr/ChartBar";
 import { Clock } from "@phosphor-icons/react/dist/ssr/Clock";
 import { Users } from "@phosphor-icons/react/dist/ssr/Users";
+import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning";
+import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
@@ -55,15 +57,15 @@ export default async function Home() {
             </h1>
           </div>
           <p className="mt-4 max-w-md text-lg text-muted-foreground">
-            Know what&apos;s working on Threads. Track post performance,
-            discover your best times to publish, and understand your audience —
-            all in one place.
+            See what&apos;s working, understand the algorithm, and know what to
+            post next. Spool turns your Threads data into algorithm-aware
+            insights and AI-powered content recommendations.
           </p>
           <a
             href="/api/auth/threads"
             className={buttonVariants({ size: "lg", className: "mt-8" })}
           >
-            Connect Threads
+            Get Started
             <span className="ml-1 inline-flex size-6 items-center justify-center rounded-full bg-white/30">
               <ArrowRight
                 weight="bold"
@@ -130,74 +132,79 @@ export default async function Home() {
 
       {/* ---- Features ---- */}
       <section className="relative mx-auto max-w-5xl px-6 pb-24">
-        <h2 className="mb-12 text-center font-heading text-3xl font-bold md:text-4xl">
-          Everything you need to grow on Threads
+        <h2 className="mb-4 text-center font-heading text-3xl font-bold md:text-4xl">
+          Analytics that understand the algorithm
         </h2>
+        <p className="mx-auto mb-12 max-w-lg text-center text-muted-foreground">
+          Track what works, learn why it works, and create more of it.
+        </p>
 
-        <div className="relative grid gap-8 md:grid-cols-3">
-          {/* Dashed connector lines between cards */}
-          <svg
-            aria-hidden
-            className="pointer-events-none absolute inset-0 -z-10 hidden h-full w-full md:block"
-          >
-            <line
-              x1="33%"
-              y1="50%"
-              x2="38%"
-              y2="50%"
-              stroke="#E2E8F0"
-              strokeWidth="2"
-              strokeDasharray="6 4"
-            />
-            <line
-              x1="62%"
-              y1="50%"
-              x2="67%"
-              y2="50%"
-              stroke="#E2E8F0"
-              strokeWidth="2"
-              strokeDasharray="6 4"
-            />
-          </svg>
-
-          {/* Card 1 — Post Performance */}
+        {/* Top row — 3 analytics features */}
+        <div className="grid gap-8 md:grid-cols-3">
           <StickerCard className="pt-8">
             <StickerCardIcon color="primary">
               <ChartBar weight="fill" className="size-6" />
             </StickerCardIcon>
             <StickerCardHeader>
-              <StickerCardTitle>Post Performance</StickerCardTitle>
+              <StickerCardTitle>Weighted Performance</StickerCardTitle>
               <StickerCardDescription>
-                See likes, replies, reposts, and engagement rate for every post
-                at a glance.
+                See how the algorithm scores your posts — shares and comments
+                matter far more than likes.
               </StickerCardDescription>
             </StickerCardHeader>
           </StickerCard>
 
-          {/* Card 2 — Best Time to Post */}
           <StickerCard className="pt-8">
             <StickerCardIcon color="secondary">
               <Clock weight="fill" className="size-6" />
             </StickerCardIcon>
             <StickerCardHeader>
-              <StickerCardTitle>Best Time to Post</StickerCardTitle>
+              <StickerCardTitle>Timing &amp; Cadence</StickerCardTitle>
               <StickerCardDescription>
-                Discover when your audience is most active so you can publish at
-                the perfect moment.
+                Find your best posting times and optimal spacing to avoid the
+                algorithm&apos;s diversity filter.
               </StickerCardDescription>
             </StickerCardHeader>
           </StickerCard>
 
-          {/* Card 3 — Audience Snapshot */}
           <StickerCard className="pt-8">
             <StickerCardIcon color="tertiary">
               <Users weight="fill" className="size-6" />
             </StickerCardIcon>
             <StickerCardHeader>
-              <StickerCardTitle>Audience Snapshot</StickerCardTitle>
+              <StickerCardTitle>Audience Fit</StickerCardTitle>
               <StickerCardDescription>
-                Understand where your followers are, their demographics, and how
-                your community is growing.
+                Track follower growth, demographics, and whether your audience
+                actually matches your content niche.
+              </StickerCardDescription>
+            </StickerCardHeader>
+          </StickerCard>
+        </div>
+
+        {/* Bottom row — 2 intelligence features, wider cards */}
+        <div className="mt-8 grid gap-8 md:grid-cols-2">
+          <StickerCard className="pt-8">
+            <StickerCardIcon color="quaternary">
+              <Lightning weight="fill" className="size-6" />
+            </StickerCardIcon>
+            <StickerCardHeader>
+              <StickerCardTitle>Content Scanner</StickerCardTitle>
+              <StickerCardDescription>
+                Analyze your posts for patterns the algorithm demotes —
+                clickbait, engagement bait, and semantic duplicates.
+              </StickerCardDescription>
+            </StickerCardHeader>
+          </StickerCard>
+
+          <StickerCard className="pt-8">
+            <StickerCardIcon color="primary">
+              <PencilLine weight="fill" className="size-6" />
+            </StickerCardIcon>
+            <StickerCardHeader>
+              <StickerCardTitle>AI Composer</StickerCardTitle>
+              <StickerCardDescription>
+                Draft algorithm-optimized posts based on what&apos;s already
+                working for your audience. Powered by your own data.
               </StickerCardDescription>
             </StickerCardHeader>
           </StickerCard>

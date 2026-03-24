@@ -10,6 +10,7 @@ import { Pagination } from "./pagination";
 import { PostRowDetail } from "./post-row-detail";
 import { getPostsEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import { getPostsPageRange } from "@/lib/posts-pagination";
+import { computeNormalizedWES } from "@/lib/weighted-engagement";
 
 export interface PostRow {
   id: string;
@@ -54,7 +55,10 @@ const COLUMNS = [
   { key: "quotes", label: "Quotes", sortable: true },
   { key: "shares", label: "Shares", sortable: true },
   { key: "engagement_rate", label: "Eng. Rate", sortable: true },
+  { key: "wes", label: "WES", sortable: false },
 ] as const;
+
+const COLUMN_COUNT = COLUMNS.length;
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -108,8 +112,14 @@ export function PostTable({
     return `${pathname}?${params.toString()}`;
   }
 
-  // Find top engagement rate for accent highlighting
-  const maxRate = Math.max(...posts.map((p) => p.engagement_rate), 0);
+  // Compute WES for each post
+  const postsWithWES = posts.map((p) => ({
+    ...p,
+    wes: computeNormalizedWES(p),
+  }));
+
+  // Find top WES for accent highlighting
+  const maxWES = Math.max(...postsWithWES.map((p) => p.wes), 0);
   const visibleRange = getPostsPageRange({
     currentPage,
     totalCount,
@@ -168,10 +178,10 @@ export function PostTable({
             </tr>
           </thead>
           <tbody>
-            {posts.map((post, i) => {
+            {postsWithWES.map((post, i) => {
               const media = MEDIA_ICONS[post.media_type] ?? MEDIA_ICONS.TEXT;
               const Icon = media.icon;
-              const isTopPerformer = maxRate > 0 && post.engagement_rate === maxRate;
+              const isTopPerformer = maxWES > 0 && post.wes === maxWES;
               const isExpanded = expandedId === post.id;
 
               return (
@@ -218,19 +228,23 @@ export function PostTable({
                     <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.reposts)}</td>
                     <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.quotes)}</td>
                     <td className="px-3 py-3 text-right tabular-nums">{formatNumber(post.shares)}</td>
+                    <td className="px-3 py-3 text-right tabular-nums">
+                      {post.engagement_rate.toFixed(2)}%
+                    </td>
                     <td
                       className={cn(
                         "px-3 py-3 text-right tabular-nums font-bold",
                         isTopPerformer ? "text-accent" : ""
                       )}
+                      title="Weighted Engagement Score — algorithm-weighted metric"
                     >
                       {isTopPerformer && <span aria-hidden="true">* </span>}
-                      {post.engagement_rate.toFixed(2)}%
+                      {post.wes.toFixed(2)}
                       {isTopPerformer && <span className="sr-only"> (top performer)</span>}
                     </td>
                   </tr>
                   <tr className="border-b border-border">
-                    <td colSpan={9} className="p-0">
+                    <td colSpan={COLUMN_COUNT} className="p-0">
                       <div
                         className="grid transition-[grid-template-rows] duration-300 [transition-timing-function:var(--ease-bounce)]"
                         style={{
@@ -248,7 +262,7 @@ export function PostTable({
             })}
             {posts.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-3">
+                <td colSpan={COLUMN_COUNT} className="px-3">
                   {hasFilters ? (
                     <EmptyState
                       icon={<FunnelSimple weight="bold" className="size-7" />}

@@ -10,7 +10,7 @@ export function getPostsEmptyStateCopy(isImporting: boolean) {
   return {
     title: "No posts yet",
     description:
-      "Connect your Threads account and run a backfill to see your post analytics here.",
+      "We'll analyze your Threads posts and show you what the algorithm rewards most — shares and meaningful comments carry far more weight than likes.",
   };
 }
 
@@ -19,14 +19,14 @@ export function getTimingEmptyStateCopy(isImporting: boolean) {
     return {
       title: "Importing posting data",
       description:
-        "We're still importing your posts. Timing insights will appear automatically as the backfill continues.",
+        "We're still importing your posts. Timing and cadence insights will appear automatically as the backfill continues.",
     };
   }
 
   return {
     title: "No posting data yet",
     description:
-      "Start posting on Threads and your optimal timing insights will appear here.",
+      "We'll find your optimal posting times and cadence — not just when to post, but how to space posts to avoid the algorithm's diversity filter.",
   };
 }
 
@@ -42,7 +42,7 @@ export function getFollowerEmptyStateCopy(isImporting: boolean) {
   return {
     title: "Tracking your growth",
     description:
-      "Your follower trend will build over time as we collect daily snapshots. Check back soon!",
+      "Your follower trend will build over time as we collect daily snapshots. We'll also track whether your followers match your content niche.",
   };
 }
 
@@ -58,6 +58,22 @@ export function getDemographicsEmptyStateCopy(isImporting: boolean) {
   return {
     title: "No data available yet",
     description:
-      "Demographics data will appear after your next audience sync.",
+      "Demographics data will appear after your next audience sync. This helps track whether your audience fits your content niche.",
+  };
+}
+
+export function getScannerEmptyStateCopy() {
+  return {
+    title: "Content Quality Scanner",
+    description:
+      "Analyze your posts for patterns the algorithm demotes — clickbait, engagement bait, and semantic duplicates. Coming soon.",
+  };
+}
+
+export function getComposerEmptyStateCopy() {
+  return {
+    title: "AI Content Composer",
+    description:
+      "Draft algorithm-optimized posts based on your performance history, audience data, and what triggers shares. Coming soon.",
   };
 }

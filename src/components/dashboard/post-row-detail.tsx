@@ -94,7 +94,7 @@ export function PostRowDetail({ post }: { post: PostRow }) {
   const chartData = metrics ? computeChartData(metrics) : [];
 
   return (
-    <div className="px-6 py-4 bg-muted/50 border-l-4 border-accent">
+    <div className="px-6 py-4 pl-10 bg-accent/5">
       {/* Full post text */}
       <p className="text-sm leading-relaxed whitespace-pre-wrap mb-4">
         {post.text_preview || "No text content."}
