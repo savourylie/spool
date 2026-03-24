@@ -1,7 +1,7 @@
 # [TICKET-023] Cadence Analysis Library
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,12 +10,12 @@
 Create a pure-function library that analyzes posting cadence patterns from existing post data. This provides the computation layer for the Cadence Optimizer UI (ticket #024). Derives all insights from `posts.published_at` timestamps and latest `post_metrics` — no new API calls or schema changes needed. Follows the same pure-function pattern as `src/lib/weighted-engagement.ts`.
 
 ## Acceptance Criteria
-- [ ] `computeCadenceStats()` returns average posts/day (last 30d), average gap between posts (hours), longest gap, and shortest gap
-- [ ] `computeCadenceScatterData()` returns array of `{ hoursSincePrevious, views }` data points for scatter chart rendering
-- [ ] `detectSameDayCollisions()` returns dates with 2+ posts and their individual view counts for reach differential display
-- [ ] `getCadenceRecommendation()` returns a recommendation object when average gap < 18 hours, including the percentage improvement from better spacing
-- [ ] All functions accept typed arrays and return typed results — no database calls or side effects
-- [ ] Unit tests cover edge cases: single post, all same day, no posts in last 30 days, posts spanning multiple months
+- [x] `computeCadenceStats()` returns average posts/day (last 30d), average gap between posts (hours), longest gap, and shortest gap
+- [x] `computeCadenceScatterData()` returns array of `{ hoursSincePrevious, views }` data points for scatter chart rendering
+- [x] `detectSameDayCollisions()` returns dates with 2+ posts and their individual view counts for reach differential display
+- [x] `getCadenceRecommendation()` returns a recommendation object when average gap < 18 hours, including the percentage improvement from better spacing
+- [x] All functions accept typed arrays and return typed results — no database calls or side effects
+- [x] Unit tests cover edge cases: single post, all same day, no posts in last 30 days, posts spanning multiple months
 
 ## Implementation Notes
 - Create `src/lib/cadence-analysis.ts`

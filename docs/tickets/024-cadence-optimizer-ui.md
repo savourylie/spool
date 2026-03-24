@@ -1,10 +1,10 @@
 # [TICKET-024] Cadence Optimizer UI
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #023
+- Requires: #023 ✅
 
 ## Description
 Build the Cadence Optimizer section that renders below the timing heatmap on the Timing tab. Visualizes posting cadence patterns, the relationship between post spacing and reach, and surfaces actionable recommendations about diversity filtering effects. Uses data from the cadence analysis library (#023).
