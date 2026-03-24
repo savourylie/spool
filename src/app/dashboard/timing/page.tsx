@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { ErrorState } from "@/components/ui/error-state";
 import { TimingHeatmap, type TimingPost } from "@/components/dashboard/timing-heatmap";
+import { CadenceOptimizer } from "@/components/dashboard/cadence-optimizer";
 import {
   isImportingBackfillStatus,
 } from "@/lib/backfill-job";
@@ -32,10 +33,12 @@ export default async function TimingPage() {
     return <ErrorState description="We couldn't load your timing data right now." />;
   }
 
+  const isImporting = isImportingBackfillStatus(backfillResult?.status);
+
   return (
-    <TimingHeatmap
-      posts={posts}
-      isImporting={isImportingBackfillStatus(backfillResult?.status)}
-    />
+    <>
+      <TimingHeatmap posts={posts} isImporting={isImporting} />
+      <CadenceOptimizer posts={posts} isImporting={isImporting} />
+    </>
   );
 }

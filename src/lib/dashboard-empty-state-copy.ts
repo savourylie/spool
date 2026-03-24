@@ -62,6 +62,22 @@ export function getDemographicsEmptyStateCopy(isImporting: boolean) {
   };
 }
 
+export function getCadenceEmptyStateCopy(isImporting: boolean) {
+  if (isImporting) {
+    return {
+      title: "Importing posting data",
+      description:
+        "Cadence insights will appear automatically as the backfill continues.",
+    };
+  }
+
+  return {
+    title: "Not enough posts for cadence analysis",
+    description:
+      "Post at least 3 times to see how your posting frequency affects reach. We'll show you the optimal spacing to avoid the algorithm's diversity filter.",
+  };
+}
+
 export function getScannerEmptyStateCopy() {
   return {
     title: "Content Quality Scanner",
