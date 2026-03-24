@@ -13,6 +13,8 @@ import { ErrorState } from "@/components/ui/error-state";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 import { PostFilters } from "@/components/dashboard/post-filters";
 import { FormatAnalysis } from "@/components/dashboard/format-analysis";
+import { ReselectionAlert } from "@/components/dashboard/reselection-alert";
+import { detectReselectedPosts } from "@/lib/reselection-detection";
 import {
   isImportingBackfillStatus,
 } from "@/lib/backfill-job";
@@ -80,7 +82,7 @@ export default async function PostsPage({
   const userId = session.value;
   const offset = (page - 1) * POSTS_PAGE_SIZE;
 
-  const [postsResult, allPostsResult, backfillResult] = await Promise.all([
+  const [postsResult, allPostsResult, backfillResult, reselectedPosts] = await Promise.all([
     supabase.rpc("get_posts_with_metrics" as never, {
       p_user_id: userId,
       p_sort_column: sortBy,
@@ -109,6 +111,7 @@ export default async function PostsPage({
       error: { message: string } | null;
     }>,
     getMostRecentBackfillJob(supabase, userId),
+    detectReselectedPosts(supabase, userId),
   ]);
   const { data: rows, error } = postsResult;
 
@@ -136,6 +139,7 @@ export default async function PostsPage({
         </StickerCardHeader>
         <StickerCardContent>
           <PostFilters />
+          <ReselectionAlert posts={reselectedPosts} />
           <PostTable
             posts={posts}
             currentPage={page}
