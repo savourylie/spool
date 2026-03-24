@@ -1,7 +1,7 @@
 # [TICKET-026] Reselection Alerts
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,12 +10,12 @@
 Build the Content Reselection Alert system — detection logic that identifies old posts re-entering distribution, and a dismissible alert banner displayed above the post table. When a post older than 7 days shows a significant engagement spike between its two most recent metric snapshots, the user is alerted so they can engage with new comments to maintain momentum.
 
 ## Acceptance Criteria
-- [ ] `detectReselectedPosts()` queries two most recent `post_metrics` rows per post where `published_at` > 7 days ago and returns posts exceeding thresholds (>20% view increase OR >50% total engagement increase between snapshots)
-- [ ] Alert banner renders above the PostTable within the Posts tab showing: post preview text, specific metrics delta (e.g., "+240 views, +12 likes"), and a link to the post on Threads
-- [ ] Banner is dismissible per session (React state, not localStorage — reappears on next visit)
-- [ ] CTA text reads "Engage with new comments to keep momentum" with ArrowSquareOut link to Threads permalink
-- [ ] Multiple reselected posts show as a scrollable list within the banner
-- [ ] No alert renders when no posts meet the threshold or when user has fewer than 2 metric snapshots per post
+- [x] `detectReselectedPosts()` queries two most recent `post_metrics` rows per post where `published_at` > 7 days ago and returns posts exceeding thresholds (>20% view increase OR >50% total engagement increase between snapshots)
+- [x] Alert banner renders above the PostTable within the Posts tab showing: post preview text, specific metrics delta (e.g., "+240 views, +12 likes"), and a link to the post on Threads
+- [x] Banner is dismissible per session (React state, not localStorage — reappears on next visit)
+- [x] CTA text reads "Engage with new comments to keep momentum" with ArrowSquareOut link to Threads permalink
+- [x] Multiple reselected posts show as a scrollable list within the banner
+- [x] No alert renders when no posts meet the threshold or when user has fewer than 2 metric snapshots per post
 
 ## Design Reference
 - **Components**: § Components > Cards — follows `backfill-status-banner.tsx` alert pattern
