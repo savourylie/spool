@@ -3,6 +3,7 @@ import type {
   ThreadsUserProfile,
   ThreadsPost,
   ThreadsPostInsights,
+  ThreadsReply,
   ThreadsUserInsightValue,
   ThreadsDemographicBreakdown,
   ThreadsTokenRefreshResult,
@@ -360,6 +361,32 @@ export class ThreadsAPI {
         value,
       })),
     };
+  }
+
+  async getPostReplies(mediaId: string): Promise<ThreadsReply[]> {
+    const allReplies: ThreadsReply[] = [];
+    let cursor: string | undefined;
+
+    const fields = "id,text,timestamp";
+
+    for (;;) {
+      const params: Record<string, string> = { fields };
+      if (cursor) params.after = cursor;
+
+      const page = await this.request<ThreadsPaginatedResponse<ThreadsReply>>(
+        `/${mediaId}/replies`,
+        params,
+      );
+
+      for (const reply of page.data) {
+        allReplies.push(reply);
+      }
+
+      if (!page.paging?.cursors?.after) break;
+      cursor = page.paging.cursors.after;
+    }
+
+    return allReplies;
   }
 
   static async refreshToken(

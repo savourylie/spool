@@ -242,6 +242,44 @@ export type Database = {
           },
         ]
       }
+      post_replies: {
+        Row: {
+          fetched_at: string | null
+          id: string
+          post_id: string
+          replied_at: string | null
+          text: string | null
+          threads_reply_id: string
+          word_count: number | null
+        }
+        Insert: {
+          fetched_at?: string | null
+          id?: string
+          post_id: string
+          replied_at?: string | null
+          text?: string | null
+          threads_reply_id: string
+          word_count?: number | null
+        }
+        Update: {
+          fetched_at?: string | null
+          id?: string
+          post_id?: string
+          replied_at?: string | null
+          text?: string | null
+          threads_reply_id?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_replies_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           created_at: string | null

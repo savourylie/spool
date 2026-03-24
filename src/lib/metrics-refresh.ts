@@ -3,9 +3,14 @@ import { ThreadsAPI } from "@/lib/threads-api";
 import { decrypt } from "@/lib/crypto";
 import { normalizeThreadsMediaType } from "@/lib/post-media-type";
 
+function countWords(text: string | null | undefined): number {
+  if (!text) return 0;
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 export async function refreshMetrics(
   userId: string,
-): Promise<{ newPosts: number; updatedMetrics: number }> {
+): Promise<{ newPosts: number; updatedMetrics: number; repliesStored: number }> {
   const supabase = createAdminClient();
 
   // 1. Get user and check token
@@ -19,7 +24,7 @@ export async function refreshMetrics(
 
   if (new Date(user.token_expires_at) <= new Date()) {
     console.warn(`Skipping user ${userId}: token expired`);
-    return { newPosts: 0, updatedMetrics: 0 };
+    return { newPosts: 0, updatedMetrics: 0, repliesStored: 0 };
   }
 
   const accessToken = decrypt(user.access_token);
@@ -100,7 +105,36 @@ export async function refreshMetrics(
     updatedMetrics++;
   }
 
-  return { newPosts, updatedMetrics };
+  // 4. Fetch and store replies for recent posts
+  let repliesStored = 0;
+  for (const post of recentPosts ?? []) {
+    try {
+      const replies = await api.getPostReplies(post.threads_media_id);
+      for (const reply of replies) {
+        const wordCount = countWords(reply.text);
+        await supabase
+          .from("post_replies")
+          .upsert(
+            {
+              post_id: post.id,
+              threads_reply_id: reply.id,
+              text: reply.text ?? null,
+              word_count: wordCount,
+              replied_at: reply.timestamp,
+            },
+            { onConflict: "threads_reply_id" },
+          );
+        repliesStored++;
+      }
+    } catch (err) {
+      console.error(
+        `Failed to fetch replies for post ${post.threads_media_id}:`,
+        err,
+      );
+    }
+  }
+
+  return { newPosts, updatedMetrics, repliesStored };
 }
 
 export async function refreshAllUsers(): Promise<{
@@ -120,7 +154,7 @@ export async function refreshAllUsers(): Promise<{
     try {
       const result = await refreshMetrics(user.id);
       console.log(
-        `Refreshed user ${user.id}: ${result.newPosts} new posts, ${result.updatedMetrics} updated metrics`,
+        `Refreshed user ${user.id}: ${result.newPosts} new posts, ${result.updatedMetrics} updated metrics, ${result.repliesStored} replies stored`,
       );
       processed++;
     } catch (err) {

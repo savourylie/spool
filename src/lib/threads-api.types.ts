@@ -55,6 +55,12 @@ export interface ThreadsTokenRefreshResult {
   expires_in: number;
 }
 
+export interface ThreadsReply {
+  id: string;
+  text: string;
+  timestamp: string;
+}
+
 export interface ThreadsPaginatedResponse<T> {
   data: T[];
   paging?: {
