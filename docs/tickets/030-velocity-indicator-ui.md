@@ -1,7 +1,7 @@
 # [TICKET-030] Velocity Indicator UI
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #029 ✅
@@ -10,13 +10,13 @@
 Add a Launch Score indicator to each post row in the post performance table. Shows a green/yellow/red badge indicating how the post's first-3-hour engagement velocity compares to the user's historical average. Only displays for posts published within the last 3 days (where velocity data exists).
 
 ## Acceptance Criteria
-- [ ] `VelocityIndicator` component renders a colored badge (green/yellow/red) inline with the post row
-- [ ] Green badge: "Strong Launch" — velocity above historical average
-- [ ] Yellow badge: "Average Launch" — velocity within 20% of average
-- [ ] Red badge: "Slow Launch" — velocity below average
-- [ ] Badge only renders for posts with `published_at` within last 3 days
-- [ ] Tooltip on hover shows: "First 3-hour engagement velocity: X.Xx vs X.Xx average"
-- [ ] Posts without velocity data show no indicator (graceful absence)
+- [x] `VelocityIndicator` component renders a colored badge (green/yellow/red) inline with the post row
+- [x] Green badge: "Strong Launch" — velocity above historical average
+- [x] Yellow badge: "Average Launch" — velocity within 20% of average
+- [x] Red badge: "Slow Launch" — velocity below average
+- [x] Badge only renders for posts with `published_at` within last 3 days
+- [x] Tooltip on hover shows: "First 3-hour engagement velocity: X.Xx vs X.Xx average"
+- [x] Posts without velocity data show no indicator (graceful absence)
 
 ## Design Reference
 - **Colors**: § Tokens > Colors — `quaternary` (green) for strong, `tertiary` (yellow) for average, `destructive` for slow

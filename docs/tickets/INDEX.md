@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 29    |
+| Done        | 30    |
 | In Progress | 0     |
-| Pending     | 6     |
+| Pending     | 5     |
 | Blocked     | 12    |
 | Deferred    | 0     |
 
@@ -49,7 +49,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | #   | Ticket                                                        | Status    | Depends On | Notes |
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
 | 029 | [Velocity Tracking Infrastructure](./029-velocity-infra.md)   | `done`    | —          | Partial index, velocity lib, 30-min cron |
-| 030 | [Velocity Indicator UI](./030-velocity-indicator-ui.md)       | `pending` | #029 ✅    | Unblocked — Launch Score badge on post rows |
+| 030 | [Velocity Indicator UI](./030-velocity-indicator-ui.md)       | `done`    | #029 ✅    | Launch Score badge on post rows |
 | 031 | [Comment Quality Infrastructure](./031-comment-quality-infra.md) | `pending` | —       | post_replies table, reply fetching, new OAuth scope |
 | 032 | [Comment Quality UI](./032-comment-quality-ui.md)             | `blocked` | #031       | Reply breakdown in post detail |
 | 033 | [Semantic Focus Infrastructure](./033-semantic-focus-infra.md) | `pending` | —          | text_full column, TF-IDF topic classification |
@@ -77,7 +77,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | #   | Ticket                                                        | Status    | Depends On                        | Notes |
 | --- | ------------------------------------------------------------- | --------- | --------------------------------- | ----- |
 | 045 | [Landing Page & Tabs Update](./045-landing-and-tabs-update.md) | `blocked` | #040, #043                       | Remove "Soon" badges, update feature cards |
-| 046 | [Phase 2 Empty & Error States](./046-empty-error-states.md)   | `blocked` | #030, #032, #034, #036           | Loading skeletons, empty/error states, isImporting |
+| 046 | [Phase 2 Empty & Error States](./046-empty-error-states.md)   | `blocked` | #030 ✅, #032, #034, #036        | Loading skeletons, empty/error states, isImporting |
 | 047 | [v1 QA & Integration Pass](./047-v1-qa-integration.md)        | `blocked` | #024-#028, #030-#036, #040-#046  | Cross-feature testing, a11y, responsive, streaming |
 
 ---
@@ -92,7 +92,7 @@ Phase 1 (existing data only):
   027 Viral Detection ✅ DONE ──► 028 Viral Recovery Card ✅ DONE
 
 Phase 2 (new infra + UI pairs):
-  029 Velocity Infra ✅ DONE ──► 030 Velocity UI 📋 PENDING
+  029 Velocity Infra ✅ DONE ──► 030 Velocity UI ✅ DONE
   031 Comment Infra ──► 032 Comment UI
   033 Semantic Infra ──► 034 Semantic UI ──┐
   035 Audience Infra ──► 036 Audience UI   │
