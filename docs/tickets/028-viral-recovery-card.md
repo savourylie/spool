@@ -1,10 +1,10 @@
 # [TICKET-028] Viral Recovery Card
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #027
+- Requires: #027 ✅
 
 ## Description
 Build the Viral Recovery Card — a full-width alert card rendered in the dashboard layout above DashboardTabs when a viral post is detected. Shows a recovery playbook with actionable steps to avoid the post-viral slump caused by diversity enforcement throttling. Dismissible via localStorage with a 7-day TTL.

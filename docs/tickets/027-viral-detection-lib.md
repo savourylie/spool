@@ -1,7 +1,7 @@
 # [TICKET-027] Viral Detection Library
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,13 +10,13 @@
 Create a pure-function library that detects viral posts and computes recovery state. A post is "viral" when its views exceed 5x the user's median post views AND daily_stats shows >100 new followers within 48 hours of that post's publish date. Recovery mode remains active for 7 days after detection. This provides the computation layer for the Viral Recovery Card UI (ticket #028).
 
 ## Acceptance Criteria
-- [ ] `detectViralPosts()` identifies posts where views > 5x user's median post views
-- [ ] `detectFollowerSpike()` checks `daily_stats` for >100 new followers within 48h of a post's publish date
-- [ ] `getViralRecoveryState()` combines both checks and returns viral post info, follower spike magnitude, recovery window (active for 7 days), and countdown to safe-to-post time (24-48h after viral post)
-- [ ] `computeMedianViews()` correctly computes the median views across all user posts
-- [ ] Functions handle edge cases: user with no posts, user with single post, no daily_stats data, post older than 7 days (recovery expired)
-- [ ] All functions are pure — accept typed arrays, return typed results, no side effects
-- [ ] Unit tests cover all detection paths and edge cases
+- [x] `detectViralPosts()` identifies posts where views > 5x user's median post views
+- [x] `detectFollowerSpike()` checks `daily_stats` for >100 new followers within 48h of a post's publish date
+- [x] `getViralRecoveryState()` combines both checks and returns viral post info, follower spike magnitude, recovery window (active for 7 days), and countdown to safe-to-post time (24-48h after viral post)
+- [x] `computeMedianViews()` correctly computes the median views across all user posts
+- [x] Functions handle edge cases: user with no posts, user with single post, no daily_stats data, post older than 7 days (recovery expired)
+- [x] All functions are pure — accept typed arrays, return typed results, no side effects
+- [x] Unit tests cover all detection paths and edge cases
 
 ## Implementation Notes
 - Create `src/lib/viral-detection.ts`
