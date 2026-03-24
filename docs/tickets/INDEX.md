@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 27    |
+| Done        | 28    |
 | In Progress | 0     |
-| Pending     | 7     |
+| Pending     | 6     |
 | Blocked     | 13    |
 | Deferred    | 0     |
 
@@ -40,7 +40,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | 025 | [Format Analysis](./025-format-analysis.md)                   | `done`    | —          | Media type breakdown + text length analysis on Posts tab |
 | 026 | [Reselection Alerts](./026-reselection-alerts.md)             | `done`    | —          | Old posts gaining traction — alert above post table |
 | 027 | [Viral Detection Library](./027-viral-detection-lib.md)       | `done`    | —          | Detect viral posts + follower spike, recovery window |
-| 028 | [Viral Recovery Card](./028-viral-recovery-card.md)           | `pending` | #027 ✅    | Unblocked — #027 now done |
+| 028 | [Viral Recovery Card](./028-viral-recovery-card.md)           | `done`    | #027 ✅    | Amber alert card with recovery playbook + countdown |
 
 ## v1 Phase 2 — Enhanced Data Collection (029-036)
 
@@ -89,7 +89,7 @@ Phase 1 (existing data only):
   023 Cadence Lib ✅ DONE ──► 024 Cadence UI ✅ DONE
   025 Format Analysis ✅ DONE (standalone)
   026 Reselection Alerts ✅ DONE (standalone)
-  027 Viral Detection ✅ DONE ──► 028 Viral Recovery Card
+  027 Viral Detection ✅ DONE ──► 028 Viral Recovery Card ✅ DONE
 
 Phase 2 (new infra + UI pairs):
   029 Velocity Infra ──► 030 Velocity UI
