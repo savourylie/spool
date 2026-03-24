@@ -11,6 +11,8 @@ import { PostRowDetail } from "./post-row-detail";
 import { getPostsEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import { getPostsPageRange } from "@/lib/posts-pagination";
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
+import { VelocityIndicator } from "./velocity-indicator";
+import type { VelocityResult } from "@/lib/velocity-scoring";
 
 export interface PostRow {
   id: string;
@@ -36,6 +38,7 @@ interface PostTableProps {
   sortOrder: string;
   hasFilters?: boolean;
   isImporting?: boolean;
+  velocityMap?: Record<string, VelocityResult>;
 }
 
 const MEDIA_ICONS: Record<string, { icon: typeof TextT; color: string }> = {
@@ -83,6 +86,7 @@ export function PostTable({
   sortOrder,
   hasFilters,
   isImporting = false,
+  velocityMap,
 }: PostTableProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -232,15 +236,28 @@ export function PostTable({
                       {post.engagement_rate.toFixed(2)}%
                     </td>
                     <td
-                      className={cn(
-                        "px-3 py-3 text-right tabular-nums font-bold",
-                        isTopPerformer ? "text-accent" : ""
-                      )}
+                      className="px-3 py-3 text-right"
                       title="Weighted Engagement Score — algorithm-weighted metric"
                     >
-                      {isTopPerformer && <span aria-hidden="true">* </span>}
-                      {post.wes.toFixed(2)}
-                      {isTopPerformer && <span className="sr-only"> (top performer)</span>}
+                      <div className="flex flex-col items-end gap-1">
+                        <span
+                          className={cn(
+                            "tabular-nums font-bold",
+                            isTopPerformer ? "text-accent" : ""
+                          )}
+                        >
+                          {isTopPerformer && <span aria-hidden="true">* </span>}
+                          {post.wes.toFixed(2)}
+                          {isTopPerformer && <span className="sr-only"> (top performer)</span>}
+                        </span>
+                        {velocityMap?.[post.id] && (
+                          <VelocityIndicator
+                            score={velocityMap[post.id].score}
+                            velocity={velocityMap[post.id].velocity}
+                            average={velocityMap[post.id].average}
+                          />
+                        )}
+                      </div>
                     </td>
                   </tr>
                   <tr className="border-b border-border">

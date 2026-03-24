@@ -23,6 +23,7 @@ import {
   POSTS_PAGE_SIZE,
   getPostsTotalPages,
 } from "@/lib/posts-pagination";
+import { getVelocityMapForRecentPosts } from "@/lib/velocity-scoring";
 
 const VALID_MEDIA_TYPES = ["TEXT", "IMAGE", "VIDEO", "CAROUSEL"] as const;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -124,6 +125,15 @@ export default async function PostsPage({
   const posts: PostRow[] = rows.map(({ total_count, ...rest }) => rest);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const allPosts: PostRow[] = (allPostsResult.data ?? []).map(({ total_count, ...rest }) => rest);
+
+  // Compute velocity badges for recent posts (non-critical — empty map on failure)
+  let velocityMap: Record<string, { score: "green" | "yellow" | "red"; velocity: number; average: number }> = {};
+  try {
+    velocityMap = await getVelocityMapForRecentPosts(userId, posts, new Date().toISOString());
+  } catch {
+    // Non-critical feature — don't break the page
+  }
+
   const totalCount = rows[0]?.total_count ?? 0;
   const totalPages = getPostsTotalPages(totalCount);
   const isImporting = isImportingBackfillStatus(backfillJob?.status);
@@ -149,6 +159,7 @@ export default async function PostsPage({
             sortOrder={sortOrder}
             hasFilters={hasFilters}
             isImporting={isImporting}
+            velocityMap={velocityMap}
           />
         </StickerCardContent>
       </StickerCard>
