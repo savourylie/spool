@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 23    |
+| Done        | 24    |
 | In Progress | 0     |
-| Pending     | 10    |
+| Pending     | 9     |
 | Blocked     | 14    |
 | Deferred    | 0     |
 
@@ -36,7 +36,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | #   | Ticket                                                        | Status    | Depends On | Notes |
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
 | 023 | [Cadence Analysis Library](./023-cadence-analysis-lib.md)     | `done`    | —          | Pure functions: gap stats, scatter data, collision detection |
-| 024 | [Cadence Optimizer UI](./024-cadence-optimizer-ui.md)         | `pending` | #023 ✅    | Unblocked — #023 done |
+| 024 | [Cadence Optimizer UI](./024-cadence-optimizer-ui.md)         | `done`    | #023 ✅    | StickerCard with scatter chart, stats bar, recommendation banner |
 | 025 | [Format Analysis](./025-format-analysis.md)                   | `pending` | —          | Media type breakdown + text length analysis on Posts tab |
 | 026 | [Reselection Alerts](./026-reselection-alerts.md)             | `pending` | —          | Old posts gaining traction — alert above post table |
 | 027 | [Viral Detection Library](./027-viral-detection-lib.md)       | `pending` | —          | Detect viral posts + follower spike, recovery window |
@@ -86,7 +86,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 ```
 Phase 1 (existing data only):
-  023 Cadence Lib ✅ DONE ──► 024 Cadence UI 📋 PENDING
+  023 Cadence Lib ✅ DONE ──► 024 Cadence UI ✅ DONE
   025 Format Analysis (standalone)
   026 Reselection Alerts (standalone)
   027 Viral Detection ──► 028 Viral Recovery Card

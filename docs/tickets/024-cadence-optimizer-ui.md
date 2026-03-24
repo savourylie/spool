@@ -1,7 +1,7 @@
 # [TICKET-024] Cadence Optimizer UI
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #023 ✅
@@ -10,13 +10,13 @@
 Build the Cadence Optimizer section that renders below the timing heatmap on the Timing tab. Visualizes posting cadence patterns, the relationship between post spacing and reach, and surfaces actionable recommendations about diversity filtering effects. Uses data from the cadence analysis library (#023).
 
 ## Acceptance Criteria
-- [ ] A new StickerCard titled "Posting Cadence" renders below the heatmap on `/dashboard/timing`
-- [ ] Stats bar shows 4 metrics: average posts/day (30d), average gap (hours), longest gap, shortest gap
-- [ ] Scatter chart renders with X = hours since previous post, Y = views (uses shadcn `ChartContainer` wrapping Recharts `ScatterChart`)
-- [ ] Recommendation banner appears (amber border, `border-tertiary bg-tertiary/10`) when average gap < 18h with text: "Posts spaced 18-24+ hours apart get X% more views on average based on your data"
-- [ ] Same-day collision list shows dates with 2+ posts and their view counts
-- [ ] Empty state renders when fewer than 3 posts exist
-- [ ] Component handles `isImporting` flag for backfill-in-progress copy variant
+- [x] A new StickerCard titled "Posting Cadence" renders below the heatmap on `/dashboard/timing`
+- [x] Stats bar shows 4 metrics: average posts/day (30d), average gap (hours), longest gap, shortest gap
+- [x] Scatter chart renders with X = hours since previous post, Y = views (uses shadcn `ChartContainer` wrapping Recharts `ScatterChart`)
+- [x] Recommendation banner appears (amber border, `border-tertiary bg-tertiary/10`) when average gap < 18h with text: "Posts spaced 18-24+ hours apart get X% more views on average based on your data"
+- [x] Same-day collision list shows dates with 2+ posts and their view counts
+- [x] Empty state renders when fewer than 3 posts exist
+- [x] Component handles `isImporting` flag for backfill-in-progress copy variant
 
 ## Design Reference
 - **Components**: § Components > Cards ("Sticker Card")
