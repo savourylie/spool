@@ -1,7 +1,7 @@
 # [TICKET-031] Comment Quality Infrastructure
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,14 +10,14 @@
 Build the infrastructure for comment quality analysis. Meaningful comments (5+ words) carry 30x the weight of likes in the algorithm's MSI scoring. This ticket creates the `post_replies` database table, adds reply-fetching capability to the Threads API service, extends the metrics refresh job to collect replies, and provides a reply classification library. Requires the new `threads_read_replies` OAuth scope.
 
 ## Acceptance Criteria
-- [ ] Supabase migration creates `post_replies` table with columns: id, post_id, threads_reply_id (unique), text, word_count, replied_at, fetched_at
-- [ ] Index `idx_post_replies_post` on `post_replies (post_id)` is created
-- [ ] `ThreadsAPI.getPostReplies(mediaId)` method fetches reply threads from `GET /{media-id}/replies`
-- [ ] OAuth scope updated to include `threads_read_replies`
-- [ ] Metrics refresh job (`refreshMetrics`) extended to fetch and store replies for recent posts (last 7 days)
-- [ ] `classifyReplies()` categorizes replies by word count: short (<5 words), medium (5-20), long (20+)
-- [ ] `computeDiscussionQualityScore()` returns a weighted average score based on reply length distribution
-- [ ] Unit tests for reply classification and quality scoring
+- [x] Supabase migration creates `post_replies` table with columns: id, post_id, threads_reply_id (unique), text, word_count, replied_at, fetched_at
+- [x] Index `idx_post_replies_post` on `post_replies (post_id)` is created
+- [x] `ThreadsAPI.getPostReplies(mediaId)` method fetches reply threads from `GET /{media-id}/replies`
+- [x] OAuth scope updated to include `threads_read_replies`
+- [x] Metrics refresh job (`refreshMetrics`) extended to fetch and store replies for recent posts (last 7 days)
+- [x] `classifyReplies()` categorizes replies by word count: short (<5 words), medium (5-20), long (20+)
+- [x] `computeDiscussionQualityScore()` returns a weighted average score based on reply length distribution
+- [x] Unit tests for reply classification and quality scoring
 
 ## Implementation Notes
 - Create Supabase migration for `post_replies` table (schema from SEO_FEATURES.md §2.2)

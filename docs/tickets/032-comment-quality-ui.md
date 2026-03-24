@@ -1,10 +1,10 @@
 # [TICKET-032] Comment Quality UI
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #031
+- Requires: #031 ✅
 
 ## Description
 Add a comment quality breakdown to the expandable post row detail, displayed below the sparkline chart. Shows the distribution of reply quality (short/medium/long) and a Discussion Quality Score for each post, helping users understand which posts generate meaningful discussion.
