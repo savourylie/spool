@@ -1,7 +1,7 @@
 # [TICKET-032] Comment Quality UI
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #031 ✅
@@ -10,13 +10,13 @@
 Add a comment quality breakdown to the expandable post row detail, displayed below the sparkline chart. Shows the distribution of reply quality (short/medium/long) and a Discussion Quality Score for each post, helping users understand which posts generate meaningful discussion.
 
 ## Acceptance Criteria
-- [ ] `CommentQuality` component renders in the post detail expansion below the sparkline chart
-- [ ] Horizontal stacked bar shows reply distribution: short (<5 words, muted), medium (5-20 words, tertiary), long (20+ words, quaternary)
-- [ ] Discussion Quality Score displays as a bold number (0-100) with a label
-- [ ] Summary text: "X meaningful comments (5+ words) out of Y total replies"
-- [ ] Loading state while reply data is being fetched
-- [ ] Empty state when no replies exist: "No replies yet"
-- [ ] Reply data is fetched via API route when the post detail is expanded (lazy-loaded, like the sparkline metrics)
+- [x] `CommentQuality` component renders in the post detail expansion below the sparkline chart
+- [x] Horizontal stacked bar shows reply distribution: short (<5 words, muted), medium (5-20 words, tertiary), long (20+ words, quaternary)
+- [x] Discussion Quality Score displays as a bold number (0-100) with a label
+- [x] Summary text: "X meaningful comments (5+ words) out of Y total replies"
+- [x] Loading state while reply data is being fetched
+- [x] Empty state when no replies exist: "No replies yet"
+- [x] Reply data is fetched via API route when the post detail is expanded (lazy-loaded, like the sparkline metrics)
 
 ## Design Reference
 - **Colors**: § Tokens > Colors — `muted` for short replies, `tertiary` for medium, `quaternary` for long
