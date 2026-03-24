@@ -1,10 +1,10 @@
 # [TICKET-030] Velocity Indicator UI
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #029
+- Requires: #029 ✅
 
 ## Description
 Add a Launch Score indicator to each post row in the post performance table. Shows a green/yellow/red badge indicating how the post's first-3-hour engagement velocity compares to the user's historical average. Only displays for posts published within the last 3 days (where velocity data exists).

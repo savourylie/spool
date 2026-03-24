@@ -1,7 +1,7 @@
 # [TICKET-029] Velocity Tracking Infrastructure
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,12 +10,12 @@
 Build the infrastructure for first-3-hour engagement velocity tracking. The algorithm disproportionately weights early engagement signals — this feature captures frequent metric snapshots for recently published posts and computes a Launch Score classification. Includes a Supabase migration for a partial index, a velocity computation library, and a new cron endpoint that runs every 30 minutes.
 
 ## Acceptance Criteria
-- [ ] Supabase migration creates partial index `idx_post_metrics_recent` on `post_metrics (post_id, fetched_at DESC) WHERE fetched_at > now() - interval '3 days'`
-- [ ] `computeVelocityScore()` calculates engagement velocity ratio: (engagement at 3h) / (engagement at 30min), compared to user's historical 3h average
-- [ ] `classifyLaunchScore()` returns green (above average), yellow (within 20% of average), or red (below average) based on velocity ratio
-- [ ] Cron endpoint `GET /api/cron/velocity` processes all users with valid tokens, fetches metrics for posts published in last 3 hours
-- [ ] Cron endpoint is secured with CRON_SECRET bearer token auth (matches existing cron pattern)
-- [ ] Velocity data is stored as regular `post_metrics` rows (reuses existing table, just at higher frequency for recent posts)
+- [x] Supabase migration creates partial index `idx_post_metrics_recent` on `post_metrics (post_id, fetched_at DESC) WHERE fetched_at > now() - interval '3 days'`
+- [x] `computeVelocityScore()` calculates engagement velocity ratio: (engagement at 3h) / (engagement at 30min), compared to user's historical 3h average
+- [x] `classifyLaunchScore()` returns green (above average), yellow (within 20% of average), or red (below average) based on velocity ratio
+- [x] Cron endpoint `GET /api/cron/velocity` processes all users with valid tokens, fetches metrics for posts published in last 3 hours
+- [x] Cron endpoint is secured with CRON_SECRET bearer token auth (matches existing cron pattern)
+- [x] Velocity data is stored as regular `post_metrics` rows (reuses existing table, just at higher frequency for recent posts)
 
 ## Implementation Notes
 - Create Supabase migration file in `supabase/migrations/` for the partial index
