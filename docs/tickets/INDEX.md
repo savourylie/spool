@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 34    |
+| Done        | 35    |
 | In Progress | 0     |
 | Pending     | 3     |
-| Blocked     | 10    |
+| Blocked     | 9     |
 | Deferred    | 0     |
 
 ---
@@ -54,8 +54,8 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | 032 | [Comment Quality UI](./032-comment-quality-ui.md)             | `done`    | #031 ✅    | Comment quality breakdown in post detail |
 | 033 | [Semantic Focus Infrastructure](./033-semantic-focus-infra.md) | `done`    | —          | text_full column, TF-IDF topic classification |
 | 034 | [Semantic Focus UI](./034-semantic-focus-ui.md)               | `done`    | #033 ✅    | Focus score, trend chart, topic badges on Audience tab |
-| 035 | [Audience Fit Infrastructure](./035-audience-fit-infra.md)    | `pending` | —          | demographics_history table, daily stats extension |
-| 036 | [Audience Fit UI](./036-audience-fit-ui.md)                   | `blocked` | #035       | Alignment score + shift timeline on Audience tab |
+| 035 | [Audience Fit Infrastructure](./035-audience-fit-infra.md)    | `done`    | —          | demographics_history table, daily stats extension |
+| 036 | [Audience Fit UI](./036-audience-fit-ui.md)                   | `pending` | #035 ✅    | Alignment score + shift timeline on Audience tab — Unblocked |
 
 ## v1 Phase 3 — AI-Powered Features (037-044)
 
@@ -95,7 +95,7 @@ Phase 2 (new infra + UI pairs):
   029 Velocity Infra ✅ DONE ──► 030 Velocity UI ✅ DONE
   031 Comment Infra ✅ DONE ──► 032 Comment UI ✅ DONE
   033 Semantic Infra ✅ DONE ──► 034 Semantic UI ✅ DONE ──┐
-  035 Audience Infra ──► 036 Audience UI   │
+  035 Audience Infra ✅ DONE ──► 036 Audience UI   │
                                            │
 Phase 3 (AI features):                    │
   037 LLM Client ──┬── 039 Quality LLM ──┐│

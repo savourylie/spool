@@ -1,7 +1,7 @@
 # [TICKET-035] Audience Fit Infrastructure
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,12 +10,12 @@
 Build the infrastructure for audience fit analysis. The algorithm suppresses reach when followers don't match content (the "follower paradox"). This ticket creates a `demographics_history` table to archive demographic snapshots over time (the existing `demographics` table only keeps the latest), provides functions to detect audience-content mismatch, and extends the daily stats cron to archive snapshots.
 
 ## Acceptance Criteria
-- [ ] Supabase migration creates `demographics_history` table with columns: id, user_id, dimension, key, value, fetched_at
-- [ ] Daily stats cron inserts into `demographics_history` alongside the existing `demographics` upsert
-- [ ] `computeAudienceAlignmentScore()` compares pre-viral vs. post-viral engagement rates and returns a 0-100 alignment score
-- [ ] `detectDemographicShift()` analyzes `demographics_history` over time and flags significant changes in audience composition
-- [ ] `getAudienceFitRecommendations()` returns actionable text when mismatch detected
-- [ ] Unit tests for alignment scoring and shift detection
+- [x] Supabase migration creates `demographics_history` table with columns: id, user_id, dimension, key, value, fetched_at
+- [x] Daily stats cron inserts into `demographics_history` alongside the existing `demographics` upsert
+- [x] `computeAudienceAlignmentScore()` compares pre-viral vs. post-viral engagement rates and returns a 0-100 alignment score
+- [x] `detectDemographicShift()` analyzes `demographics_history` over time and flags significant changes in audience composition
+- [x] `getAudienceFitRecommendations()` returns actionable text when mismatch detected
+- [x] Unit tests for alignment scoring and shift detection
 
 ## Implementation Notes
 - Create Supabase migration for `demographics_history` table (schema from SEO_FEATURES.md §2.4)

@@ -1,10 +1,10 @@
 # [TICKET-036] Audience Fit UI
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #035
+- Requires: #035 ✅
 
 ## Description
 Build the Audience Fit Analysis section on the Audience tab. Shows an audience alignment score, a demographic shift timeline, and recommendations when audience-content mismatch is detected. Helps users understand whether viral-acquired followers create a mismatch with their content strategy.
