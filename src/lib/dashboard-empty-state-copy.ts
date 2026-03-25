@@ -118,6 +118,22 @@ export function getSemanticFocusEmptyStateCopy(isImporting: boolean) {
   };
 }
 
+export function getAudienceFitEmptyStateCopy(isImporting: boolean) {
+  if (isImporting) {
+    return {
+      title: "Importing audience data",
+      description:
+        "Audience fit analysis requires multiple demographic snapshots over time. Data will appear as daily syncs continue.",
+    };
+  }
+
+  return {
+    title: "Not enough data for audience fit analysis",
+    description:
+      "We need at least 2 demographic snapshots to detect shifts. This data builds automatically with daily audience syncs.",
+  };
+}
+
 export function getComposerEmptyStateCopy() {
   return {
     title: "AI Content Composer",
