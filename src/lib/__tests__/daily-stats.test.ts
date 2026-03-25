@@ -65,6 +65,15 @@ function createMockFrom(table: string) {
     };
   }
 
+  if (table === "demographics_history") {
+    return {
+      insert: (...args: unknown[]) => {
+        trackCall(table, "insert", ...args);
+        return Promise.resolve({ error: null });
+      },
+    };
+  }
+
   return {
     insert: () => Promise.resolve({ error: null }),
     upsert: () => Promise.resolve({ error: null }),
@@ -106,6 +115,12 @@ function getDailyStatsUpserts() {
 function getDemographicsUpserts() {
   return calls
     .filter((c) => c.table === "demographics" && c.op === "upsert")
+    .map((c) => c.args[0]);
+}
+
+function getDemographicsHistoryInserts() {
+  return calls
+    .filter((c) => c.table === "demographics_history" && c.op === "insert")
     .map((c) => c.args[0]);
 }
 
@@ -219,6 +234,32 @@ describe("refreshDailyStats", () => {
     // Second run also upserts without error
     const upserts = getDailyStatsUpserts();
     expect(upserts).toHaveLength(1);
+  });
+
+  it("inserts into demographics_history alongside demographics upsert", async () => {
+    await refreshDailyStats("user-uuid");
+
+    const historyInserts = getDemographicsHistoryInserts();
+    // 3 dimensions × 2 values each = 6 inserts
+    expect(historyInserts).toHaveLength(6);
+
+    expect(historyInserts[0]).toEqual(
+      expect.objectContaining({
+        user_id: "user-uuid",
+        dimension: expect.any(String),
+        key: expect.any(String),
+        value: expect.any(Number),
+      }),
+    );
+  });
+
+  it("skips demographics_history when followers < 100", async () => {
+    mockGetFollowersCount.mockResolvedValue(50);
+
+    await refreshDailyStats("user-uuid");
+
+    const historyInserts = getDemographicsHistoryInserts();
+    expect(historyInserts).toHaveLength(0);
   });
 
   it("demographics failure is non-fatal", async () => {

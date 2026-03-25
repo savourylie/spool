@@ -55,6 +55,14 @@ export async function refreshDailyStats(
             },
             { onConflict: "user_id,dimension,key" },
           );
+
+          // Append to demographics_history for audience fit analysis
+          await supabase.from("demographics_history").insert({
+            user_id: userId,
+            dimension,
+            key,
+            value,
+          });
         }
 
         demographicsUpdated = true;
