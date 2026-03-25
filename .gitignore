@@ -39,6 +39,7 @@ coverage/
 # supabase
 supabase/.temp/
 supabase/.branches/
+supabase/snippets/
 
 # misc
 .DS_Store
