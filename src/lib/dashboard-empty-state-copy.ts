@@ -96,9 +96,9 @@ export function getFormatEmptyStateCopy(isImporting: boolean) {
 
 export function getScannerEmptyStateCopy() {
   return {
-    title: "Content Quality Scanner",
+    title: "Type or paste a draft post to analyze",
     description:
-      "Analyze your posts for patterns the algorithm demotes — clickbait, engagement bait, and semantic duplicates. Coming soon.",
+      "We'll check for patterns the algorithm demotes and suggest improvements.",
   };
 }
 

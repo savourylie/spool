@@ -1,4 +1,9 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
+
+import { createAdminClient } from "@/lib/supabase/server";
+import { SESSION_COOKIE_NAME } from "@/lib/session";
 import {
   StickerCard,
   StickerCardHeader,
@@ -7,14 +12,36 @@ import {
   StickerCardContent,
   StickerCardIcon,
 } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { getScannerEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
+import {
+  QualityScanner,
+  type ScannerPost,
+} from "@/components/dashboard/quality-scanner";
 
-export default function ScannerPage() {
-  const copy = getScannerEmptyStateCopy();
+export default async function ScannerPage() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get(SESSION_COOKIE_NAME);
+  if (!session) redirect("/");
+
+  const supabase = createAdminClient();
+  const userId = session.value;
+
+  const { data: postsData } = await supabase
+    .from("posts")
+    .select("id, text_preview, text_full, published_at")
+    .eq("user_id", userId)
+    .not("text_full", "is", null)
+    .order("published_at", { ascending: false })
+    .limit(50);
+
+  const posts: ScannerPost[] = (postsData ?? []).map((p) => ({
+    id: p.id,
+    text_preview: p.text_preview,
+    text_full: p.text_full,
+    published_at: p.published_at,
+  }));
 
   return (
-    <StickerCard className="pt-8">
+    <StickerCard className="pt-8 hover:rotate-0 hover:scale-100">
       <StickerCardIcon color="quaternary">
         <MagnifyingGlass weight="fill" className="size-6" />
       </StickerCardIcon>
@@ -25,12 +52,7 @@ export default function ScannerPage() {
         </StickerCardDescription>
       </StickerCardHeader>
       <StickerCardContent>
-        <EmptyState
-          icon={<MagnifyingGlass weight="bold" className="size-7" />}
-          iconColor="quaternary"
-          title={copy.title}
-          description={copy.description}
-        />
+        <QualityScanner posts={posts} />
       </StickerCardContent>
     </StickerCard>
   );
