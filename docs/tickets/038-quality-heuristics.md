@@ -1,7 +1,7 @@
 # [TICKET-038] Quality Heuristics Library
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,17 +10,17 @@
 Create a client-side heuristic analysis library for the Content Quality Scanner. This is the first of two analysis layers — it runs instantly in the browser without any API calls, detecting common anti-patterns that the algorithm demotes. Each check returns a typed issue with severity, description, and suggested fix. The heuristic score updates in real-time as the user types.
 
 ## Acceptance Criteria
-- [ ] `analyzeHeuristics()` accepts post text and returns an array of typed `QualityIssue` objects
-- [ ] Detects clickbait openers: "You won't believe...", "This will change...", "Nobody talks about..." etc.
-- [ ] Detects engagement bait: "Like if you agree", "Share with someone who...", "Tag a friend", "Comment YES" etc.
-- [ ] Detects excessive hashtags: flags when hashtag count exceeds 5
-- [ ] Detects ALL CAPS: flags when >30% of alphabetic characters are uppercase (excluding short posts)
-- [ ] Detects excessive emoji density: flags when emoji count > 20% of total characters
-- [ ] Detects too-short posts: flags posts under 20 characters as low-effort
-- [ ] `computeHeuristicScore()` returns a quality score (0-100) based on detected issues, weighted by severity
-- [ ] Each `QualityIssue` includes: `id`, `severity` (high/medium/low), `category`, `description`, `suggestion` (fix text)
-- [ ] All functions are pure and synchronous — no API calls, no side effects
-- [ ] Unit tests cover all detection patterns with positive and negative cases
+- [x] `analyzeHeuristics()` accepts post text and returns an array of typed `QualityIssue` objects
+- [x] Detects clickbait openers: "You won't believe...", "This will change...", "Nobody talks about..." etc.
+- [x] Detects engagement bait: "Like if you agree", "Share with someone who...", "Tag a friend", "Comment YES" etc.
+- [x] Detects excessive hashtags: flags when hashtag count exceeds 5
+- [x] Detects ALL CAPS: flags when >30% of alphabetic characters are uppercase (excluding short posts)
+- [x] Detects excessive emoji density: flags when emoji count > 20% of total characters
+- [x] Detects too-short posts: flags posts under 20 characters as low-effort
+- [x] `computeHeuristicScore()` returns a quality score (0-100) based on detected issues, weighted by severity
+- [x] Each `QualityIssue` includes: `id`, `severity` (high/medium/low), `category`, `description`, `suggestion` (fix text)
+- [x] All functions are pure and synchronous — no API calls, no side effects
+- [x] Unit tests cover all detection patterns with positive and negative cases
 
 ## Implementation Notes
 - Create `src/lib/quality-heuristics.ts`

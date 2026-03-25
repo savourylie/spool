@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #038, #039
+- Requires: #038 ✅, #039
 
 ## Description
 Replace the Scanner tab's "Coming Soon" stub with the full Content Quality Scanner interface. Provides a text input area for draft or existing post text, real-time analysis via both heuristic (instant, client-side) and LLM (streamed, server-side) layers, a quality score gauge, and a list of flagged issues with suggested rewrites.
