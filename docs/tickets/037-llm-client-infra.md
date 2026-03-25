@@ -1,7 +1,7 @@
 # [TICKET-037] LLM Client Infrastructure
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,14 +10,14 @@
 Create the shared LLM API abstraction that all Phase 3 AI features depend on. Provides a typed client for the Claude API with both streaming (SSE) and non-streaming modes, error handling, rate limit awareness, and timeout management. This is the foundational infrastructure for the Content Quality Scanner (§3.1), Engagement Prediction (§3.2), AI Composer (§3.3), and Topic Suggestions (§3.4).
 
 ## Acceptance Criteria
-- [ ] `LLMClient` class or module provides `generate(prompt, options)` returning a full completion string
-- [ ] `generateStream(prompt, options)` returns a `ReadableStream` suitable for SSE responses to the client
-- [ ] Configurable via `LLM_API_KEY` environment variable
-- [ ] Supports system prompt, user prompt, and optional message history
-- [ ] Handles API errors gracefully: rate limits (429), auth errors (401), server errors (5xx) with typed error responses
-- [ ] Request timeout configurable (default 30s for generate, 60s for streaming)
-- [ ] Supports configurable model selection and max token limits
-- [ ] TypeScript types for all request/response shapes
+- [x] `LLMClient` class or module provides `generate(prompt, options)` returning a full completion string
+- [x] `generateStream(prompt, options)` returns a `ReadableStream` suitable for SSE responses to the client
+- [x] Configurable via `LLM_API_KEY` environment variable
+- [x] Supports system prompt, user prompt, and optional message history
+- [x] Handles API errors gracefully: rate limits (429), auth errors (401), server errors (5xx) with typed error responses
+- [x] Request timeout configurable (default 30s for generate, 60s for streaming)
+- [x] Supports configurable model selection and max token limits
+- [x] TypeScript types for all request/response shapes
 
 ## Implementation Notes
 - Create `src/lib/llm-client.ts`

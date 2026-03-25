@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 36    |
+| Done        | 37    |
 | In Progress | 0     |
-| Pending     | 3     |
-| Blocked     | 8     |
+| Pending     | 5     |
+| Blocked     | 5     |
 | Deferred    | 0     |
 
 ---
@@ -63,12 +63,12 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 | #   | Ticket                                                        | Status    | Depends On   | Notes |
 | --- | ------------------------------------------------------------- | --------- | ------------ | ----- |
-| 037 | [LLM Client Infrastructure](./037-llm-client-infra.md)       | `pending` | —            | Claude API abstraction with streaming support |
+| 037 | [LLM Client Infrastructure](./037-llm-client-infra.md)       | `done`    | —            | Claude API abstraction with streaming support |
 | 038 | [Quality Heuristics Library](./038-quality-heuristics.md)     | `pending` | —            | Client-side regex checks for anti-patterns |
-| 039 | [Quality LLM Analysis](./039-quality-llm.md)                 | `blocked` | #037         | Server-side LLM analysis + /api/scanner endpoint |
+| 039 | [Quality LLM Analysis](./039-quality-llm.md)                 | `pending` | #037 ✅      | Server-side LLM analysis + /api/scanner endpoint — Unblocked |
 | 040 | [Content Quality Scanner UI](./040-scanner-ui.md)             | `blocked` | #038, #039   | Full scanner page: text input, gauge, issues |
-| 041 | [Engagement Prediction](./041-engagement-prediction.md)       | `blocked` | #037         | Statistical model + prediction range widget |
-| 042 | [Composer Infrastructure](./042-composer-infra.md)            | `blocked` | #037         | drafts table, prompt construction, /api/compose |
+| 041 | [Engagement Prediction](./041-engagement-prediction.md)       | `pending` | #037 ✅      | Statistical model + prediction range widget — Unblocked |
+| 042 | [Composer Infrastructure](./042-composer-infra.md)            | `pending` | #037 ✅      | drafts table, prompt construction, /api/compose — Unblocked |
 | 043 | [AI Content Composer UI](./043-composer-ui.md)                | `blocked` | #040, #041, #042 | Three-panel layout, streaming drafts, scanner integration |
 | 044 | [Topic Suggestions](./044-topic-suggestions.md)               | `blocked` | #042, #033 ✅ | Adjacent topic recommendations in composer |
 
@@ -98,10 +98,10 @@ Phase 2 (new infra + UI pairs):
   035 Audience Infra ✅ DONE ──► 036 Audience UI ✅ DONE
                                            │
 Phase 3 (AI features):                    │
-  037 LLM Client ──┬── 039 Quality LLM ──┐│
-  038 Heuristics ──┤                     ││
-                   ├── 041 Prediction    ││
-                   └── 042 Composer Infra─┤│
+  037 LLM Client ✅ DONE ──┬── 039 Quality LLM ──┐│
+  038 Heuristics ──────────┤                     ││
+                           ├── 041 Prediction    ││
+                           └── 042 Composer Infra─┤│
                          │               ││
   040 Scanner UI ◄── 038 + 039           ││
   043 Composer UI ◄── 040 + 041 + 042   ││

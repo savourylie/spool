@@ -1,10 +1,10 @@
 # [TICKET-042] Composer Infrastructure
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #037
+- Requires: #037 ✅
 
 ## Description
 Build the backend infrastructure for the AI Content Composer. Creates the `drafts` database table, prompt construction logic that assembles user context for the LLM, and a streaming API endpoint that generates 2-3 draft post variations targeting different share-trigger categories.

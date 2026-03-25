@@ -1,10 +1,10 @@
 # [TICKET-041] Engagement Prediction
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #037
+- Requires: #037 ✅
 
 ## Description
 Build the engagement prediction system — a statistical model that predicts expected engagement range for a post based on the user's historical performance data, plus an optional LLM refinement layer. The prediction widget is a reusable component displayed in both the Scanner and Compose tabs.
