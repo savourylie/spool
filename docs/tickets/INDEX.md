@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 35    |
+| Done        | 36    |
 | In Progress | 0     |
 | Pending     | 3     |
-| Blocked     | 9     |
+| Blocked     | 8     |
 | Deferred    | 0     |
 
 ---
@@ -55,7 +55,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | 033 | [Semantic Focus Infrastructure](./033-semantic-focus-infra.md) | `done`    | —          | text_full column, TF-IDF topic classification |
 | 034 | [Semantic Focus UI](./034-semantic-focus-ui.md)               | `done`    | #033 ✅    | Focus score, trend chart, topic badges on Audience tab |
 | 035 | [Audience Fit Infrastructure](./035-audience-fit-infra.md)    | `done`    | —          | demographics_history table, daily stats extension |
-| 036 | [Audience Fit UI](./036-audience-fit-ui.md)                   | `pending` | #035 ✅    | Alignment score + shift timeline on Audience tab — Unblocked |
+| 036 | [Audience Fit UI](./036-audience-fit-ui.md)                   | `done`    | #035 ✅    | Alignment score + shift timeline on Audience tab |
 
 ## v1 Phase 3 — AI-Powered Features (037-044)
 
@@ -77,7 +77,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | #   | Ticket                                                        | Status    | Depends On                        | Notes |
 | --- | ------------------------------------------------------------- | --------- | --------------------------------- | ----- |
 | 045 | [Landing Page & Tabs Update](./045-landing-and-tabs-update.md) | `blocked` | #040, #043                       | Remove "Soon" badges, update feature cards |
-| 046 | [Phase 2 Empty & Error States](./046-empty-error-states.md)   | `blocked` | #030 ✅, #032 ✅, #034 ✅, #036    | Loading skeletons, empty/error states, isImporting |
+| 046 | [Phase 2 Empty & Error States](./046-empty-error-states.md)   | `pending` | #030 ✅, #032 ✅, #034 ✅, #036 ✅  | Loading skeletons, empty/error states, isImporting — Unblocked |
 | 047 | [v1 QA & Integration Pass](./047-v1-qa-integration.md)        | `blocked` | #024-#028, #030-#036, #040-#046  | Cross-feature testing, a11y, responsive, streaming |
 
 ---
@@ -95,7 +95,7 @@ Phase 2 (new infra + UI pairs):
   029 Velocity Infra ✅ DONE ──► 030 Velocity UI ✅ DONE
   031 Comment Infra ✅ DONE ──► 032 Comment UI ✅ DONE
   033 Semantic Infra ✅ DONE ──► 034 Semantic UI ✅ DONE ──┐
-  035 Audience Infra ✅ DONE ──► 036 Audience UI   │
+  035 Audience Infra ✅ DONE ──► 036 Audience UI ✅ DONE
                                            │
 Phase 3 (AI features):                    │
   037 LLM Client ──┬── 039 Quality LLM ──┐│

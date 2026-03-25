@@ -1,7 +1,7 @@
 # [TICKET-036] Audience Fit UI
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #035 ✅
@@ -10,12 +10,12 @@
 Build the Audience Fit Analysis section on the Audience tab. Shows an audience alignment score, a demographic shift timeline, and recommendations when audience-content mismatch is detected. Helps users understand whether viral-acquired followers create a mismatch with their content strategy.
 
 ## Acceptance Criteria
-- [ ] StickerCard titled "Audience Fit" renders on the Audience tab below demographics charts
-- [ ] Audience Alignment Score displays as a large bold number (0-100) with a colored indicator
-- [ ] Demographic shift timeline shows key demographic proportions changing over time (line chart with multiple series)
-- [ ] Recommendations section renders when alignment score is below threshold, with actionable suggestions
-- [ ] Empty state when insufficient demographic history (< 2 snapshots)
-- [ ] Handles `isImporting` flag for backfill-in-progress variant
+- [x] StickerCard titled "Audience Fit" renders on the Audience tab below demographics charts
+- [x] Audience Alignment Score displays as a large bold number (0-100) with a colored indicator
+- [x] Demographic shift timeline shows key demographic proportions changing over time (line chart with multiple series)
+- [x] Recommendations section renders when alignment score is below threshold, with actionable suggestions
+- [x] Empty state when insufficient demographic history (< 2 snapshots)
+- [x] Handles `isImporting` flag for backfill-in-progress variant
 
 ## Design Reference
 - **Components**: § Components > Cards ("Sticker Card")

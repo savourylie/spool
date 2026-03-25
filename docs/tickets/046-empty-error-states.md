@@ -1,10 +1,10 @@
 # [TICKET-046] Phase 2 Empty & Error States
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #030 ✅, #032 ✅, #034 ✅, #036
+- Requires: #030 ✅, #032 ✅, #034 ✅, #036 ✅
 
 ## Description
 Add comprehensive empty states, error states, and loading skeletons for all Phase 2 UI components. Ensures every new data-driven section implements the 4-state machine (loading → success / error / empty) and correctly handles the `isImporting` flag for backfill-in-progress copy variants.
