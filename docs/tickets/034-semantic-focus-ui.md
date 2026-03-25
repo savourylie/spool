@@ -1,10 +1,10 @@
 # [TICKET-034] Semantic Focus UI
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #033
+- Requires: #033 ✅
 
 ## Description
 Build the Semantic Focus Score section on the Audience tab. Shows a 0-100 focus score representing topical consistency, a rolling 30-day trend line, and warnings when the score drops (indicating the algorithm may be re-classifying the account). Based on TF-IDF topic classification data from ticket #033.

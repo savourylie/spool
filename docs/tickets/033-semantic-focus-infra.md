@@ -1,7 +1,7 @@
 # [TICKET-033] Semantic Focus Infrastructure
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None (v0 complete)
@@ -10,14 +10,14 @@
 Build the infrastructure for semantic focus analysis. The algorithm classifies content by topic and builds per-account performance expectations — consistent posting in one topic builds classification confidence. This ticket adds full post text storage, implements TF-IDF keyword extraction for topic classification, and auto-populates the `topic_tag` column on posts. No LLM required — keyword-based for Phase 2.
 
 ## Acceptance Criteria
-- [ ] Supabase migration adds `text_full text` column to `posts` table
-- [ ] Backfill pipeline stores full post text in `text_full` (requesting `text` field from Threads API)
-- [ ] Metrics refresh stores full text for newly discovered posts
-- [ ] `extractTopics()` performs TF-IDF keyword extraction on post text and returns top topic clusters
-- [ ] `classifyPostTopic()` assigns a `topic_tag` to a post based on its content
-- [ ] `computeFocusScore()` returns 0-100 score representing % of recent posts within top 2-3 topics
-- [ ] Posts table `topic_tag` column is auto-populated during backfill and metrics refresh
-- [ ] Unit tests for topic extraction and focus score computation
+- [x] Supabase migration adds `text_full text` column to `posts` table
+- [x] Backfill pipeline stores full post text in `text_full` (requesting `text` field from Threads API)
+- [x] Metrics refresh stores full text for newly discovered posts
+- [x] `extractTopics()` performs TF-IDF keyword extraction on post text and returns top topic clusters
+- [x] `classifyPostTopic()` assigns a `topic_tag` to a post based on its content
+- [x] `computeFocusScore()` returns 0-100 score representing % of recent posts within top 2-3 topics
+- [x] Posts table `topic_tag` column is auto-populated during backfill and metrics refresh
+- [x] Unit tests for topic extraction and focus score computation
 
 ## Implementation Notes
 - Create Supabase migration adding `text_full text` column to `posts` table (keep `text_preview` for display)
