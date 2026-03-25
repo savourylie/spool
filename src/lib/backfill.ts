@@ -5,6 +5,7 @@ import type { ThreadsPost } from "@/lib/threads-api.types";
 import { decrypt } from "@/lib/crypto";
 import { ThreadsAPIError } from "@/lib/threads";
 import { normalizeThreadsMediaType } from "@/lib/post-media-type";
+import { extractTopics, classifyPostTopic } from "@/lib/topic-classification";
 
 type BackfillEventLevel = "info" | "warn" | "error";
 
@@ -444,6 +445,7 @@ export async function runBackfill(userId: string, jobId: string) {
               threads_media_id: post.id,
               media_type: normalizeThreadsMediaType(post.media_type),
               text_preview: post.text?.substring(0, 280) ?? null,
+              text_full: post.text ?? null,
               permalink: post.permalink,
               published_at: post.timestamp,
             },
@@ -498,6 +500,42 @@ export async function runBackfill(userId: string, jobId: string) {
         jobPatch: {
           processed_posts: processed,
         },
+      });
+    }
+
+    // --- Topic classification (batch) ---
+    await checkpoint({
+      nextStage: "classifying_topics",
+      nextCurrentPostId: null,
+      message: "Classifying post topics",
+    });
+
+    const { data: allPosts } = await supabase
+      .from("posts")
+      .select("id, text_full")
+      .eq("user_id", userId);
+
+    if (allPosts && allPosts.length > 0) {
+      const topicClusters = extractTopics(
+        allPosts.map((p) => ({ text: p.text_full })),
+      );
+      let classified = 0;
+
+      for (const post of allPosts) {
+        const result = classifyPostTopic(post.text_full, topicClusters);
+        if (result) {
+          await supabase
+            .from("posts")
+            .update({ topic_tag: result.topic })
+            .eq("id", post.id);
+          classified++;
+        }
+      }
+
+      await appendEvent("info", "Topic classification complete", {
+        totalPosts: allPosts.length,
+        classified,
+        clusters: topicClusters.length,
       });
     }
 

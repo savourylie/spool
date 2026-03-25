@@ -75,8 +75,8 @@ export type Database = {
       backfill_jobs: {
         Row: {
           completed_at: string | null
-          current_post_id: string | null
           created_at: string | null
+          current_post_id: string | null
           id: string
           last_error_message: string | null
           last_error_payload: Json | null
@@ -91,8 +91,8 @@ export type Database = {
         }
         Insert: {
           completed_at?: string | null
-          current_post_id?: string | null
           created_at?: string | null
+          current_post_id?: string | null
           id?: string
           last_error_message?: string | null
           last_error_payload?: Json | null
@@ -107,8 +107,8 @@ export type Database = {
         }
         Update: {
           completed_at?: string | null
-          current_post_id?: string | null
           created_at?: string | null
+          current_post_id?: string | null
           id?: string
           last_error_message?: string | null
           last_error_payload?: Json | null
@@ -287,6 +287,7 @@ export type Database = {
           media_type: string
           permalink: string | null
           published_at: string
+          text_full: string | null
           text_preview: string | null
           threads_media_id: string
           topic_tag: string | null
@@ -298,6 +299,7 @@ export type Database = {
           media_type: string
           permalink?: string | null
           published_at: string
+          text_full?: string | null
           text_preview?: string | null
           threads_media_id: string
           topic_tag?: string | null
@@ -309,6 +311,7 @@ export type Database = {
           media_type?: string
           permalink?: string | null
           published_at?: string
+          text_full?: string | null
           text_preview?: string | null
           threads_media_id?: string
           topic_tag?: string | null
@@ -555,3 +558,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

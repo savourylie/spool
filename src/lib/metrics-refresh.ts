@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { ThreadsAPI } from "@/lib/threads-api";
 import { decrypt } from "@/lib/crypto";
 import { normalizeThreadsMediaType } from "@/lib/post-media-type";
+import { extractTopics, classifyPostTopic } from "@/lib/topic-classification";
 
 function countWords(text: string | null | undefined): number {
   if (!text) return 0;
@@ -45,6 +46,7 @@ export async function refreshMetrics(
   const newPostsData = await api.getUserPosts(since);
 
   let newPosts = 0;
+  const newPostIds: string[] = [];
   for (const post of newPostsData) {
     const { data: insertedPost } = await supabase
       .from("posts")
@@ -54,6 +56,7 @@ export async function refreshMetrics(
           threads_media_id: post.id,
           media_type: normalizeThreadsMediaType(post.media_type),
           text_preview: post.text?.substring(0, 280) ?? null,
+          text_full: post.text ?? null,
           permalink: post.permalink,
           published_at: post.timestamp,
         },
@@ -63,6 +66,7 @@ export async function refreshMetrics(
       .single();
 
     if (insertedPost) {
+      newPostIds.push(insertedPost.id);
       const insights = await api.getPostInsights(post.id);
       await supabase.from("post_metrics").insert({
         post_id: insertedPost.id,
@@ -74,6 +78,31 @@ export async function refreshMetrics(
         shares: insights.shares,
       });
       newPosts++;
+    }
+  }
+
+  // 2b. Classify topics for newly inserted posts
+  if (newPostIds.length > 0) {
+    const { data: allPosts } = await supabase
+      .from("posts")
+      .select("id, text_full")
+      .eq("user_id", userId);
+
+    if (allPosts && allPosts.length > 0) {
+      const topicClusters = extractTopics(
+        allPosts.map((p) => ({ text: p.text_full })),
+      );
+      const newPostIdSet = new Set(newPostIds);
+
+      for (const post of allPosts.filter((p) => newPostIdSet.has(p.id))) {
+        const result = classifyPostTopic(post.text_full, topicClusters);
+        if (result) {
+          await supabase
+            .from("posts")
+            .update({ topic_tag: result.topic })
+            .eq("id", post.id);
+        }
+      }
     }
   }
 
