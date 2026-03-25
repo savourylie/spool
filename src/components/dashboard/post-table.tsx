@@ -11,6 +11,7 @@ import { PostRowDetail } from "./post-row-detail";
 import { getPostsEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import { getPostsPageRange } from "@/lib/posts-pagination";
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
+import { formatNumber } from "@/lib/engagement-prediction";
 import { VelocityIndicator } from "./velocity-indicator";
 import type { VelocityResult } from "@/lib/velocity-scoring";
 
@@ -62,12 +63,6 @@ const COLUMNS = [
 ] as const;
 
 const COLUMN_COUNT = COLUMNS.length;
-
-function formatNumber(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
-}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {

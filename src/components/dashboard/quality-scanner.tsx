@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { QualityGauge } from "@/components/dashboard/quality-gauge";
 import { QualityIssuesList } from "@/components/dashboard/quality-issues-list";
 import { QualityRewrites } from "@/components/dashboard/quality-rewrites";
+import { PredictionWidget } from "@/components/dashboard/prediction-widget";
 import {
   analyzeHeuristics,
   computeHeuristicScore,
@@ -19,6 +20,13 @@ import {
   parseAndValidateResponse,
   type LLMAnalysisResult,
 } from "@/lib/quality-scanner-shared";
+import {
+  predictEngagement,
+  type HistoricalPost,
+  type PredictionResult,
+  type LLMRefinement,
+  type PostCharacteristics,
+} from "@/lib/engagement-prediction";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -31,6 +39,7 @@ export interface ScannerPost {
 
 interface QualityScannerProps {
   posts: ScannerPost[];
+  predictionPosts: HistoricalPost[];
 }
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -40,7 +49,7 @@ const THREADS_CHAR_LIMIT = 500;
 
 // ── Component ────────────────────────────────────────────────────────
 
-export function QualityScanner({ posts }: QualityScannerProps) {
+export function QualityScanner({ posts, predictionPosts }: QualityScannerProps) {
   const [text, setText] = useState("");
   const [heuristicIssues, setHeuristicIssues] = useState<QualityIssue[]>([]);
   const [heuristicScore, setHeuristicScore] = useState(100);
@@ -48,6 +57,9 @@ export function QualityScanner({ posts }: QualityScannerProps) {
   const [llmLoading, setLlmLoading] = useState(false);
   const [llmError, setLlmError] = useState<string | null>(null);
   const [showPostSelector, setShowPostSelector] = useState(false);
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
+  const [llmRefinement, setLlmRefinement] = useState<LLMRefinement | null>(null);
+  const [isRefining, setIsRefining] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -64,12 +76,7 @@ export function QualityScanner({ posts }: QualityScannerProps) {
 
   // ── SSE stream handler ─────────────────────────────────────────
 
-  const startStream = useCallback(async (inputText: string) => {
-    // Abort any in-flight request
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
+  const startStream = useCallback(async (inputText: string, signal: AbortSignal) => {
     setLlmLoading(true);
     setLlmResult(null);
     setLlmError(null);
@@ -79,7 +86,7 @@ export function QualityScanner({ posts }: QualityScannerProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: inputText }),
-        signal: controller.signal,
+        signal,
       });
 
       if (!response.ok) {
@@ -178,11 +185,20 @@ export function QualityScanner({ posts }: QualityScannerProps) {
       setLlmResult(null);
       setLlmLoading(false);
       setLlmError(null);
+      setPrediction(null);
+      setLlmRefinement(null);
+      setIsRefining(false);
       abortRef.current?.abort();
       return;
     }
 
     debounceRef.current = setTimeout(() => {
+      // Abort previous in-flight requests and create a fresh controller
+      // shared by all async work in this analysis cycle
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
       // 1. Heuristic analysis (sync, instant)
       const issues = analyzeHeuristics(trimmed);
       setHeuristicIssues(issues);
@@ -190,17 +206,53 @@ export function QualityScanner({ posts }: QualityScannerProps) {
 
       // 2. LLM analysis (async, streamed) — only if text is long enough
       if (trimmed.length >= MIN_POST_LENGTH) {
-        startStream(trimmed);
+        startStream(trimmed, controller.signal);
       } else {
         setLlmResult(null);
         setLlmLoading(false);
+      }
+
+      // 3. Engagement prediction (sync, instant)
+      const now = new Date();
+      const chars: PostCharacteristics = {
+        mediaType: "TEXT",
+        textLength: trimmed.length,
+        dayOfWeek: now.getDay(),
+        hourOfDay: now.getHours(),
+      };
+      const predResult = predictEngagement(predictionPosts, chars);
+      setPrediction(predResult);
+      setLlmRefinement(null);
+
+      // 4. Optional LLM refinement (async) — only if prediction succeeded
+      if (predResult.status === "ok" && trimmed.length >= MIN_POST_LENGTH) {
+        setIsRefining(true);
+        fetch("/api/prediction", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: trimmed,
+            p25: predResult.range.p25,
+            p50: predResult.range.p50,
+            p75: predResult.range.p75,
+          }),
+          signal: controller.signal,
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data) setLlmRefinement(data as LLMRefinement);
+          })
+          .catch(() => {})
+          .finally(() => setIsRefining(false));
+      } else {
+        setIsRefining(false);
       }
     }, DEBOUNCE_MS);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [text, startStream]);
+  }, [text, startStream, predictionPosts]);
 
   // ── Cleanup on unmount ─────────────────────────────────────────
 
@@ -330,6 +382,14 @@ export function QualityScanner({ posts }: QualityScannerProps) {
               <p className="text-xs text-destructive">
                 {llmError}
               </p>
+            )}
+
+            {prediction && (
+              <PredictionWidget
+                prediction={prediction}
+                llmRefinement={llmRefinement}
+                isRefining={isRefining}
+              />
             )}
           </div>
         )}
