@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 40    |
+| Done        | 41    |
 | In Progress | 0     |
-| Pending     | 3     |
+| Pending     | 2     |
 | Blocked     | 4     |
 | Deferred    | 0     |
 
@@ -67,9 +67,9 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | 038 | [Quality Heuristics Library](./038-quality-heuristics.md)     | `done`    | —            | Client-side regex checks for anti-patterns |
 | 039 | [Quality LLM Analysis](./039-quality-llm.md)                 | `done`    | #037 ✅      | Server-side LLM analysis + /api/scanner endpoint |
 | 040 | [Content Quality Scanner UI](./040-scanner-ui.md)             | `done`    | #038 ✅, #039 ✅ | Full scanner page: text input, gauge, issues |
-| 041 | [Engagement Prediction](./041-engagement-prediction.md)       | `pending` | #037 ✅      | Statistical model + prediction range widget — Unblocked |
+| 041 | [Engagement Prediction](./041-engagement-prediction.md)       | `done`    | #037 ✅      | Statistical model + prediction range widget |
 | 042 | [Composer Infrastructure](./042-composer-infra.md)            | `pending` | #037 ✅      | drafts table, prompt construction, /api/compose — Unblocked |
-| 043 | [AI Content Composer UI](./043-composer-ui.md)                | `blocked` | #040 ✅, #041, #042 | Three-panel layout, streaming drafts, scanner integration |
+| 043 | [AI Content Composer UI](./043-composer-ui.md)                | `blocked` | #040 ✅, #041 ✅, #042 | Three-panel layout, streaming drafts, scanner integration |
 | 044 | [Topic Suggestions](./044-topic-suggestions.md)               | `blocked` | #042, #033 ✅ | Adjacent topic recommendations in composer |
 
 ## v1 Phase 4 — Polish & Shipping (045-047)
@@ -100,7 +100,7 @@ Phase 2 (new infra + UI pairs):
 Phase 3 (AI features):                    │
   037 LLM Client ✅ DONE ──┬── 039 Quality LLM ✅ DONE ──┐│
   038 Heuristics ✅ DONE ──┤                     ││
-                           ├── 041 Prediction    ││
+                           ├── 041 Prediction ✅ DONE ││
                            └── 042 Composer Infra─┤│
                          │               ││
   040 Scanner UI ✅ DONE ◄── 038 + 039           ││

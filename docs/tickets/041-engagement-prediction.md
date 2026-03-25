@@ -1,7 +1,7 @@
 # [TICKET-041] Engagement Prediction
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #037 ✅
@@ -10,12 +10,12 @@
 Build the engagement prediction system — a statistical model that predicts expected engagement range for a post based on the user's historical performance data, plus an optional LLM refinement layer. The prediction widget is a reusable component displayed in both the Scanner and Compose tabs.
 
 ## Acceptance Criteria
-- [ ] `predictEngagement()` returns a predicted engagement range (25th/50th/75th percentile views) based on: media type, post length, posting time (day/hour), topic similarity to past high-performers, time since last post, current follower count
-- [ ] Statistical model derives predictions purely from user's historical averages — no external training data
-- [ ] Optional LLM refinement adjusts the prediction based on semantic quality analysis
-- [ ] `PredictionWidget` component displays a horizontal range bar showing min/expected/max predicted engagement with labels
-- [ ] Widget updates as draft text changes (re-predicts based on new characteristics)
-- [ ] Graceful fallback when insufficient historical data: "Not enough posting history to predict engagement"
+- [x] `predictEngagement()` returns a predicted engagement range (25th/50th/75th percentile views) based on: media type, post length, posting time (day/hour), topic similarity to past high-performers, time since last post, current follower count
+- [x] Statistical model derives predictions purely from user's historical averages — no external training data
+- [x] Optional LLM refinement adjusts the prediction based on semantic quality analysis
+- [x] `PredictionWidget` component displays a horizontal range bar showing min/expected/max predicted engagement with labels
+- [x] Widget updates as draft text changes (re-predicts based on new characteristics)
+- [x] Graceful fallback when insufficient historical data: "Not enough posting history to predict engagement"
 
 ## Design Reference
 - **Components**: § Components > Cards — inline widget style, compact for embedding in scanner/composer panels
