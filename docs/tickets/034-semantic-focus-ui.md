@@ -1,7 +1,7 @@
 # [TICKET-034] Semantic Focus UI
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #033 ✅
@@ -10,13 +10,13 @@
 Build the Semantic Focus Score section on the Audience tab. Shows a 0-100 focus score representing topical consistency, a rolling 30-day trend line, and warnings when the score drops (indicating the algorithm may be re-classifying the account). Based on TF-IDF topic classification data from ticket #033.
 
 ## Acceptance Criteria
-- [ ] StickerCard titled "Semantic Focus" renders on the Audience tab
-- [ ] Focus Score displays as a large bold number (0-100) with a colored indicator (quaternary for high, tertiary for medium, destructive for low)
-- [ ] 30-day rolling trend line chart shows focus score over time (line chart via shadcn `ChartContainer`)
-- [ ] Top topic clusters displayed as labeled badges (showing the 2-3 dominant topics)
-- [ ] Warning text appears when score drops below 50: "Your content has become less focused. The algorithm may be re-classifying your account."
-- [ ] Empty state when insufficient posts for topic classification (< 10 posts with `text_full`)
-- [ ] Handles `isImporting` flag for backfill-in-progress variant
+- [x] StickerCard titled "Semantic Focus" renders on the Audience tab
+- [x] Focus Score displays as a large bold number (0-100) with a colored indicator (quaternary for high, tertiary for medium, destructive for low)
+- [x] 30-day rolling trend line chart shows focus score over time (line chart via shadcn `ChartContainer`)
+- [x] Top topic clusters displayed as labeled badges (showing the 2-3 dominant topics)
+- [x] Warning text appears when score drops below 50: "Your content has become less focused. The algorithm may be re-classifying your account."
+- [x] Empty state when insufficient posts for topic classification (< 10 posts with `text_full`)
+- [x] Handles `isImporting` flag for backfill-in-progress variant
 
 ## Design Reference
 - **Components**: § Components > Cards ("Sticker Card")
