@@ -38,21 +38,8 @@ export type BackfillJobSnapshot = {
   retrying: boolean;
 };
 
-export const BACKFILL_JOB_SELECT_FIELDS = [
-  "id",
-  "status",
-  "processed_posts",
-  "total_posts",
-  "stage",
-  "current_post_id",
-  "last_heartbeat_at",
-  "last_error_message",
-  "last_error_status",
-  "last_error_payload",
-  "created_at",
-  "started_at",
-  "completed_at",
-].join(",");
+export const BACKFILL_JOB_SELECT_FIELDS =
+  "id,status,processed_posts,total_posts,stage,current_post_id,last_heartbeat_at,last_error_message,last_error_status,last_error_payload,created_at,started_at,completed_at" as const;
 
 export const BACKFILL_IMPORTING_STATUSES = ["pending", "running"] as const;
 export const BACKFILL_VISIBLE_STATUSES = [

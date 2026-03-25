@@ -24,7 +24,7 @@ function isStoredPostMediaType(
 export function normalizeThreadsMediaType(
   mediaType: string,
 ): StoredPostMediaType {
-  const aliasedMediaType = THREADS_MEDIA_TYPE_ALIASES[mediaType];
+  const aliasedMediaType = THREADS_MEDIA_TYPE_ALIASES[mediaType as keyof typeof THREADS_MEDIA_TYPE_ALIASES];
 
   if (aliasedMediaType) {
     return aliasedMediaType;

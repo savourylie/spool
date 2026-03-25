@@ -198,6 +198,82 @@ export type Database = {
           },
         ]
       }
+      demographics_history: {
+        Row: {
+          dimension: string
+          fetched_at: string | null
+          id: string
+          key: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          dimension: string
+          fetched_at?: string | null
+          id?: string
+          key: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          dimension?: string
+          fetched_at?: string | null
+          id?: string
+          key?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demographics_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drafts: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          predicted_engagement: Json | null
+          quality_score: number | null
+          share_trigger: string | null
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          predicted_engagement?: Json | null
+          quality_score?: number | null
+          share_trigger?: string | null
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          predicted_engagement?: Json | null
+          quality_score?: number | null
+          share_trigger?: string | null
+          topic?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drafts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_metrics: {
         Row: {
           fetched_at: string | null

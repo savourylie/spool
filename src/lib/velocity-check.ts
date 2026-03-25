@@ -204,7 +204,20 @@ export async function getHistoricalVelocityAverage(
 
     if (snapError || !snapshots || snapshots.length < 2) continue;
 
-    const ratio = computeVelocityScore(snapshots, post.published_at, now);
+    const validSnapshots: VelocitySnapshot[] = snapshots
+      .filter((s): s is typeof s & { fetched_at: string } => s.fetched_at != null)
+      .map((s) => ({
+        fetched_at: s.fetched_at,
+        views: s.views ?? 0,
+        likes: s.likes ?? 0,
+        replies: s.replies ?? 0,
+        reposts: s.reposts ?? 0,
+        quotes: s.quotes ?? 0,
+        shares: s.shares ?? 0,
+      }));
+    if (validSnapshots.length < 2) continue;
+
+    const ratio = computeVelocityScore(validSnapshots, post.published_at, now);
     if (ratio !== null) ratios.push(ratio);
   }
 
