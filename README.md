@@ -42,9 +42,10 @@ Open [http://localhost:3000](http://localhost:3000).
 Spool uses Supabase Cron as the scheduler of record for recurring jobs. The
 database schedules HTTP calls to the existing internal cron routes:
 
-- `/api/cron/metrics`
-- `/api/cron/daily`
-- `/api/cron/token-refresh`
+- `/api/cron/metrics` — refresh post metrics (every 6 hours)
+- `/api/cron/daily` — poll follower counts and demographics (daily at 6 AM UTC)
+- `/api/cron/token-refresh` — refresh Threads tokens before expiry (daily at 7 AM UTC)
+- `/api/cron/velocity` — capture engagement snapshots for recent posts (every 30 minutes)
 
 ### Local setup
 
