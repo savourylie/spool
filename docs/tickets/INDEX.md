@@ -7,10 +7,10 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 38    |
+| Done        | 39    |
 | In Progress | 0     |
 | Pending     | 4     |
-| Blocked     | 5     |
+| Blocked     | 4     |
 | Deferred    | 0     |
 
 ---
@@ -65,8 +65,8 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | --- | ------------------------------------------------------------- | --------- | ------------ | ----- |
 | 037 | [LLM Client Infrastructure](./037-llm-client-infra.md)       | `done`    | —            | Claude API abstraction with streaming support |
 | 038 | [Quality Heuristics Library](./038-quality-heuristics.md)     | `done`    | —            | Client-side regex checks for anti-patterns |
-| 039 | [Quality LLM Analysis](./039-quality-llm.md)                 | `pending` | #037 ✅      | Server-side LLM analysis + /api/scanner endpoint — Unblocked |
-| 040 | [Content Quality Scanner UI](./040-scanner-ui.md)             | `blocked` | #038 ✅, #039   | Full scanner page: text input, gauge, issues |
+| 039 | [Quality LLM Analysis](./039-quality-llm.md)                 | `done`    | #037 ✅      | Server-side LLM analysis + /api/scanner endpoint |
+| 040 | [Content Quality Scanner UI](./040-scanner-ui.md)             | `pending` | #038 ✅, #039 ✅ | Full scanner page: text input, gauge, issues — Unblocked |
 | 041 | [Engagement Prediction](./041-engagement-prediction.md)       | `pending` | #037 ✅      | Statistical model + prediction range widget — Unblocked |
 | 042 | [Composer Infrastructure](./042-composer-infra.md)            | `pending` | #037 ✅      | drafts table, prompt construction, /api/compose — Unblocked |
 | 043 | [AI Content Composer UI](./043-composer-ui.md)                | `blocked` | #040, #041, #042 | Three-panel layout, streaming drafts, scanner integration |
@@ -98,7 +98,7 @@ Phase 2 (new infra + UI pairs):
   035 Audience Infra ✅ DONE ──► 036 Audience UI ✅ DONE
                                            │
 Phase 3 (AI features):                    │
-  037 LLM Client ✅ DONE ──┬── 039 Quality LLM ──┐│
+  037 LLM Client ✅ DONE ──┬── 039 Quality LLM ✅ DONE ──┐│
   038 Heuristics ✅ DONE ──┤                     ││
                            ├── 041 Prediction    ││
                            └── 042 Composer Infra─┤│

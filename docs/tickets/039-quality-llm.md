@@ -1,7 +1,7 @@
 # [TICKET-039] Quality LLM Analysis
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #037 ✅
@@ -10,13 +10,13 @@
 Create the server-side LLM analysis layer for the Content Quality Scanner. This is the second analysis layer — it runs on the server using the Claude API to provide deeper content analysis: tone detection, topic coherence assessment, semantic similarity checking against recent posts, and shareability evaluation. Provides a streaming API endpoint for real-time results.
 
 ## Acceptance Criteria
-- [ ] `analyzeWithLLM()` accepts post text + user context (recent posts, topics) and returns structured analysis results
-- [ ] Analysis covers: tone (AI-generated feel), topic coherence (alignment with user's usual topics), semantic similarity (too similar to recent posts), shareability (scores against 4 private-share triggers)
-- [ ] Returns typed `LLMAnalysisResult` with issues array (same `QualityIssue` format as heuristics) and optional suggested rewrites
-- [ ] API endpoint `POST /api/scanner` accepts draft text + user ID, streams analysis results via SSE
-- [ ] Endpoint secured by session cookie authentication
-- [ ] Handles LLM errors gracefully (returns partial results from heuristic layer if LLM fails)
-- [ ] Prompt construction includes user's recent posts and topic profile for context
+- [x] `analyzeWithLLM()` accepts post text + user context (recent posts, topics) and returns structured analysis results
+- [x] Analysis covers: tone (AI-generated feel), topic coherence (alignment with user's usual topics), semantic similarity (too similar to recent posts), shareability (scores against 4 private-share triggers)
+- [x] Returns typed `LLMAnalysisResult` with issues array (same `QualityIssue` format as heuristics) and optional suggested rewrites
+- [x] API endpoint `POST /api/scanner` accepts draft text + user ID, streams analysis results via SSE
+- [x] Endpoint secured by session cookie authentication
+- [x] Handles LLM errors gracefully (returns partial results from heuristic layer if LLM fails)
+- [x] Prompt construction includes user's recent posts and topic profile for context
 
 ## Implementation Notes
 - Create `src/lib/quality-llm.ts`:
