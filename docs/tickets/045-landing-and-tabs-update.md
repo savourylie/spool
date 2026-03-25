@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #040, #043
+- Requires: #040 ✅, #043
 
 ## Description
 Update the landing page and dashboard tabs to reflect shipped Scanner and Composer features. Remove "Coming Soon" badges from the Scanner and Compose tabs, update landing page feature cards to present these features as active rather than aspirational, and clean up any remaining "coming soon" language in empty state copy.

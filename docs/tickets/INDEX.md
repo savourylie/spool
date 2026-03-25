@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 39    |
+| Done        | 40    |
 | In Progress | 0     |
-| Pending     | 4     |
+| Pending     | 3     |
 | Blocked     | 4     |
 | Deferred    | 0     |
 
@@ -66,17 +66,17 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | 037 | [LLM Client Infrastructure](./037-llm-client-infra.md)       | `done`    | —            | Claude API abstraction with streaming support |
 | 038 | [Quality Heuristics Library](./038-quality-heuristics.md)     | `done`    | —            | Client-side regex checks for anti-patterns |
 | 039 | [Quality LLM Analysis](./039-quality-llm.md)                 | `done`    | #037 ✅      | Server-side LLM analysis + /api/scanner endpoint |
-| 040 | [Content Quality Scanner UI](./040-scanner-ui.md)             | `pending` | #038 ✅, #039 ✅ | Full scanner page: text input, gauge, issues — Unblocked |
+| 040 | [Content Quality Scanner UI](./040-scanner-ui.md)             | `done`    | #038 ✅, #039 ✅ | Full scanner page: text input, gauge, issues |
 | 041 | [Engagement Prediction](./041-engagement-prediction.md)       | `pending` | #037 ✅      | Statistical model + prediction range widget — Unblocked |
 | 042 | [Composer Infrastructure](./042-composer-infra.md)            | `pending` | #037 ✅      | drafts table, prompt construction, /api/compose — Unblocked |
-| 043 | [AI Content Composer UI](./043-composer-ui.md)                | `blocked` | #040, #041, #042 | Three-panel layout, streaming drafts, scanner integration |
+| 043 | [AI Content Composer UI](./043-composer-ui.md)                | `blocked` | #040 ✅, #041, #042 | Three-panel layout, streaming drafts, scanner integration |
 | 044 | [Topic Suggestions](./044-topic-suggestions.md)               | `blocked` | #042, #033 ✅ | Adjacent topic recommendations in composer |
 
 ## v1 Phase 4 — Polish & Shipping (045-047)
 
 | #   | Ticket                                                        | Status    | Depends On                        | Notes |
 | --- | ------------------------------------------------------------- | --------- | --------------------------------- | ----- |
-| 045 | [Landing Page & Tabs Update](./045-landing-and-tabs-update.md) | `blocked` | #040, #043                       | Remove "Soon" badges, update feature cards |
+| 045 | [Landing Page & Tabs Update](./045-landing-and-tabs-update.md) | `blocked` | #040 ✅, #043                     | Remove "Soon" badges, update feature cards |
 | 046 | [Phase 2 Empty & Error States](./046-empty-error-states.md)   | `pending` | #030 ✅, #032 ✅, #034 ✅, #036 ✅  | Loading skeletons, empty/error states, isImporting — Unblocked |
 | 047 | [v1 QA & Integration Pass](./047-v1-qa-integration.md)        | `blocked` | #024-#028, #030-#036, #040-#046  | Cross-feature testing, a11y, responsive, streaming |
 
@@ -103,7 +103,7 @@ Phase 3 (AI features):                    │
                            ├── 041 Prediction    ││
                            └── 042 Composer Infra─┤│
                          │               ││
-  040 Scanner UI ◄── 038 + 039           ││
+  040 Scanner UI ✅ DONE ◄── 038 + 039           ││
   043 Composer UI ◄── 040 + 041 + 042   ││
   044 Topic Suggestions ◄── 042 + 033 ◄──┘│
                                            │

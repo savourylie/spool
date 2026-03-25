@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #040, #041, #042
+- Requires: #040 ✅, #041, #042
 
 ## Description
 Replace the Compose tab's "Coming Soon" stub with the full AI Content Composer interface. A three-panel layout where users provide a topic, receive AI-generated draft variations streamed in real-time, and see quality scores and engagement predictions for each draft. The composer integrates the Quality Scanner and Prediction Widget, creating the capstone Phase 3 feature.

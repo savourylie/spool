@@ -1,7 +1,7 @@
 # [TICKET-040] Content Quality Scanner UI
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #038 ✅, #039 ✅
@@ -10,16 +10,16 @@
 Replace the Scanner tab's "Coming Soon" stub with the full Content Quality Scanner interface. Provides a text input area for draft or existing post text, real-time analysis via both heuristic (instant, client-side) and LLM (streamed, server-side) layers, a quality score gauge, and a list of flagged issues with suggested rewrites.
 
 ## Acceptance Criteria
-- [ ] Scanner page at `/dashboard/scanner` shows a text input area instead of the "Coming Soon" empty state
-- [ ] Typing triggers analysis after 500ms debounce: heuristic results appear instantly, LLM results stream in after
-- [ ] Quality score gauge (semicircular, 0-100) renders below the text input with color zones: 0-40 red, 40-70 yellow, 70-100 green
-- [ ] Gauge updates in real-time: initially shows heuristic score, refines when LLM analysis completes
-- [ ] Flagged issues list shows each issue with severity badge (high: red, medium: yellow, low: blue), description, and suggested fix
-- [ ] LLM-generated rewrites appear with an "Apply" button that replaces the text in the input area
-- [ ] "Analyze existing post" button opens a post selector (using existing post data), populating the input and running analysis
-- [ ] Empty state when text input is empty: "Type or paste a draft post to analyze"
-- [ ] Loading state during LLM analysis: spinner indicator next to the gauge
-- [ ] Character count shown below text input (for awareness of post length impact)
+- [x] Scanner page at `/dashboard/scanner` shows a text input area instead of the "Coming Soon" empty state
+- [x] Typing triggers analysis after 500ms debounce: heuristic results appear instantly, LLM results stream in after
+- [x] Quality score gauge (semicircular, 0-100) renders below the text input with color zones: 0-40 red, 40-70 yellow, 70-100 green
+- [x] Gauge updates in real-time: initially shows heuristic score, refines when LLM analysis completes
+- [x] Flagged issues list shows each issue with severity badge (high: red, medium: yellow, low: blue), description, and suggested fix
+- [x] LLM-generated rewrites appear with an "Apply" button that replaces the text in the input area
+- [x] "Analyze existing post" button opens a post selector (using existing post data), populating the input and running analysis
+- [x] Empty state when text input is empty: "Type or paste a draft post to analyze"
+- [x] Loading state during LLM analysis: spinner indicator next to the gauge
+- [x] Character count shown below text input (for awareness of post length impact)
 
 ## Design Reference
 - **Components**: § Components > Cards ("Sticker Card") for the main scanner card, § Components > Inputs for the text area
