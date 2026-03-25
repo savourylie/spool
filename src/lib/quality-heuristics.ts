@@ -33,7 +33,12 @@ export type IssueCategory =
   | "hashtags"
   | "caps"
   | "emoji"
-  | "length";
+  | "length"
+  // LLM-detected categories (TICKET-039)
+  | "tone"
+  | "coherence"
+  | "similarity"
+  | "shareability";
 
 export interface QualityIssue {
   id: string;
