@@ -109,7 +109,8 @@ export async function GET(request: NextRequest) {
     }
 
     backfillJobId = job.id;
-  } catch {
+  } catch (err) {
+    console.error("[auth/callback] Failed to upsert user or create backfill job:", err);
     return errorRedirect("unknown");
   }
 

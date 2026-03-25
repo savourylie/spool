@@ -169,7 +169,7 @@ export function DashboardBackfillBanner({
               </p>
             )}
             {lastUpdatedLabel && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground" suppressHydrationWarning>
                 Last update {lastUpdatedLabel}.
               </p>
             )}
@@ -232,7 +232,7 @@ export function DashboardBackfillBanner({
               </p>
             )}
             {lastUpdatedLabel && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground" suppressHydrationWarning>
                 Last update {lastUpdatedLabel}.
               </p>
             )}
