@@ -12,6 +12,8 @@ import {
   DemographicsCharts,
   type DemographicRow,
 } from "@/components/dashboard/demographics-charts";
+import { SemanticFocus } from "@/components/dashboard/semantic-focus";
+import type { SemanticFocusPost } from "@/lib/semantic-focus";
 import {
   isImportingBackfillStatus,
 } from "@/lib/backfill-job";
@@ -25,7 +27,7 @@ export default async function AudiencePage() {
   const supabase = createAdminClient();
   const userId = session.value;
 
-  const [statsResult, postsResult, demographicsResult, backfillResult] = await Promise.all([
+  const [statsResult, postsResult, demographicsResult, backfillResult, focusPostsResult] = await Promise.all([
     supabase
       .from("daily_stats")
       .select("date, followers_count")
@@ -41,6 +43,11 @@ export default async function AudiencePage() {
       .select("dimension, key, value, fetched_at")
       .eq("user_id", userId),
     getMostRecentBackfillJob(supabase, userId),
+    supabase
+      .from("posts")
+      .select("topic_tag, text_full, published_at")
+      .eq("user_id", userId)
+      .order("published_at", { ascending: true }),
   ]);
 
   if (statsResult.error) {
@@ -63,6 +70,10 @@ export default async function AudiencePage() {
       <DemographicsCharts
         demographics={(demographicsResult.data ?? []) as DemographicRow[]}
         followersCount={followersCount}
+        isImporting={isImporting}
+      />
+      <SemanticFocus
+        posts={(focusPostsResult.data ?? []) as SemanticFocusPost[]}
         isImporting={isImporting}
       />
     </>

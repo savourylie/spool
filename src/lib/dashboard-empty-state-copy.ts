@@ -102,6 +102,22 @@ export function getScannerEmptyStateCopy() {
   };
 }
 
+export function getSemanticFocusEmptyStateCopy(isImporting: boolean) {
+  if (isImporting) {
+    return {
+      title: "Importing your posts",
+      description:
+        "Topic analysis requires post text. Focus scores will appear automatically as the backfill continues.",
+    };
+  }
+
+  return {
+    title: "Not enough text posts for focus analysis",
+    description:
+      "Post at least 10 times with text to see how focused your content is. A high focus score signals niche authority to the algorithm.",
+  };
+}
+
 export function getComposerEmptyStateCopy() {
   return {
     title: "AI Content Composer",
