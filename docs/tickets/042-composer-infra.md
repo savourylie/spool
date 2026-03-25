@@ -1,7 +1,7 @@
 # [TICKET-042] Composer Infrastructure
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #037 ✅
@@ -10,13 +10,13 @@
 Build the backend infrastructure for the AI Content Composer. Creates the `drafts` database table, prompt construction logic that assembles user context for the LLM, and a streaming API endpoint that generates 2-3 draft post variations targeting different share-trigger categories.
 
 ## Acceptance Criteria
-- [ ] Supabase migration creates `drafts` table with columns: id, user_id, topic, content, quality_score, predicted_engagement (jsonb), created_at
-- [ ] `buildComposerPrompt()` assembles LLM context from: top 10 performing posts + metrics, audience demographics, topic clusters, current cadence state, and recent topics (for semantic variation)
-- [ ] Prompt targets the 4 content types that trigger private shares: (1) articulating what readers think but can't express, (2) systematic time-saving compilations, (3) counterintuitive data-backed conclusions, (4) shareable conversation frameworks
-- [ ] API endpoint `POST /api/compose` accepts topic + style parameters and streams 2-3 draft variations via SSE
-- [ ] Each draft variation targets a different share-trigger category
-- [ ] Endpoint secured by session cookie authentication
-- [ ] Drafts are saved to the `drafts` table after generation completes
+- [x] Supabase migration creates `drafts` table with columns: id, user_id, topic, content, quality_score, predicted_engagement (jsonb), created_at
+- [x] `buildComposerPrompt()` assembles LLM context from: top 10 performing posts + metrics, audience demographics, topic clusters, current cadence state, and recent topics (for semantic variation)
+- [x] Prompt targets the 4 content types that trigger private shares: (1) articulating what readers think but can't express, (2) systematic time-saving compilations, (3) counterintuitive data-backed conclusions, (4) shareable conversation frameworks
+- [x] API endpoint `POST /api/compose` accepts topic + style parameters and streams 2-3 draft variations via SSE
+- [x] Each draft variation targets a different share-trigger category
+- [x] Endpoint secured by session cookie authentication
+- [x] Drafts are saved to the `drafts` table after generation completes
 
 ## Implementation Notes
 - Create Supabase migration for `drafts` table (schema from SEO_FEATURES.md §3.3)
