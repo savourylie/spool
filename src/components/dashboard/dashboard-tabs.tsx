@@ -22,7 +22,7 @@ const tabs: Tab[] = [
   { label: "Timing", href: "/dashboard/timing", icon: Clock, group: "analyze" },
   { label: "Audience", href: "/dashboard/audience", icon: Users, group: "analyze" },
   { label: "Scanner", href: "/dashboard/scanner", icon: MagnifyingGlass, group: "create" },
-  { label: "Compose", href: "/dashboard/compose", icon: PencilLine, group: "create", badge: "Soon" },
+  { label: "Compose", href: "/dashboard/compose", icon: PencilLine, group: "create" },
 ];
 
 export function DashboardTabs() {
