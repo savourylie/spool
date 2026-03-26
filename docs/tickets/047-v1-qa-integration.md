@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #024 ✅, #025 ✅, #026 ✅, #028 ✅, #030 ✅, #032 ✅, #034 ✅, #036 ✅, #040 ✅, #043 ✅, #044 ✅, #045, #046
+- Requires: #024 ✅, #025 ✅, #026 ✅, #028 ✅, #030 ✅, #032 ✅, #034 ✅, #036 ✅, #040 ✅, #043 ✅, #044 ✅, #045 ✅, #046
 
 ## Description
 Final quality assurance and integration pass for all v1 features. Verify cross-feature interactions, banner stacking order, chart library compliance, responsive behavior, keyboard navigation, screen reader accessibility, reduced-motion handling, and streaming functionality. Ensure no regressions on v0 features.

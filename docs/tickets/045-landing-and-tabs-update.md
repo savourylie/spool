@@ -1,7 +1,7 @@
 # [TICKET-045] Landing Page & Tabs Update
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #040 ✅, #043 ✅
@@ -10,11 +10,11 @@
 Update the landing page and dashboard tabs to reflect shipped Scanner and Composer features. Remove "Coming Soon" badges from the Scanner and Compose tabs, update landing page feature cards to present these features as active rather than aspirational, and clean up any remaining "coming soon" language in empty state copy.
 
 ## Acceptance Criteria
-- [ ] Scanner and Compose tabs in DashboardTabs no longer show "Soon" badges
-- [ ] Landing page feature cards for Content Scanner and AI Composer updated with active descriptions (not "Coming soon")
-- [ ] Any remaining "Coming soon" text in `dashboard-empty-state-copy.ts` for scanner/composer is removed or updated
-- [ ] Tab icons for Scanner and Compose remain consistent (MagnifyingGlass, PencilLine)
-- [ ] No visual regressions on the landing page or dashboard tabs
+- [x] Scanner and Compose tabs in DashboardTabs no longer show "Soon" badges
+- [x] Landing page feature cards for Content Scanner and AI Composer updated with active descriptions (not "Coming soon")
+- [x] Any remaining "Coming soon" text in `dashboard-empty-state-copy.ts` for scanner/composer is removed or updated
+- [x] Tab icons for Scanner and Compose remain consistent (MagnifyingGlass, PencilLine)
+- [x] No visual regressions on the landing page or dashboard tabs
 
 ## Design Reference
 - **Layout**: § Layout > Section Patterns > Features — landing page feature card grid

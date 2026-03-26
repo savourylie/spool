@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 44    |
+| Done        | 45    |
 | In Progress | 0     |
-| Pending     | 2     |
+| Pending     | 1     |
 | Blocked     | 1     |
 | Deferred    | 0     |
 
@@ -76,9 +76,9 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 | #   | Ticket                                                        | Status    | Depends On                        | Notes |
 | --- | ------------------------------------------------------------- | --------- | --------------------------------- | ----- |
-| 045 | [Landing Page & Tabs Update](./045-landing-and-tabs-update.md) | `pending` | #040 ✅, #043 ✅                   | Remove "Soon" badges, update feature cards — Unblocked |
+| 045 | [Landing Page & Tabs Update](./045-landing-and-tabs-update.md) | `done`    | #040 ✅, #043 ✅                   | Remove "Soon" badges, update feature cards |
 | 046 | [Phase 2 Empty & Error States](./046-empty-error-states.md)   | `pending` | #030 ✅, #032 ✅, #034 ✅, #036 ✅  | Loading skeletons, empty/error states, isImporting — Unblocked |
-| 047 | [v1 QA & Integration Pass](./047-v1-qa-integration.md)        | `blocked` | #024-#028, #030-#036, #040-#046  | Cross-feature testing, a11y, responsive, streaming (#044 done) |
+| 047 | [v1 QA & Integration Pass](./047-v1-qa-integration.md)        | `blocked` | #024-#028, #030-#036, #040-#046  | Cross-feature testing, a11y, responsive, streaming (#045 done) |
 
 ---
 
@@ -108,7 +108,7 @@ Phase 3 (AI features):                    │
   044 Topic Suggestions ✅ DONE ◄── 042 + 033 ◄──┘│
                                            │
 Phase 4 (polish):                          │
-  045 Landing Update 📋 PENDING ◄── 040 + 043        │
+  045 Landing Update ✅ DONE ◄── 040 + 043        │
   046 Empty States ◄── 030 + 032 + 034 + 036
   047 QA Pass ◄── All
 ```
