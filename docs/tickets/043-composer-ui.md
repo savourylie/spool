@@ -1,7 +1,7 @@
 # [TICKET-043] AI Content Composer UI
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #040 ✅, #041 ✅, #042 ✅
@@ -10,16 +10,16 @@
 Replace the Compose tab's "Coming Soon" stub with the full AI Content Composer interface. A three-panel layout where users provide a topic, receive AI-generated draft variations streamed in real-time, and see quality scores and engagement predictions for each draft. The composer integrates the Quality Scanner and Prediction Widget, creating the capstone Phase 3 feature.
 
 ## Acceptance Criteria
-- [ ] Compose page at `/dashboard/compose` shows a three-panel layout instead of the "Coming Soon" empty state
-- [ ] **Left panel**: Topic input (text field or "Generate ideas for me" button) and optional style selector
-- [ ] **Center panel**: Streaming draft cards (2-3 variations) appear as text generates token-by-token
-- [ ] **Right panel**: Quality score from scanner, predicted engagement widget, timing recommendation (best posting time from heatmap data)
-- [ ] Each draft card shows: generated text, share-trigger category label, inline quality score badge, "Copy to clipboard" button, "Regenerate" button, inline edit mode toggle
-- [ ] "Copy to clipboard" copies the draft text (primary CTA — v1 is copy-paste only, no direct publishing)
-- [ ] "Stop generating" button cancels mid-stream
-- [ ] Each completed draft auto-runs through heuristic quality analysis
-- [ ] Drafts appear in sequence (first starts immediately, subsequent drafts after previous completes)
-- [ ] Responsive: panels stack vertically on mobile (topic → drafts → scoring)
+- [x] Compose page at `/dashboard/compose` shows a three-panel layout instead of the "Coming Soon" empty state
+- [x] **Left panel**: Topic input (text field or "Generate ideas for me" button) and optional style selector
+- [x] **Center panel**: Streaming draft cards (2-3 variations) appear as text generates token-by-token
+- [x] **Right panel**: Quality score from scanner, predicted engagement widget, timing recommendation (best posting time from heatmap data)
+- [x] Each draft card shows: generated text, share-trigger category label, inline quality score badge, "Copy to clipboard" button, "Regenerate" button, inline edit mode toggle
+- [x] "Copy to clipboard" copies the draft text (primary CTA — v1 is copy-paste only, no direct publishing)
+- [x] "Stop generating" button cancels mid-stream
+- [x] Each completed draft auto-runs through heuristic quality analysis
+- [x] Drafts appear in sequence (first starts immediately, subsequent drafts after previous completes)
+- [x] Responsive: panels stack vertically on mobile (topic → drafts → scoring)
 
 ## Design Reference
 - **Components**: § Components > Cards ("Sticker Card") for draft cards, § Components > Buttons for primary CTAs
