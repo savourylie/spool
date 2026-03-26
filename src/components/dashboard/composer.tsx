@@ -562,10 +562,11 @@ export function Composer({
       {/* ── Left Panel: Topic + Style ─────────────────────────── */}
       <div className="space-y-4">
         <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          <label htmlFor="composer-topic" className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             Topic
           </label>
           <textarea
+            id="composer-topic"
             value={state.topic}
             onChange={(e) =>
               dispatch({ type: "SET_TOPIC", topic: e.target.value })

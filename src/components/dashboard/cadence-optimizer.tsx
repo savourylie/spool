@@ -167,7 +167,7 @@ export function CadenceOptimizer({
               shortestGapHours={stats.shortestGapHours}
             />
 
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
+            <ChartContainer config={chartConfig} className="h-[300px] w-full" aria-label="Post cadence scatter chart">
               <ScatterChart
                 margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
                 accessibilityLayer

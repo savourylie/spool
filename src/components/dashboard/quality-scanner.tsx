@@ -290,6 +290,7 @@ export function QualityScanner({ posts, predictionPosts }: QualityScannerProps) 
             onChange={(e) => setText(e.target.value)}
             placeholder="Type or paste a draft post to analyze..."
             rows={5}
+            aria-label="Draft post text to analyze"
             className="w-full resize-y rounded-[var(--radius-md)] border-2 border-[var(--input-border)] bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none"
           />
 

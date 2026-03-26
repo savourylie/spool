@@ -56,8 +56,9 @@ export function ReselectionAlert({ posts }: { posts: ReselectedPost[] }) {
               </p>
             </div>
             <button
+              type="button"
               onClick={() => setDismissed(true)}
-              className="shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:bg-accent/20 hover:text-foreground"
+              className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-accent/20 hover:text-foreground"
               aria-label="Dismiss alert"
             >
               <X weight="bold" className="size-4" />

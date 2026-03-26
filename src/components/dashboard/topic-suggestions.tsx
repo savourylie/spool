@@ -127,6 +127,7 @@ export function TopicSuggestions({ onSelectTopic }: TopicSuggestionsProps) {
               type="button"
               onClick={() => onSelectTopic(s.name)}
               title={s.rationale}
+              aria-label={`${s.name} — ${s.rationale}`}
               className={`flex w-full items-center justify-between rounded-[var(--radius-sm)] px-2 py-1.5 text-left transition-all duration-300 [transition-timing-function:var(--ease-bounce)] ${DISTANCE_HOVER[s.semanticDistance]}`}
             >
               <div className="flex items-center gap-2">

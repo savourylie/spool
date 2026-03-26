@@ -56,7 +56,7 @@ function FormatBarChart({
       <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
         Engagement by media type
       </p>
-      <ChartContainer config={formatChartConfig} className="h-[250px] w-full">
+      <ChartContainer config={formatChartConfig} className="h-[250px] w-full" aria-label="Engagement by media type chart">
         <BarChart
           data={data}
           margin={{ top: 8, right: 8, bottom: 0, left: 0 }}

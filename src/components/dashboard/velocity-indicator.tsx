@@ -38,8 +38,10 @@ export function VelocityIndicator({
 
   return (
     <span
+      role="status"
       className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold leading-none ${config.bg} ${config.text}`}
       title={`First 3-hour engagement velocity: ${velocity.toFixed(2)}x vs ${average.toFixed(2)}x average`}
+      aria-label={`${config.label}: ${velocity.toFixed(2)}x velocity vs ${average.toFixed(2)}x average`}
     >
       {config.label}
     </span>

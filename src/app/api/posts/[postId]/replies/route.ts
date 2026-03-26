@@ -41,7 +41,7 @@ export async function GET(
   }
 
   // Fetch replies from DB
-  let { data: replies, error } = await supabase
+  const { data: initialReplies, error } = await supabase
     .from("post_replies")
     .select("text, word_count")
     .eq("post_id", postId);
@@ -49,6 +49,8 @@ export async function GET(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  let replies = initialReplies;
 
   // On-demand fetch: if no replies in DB, fetch from Threads API and store
   if ((!replies || replies.length === 0) && post.threads_media_id) {
@@ -85,7 +87,7 @@ export async function GET(
           .select("text, word_count")
           .eq("post_id", postId);
 
-        replies = freshReplies;
+        replies = freshReplies ?? [];
       }
     } catch (err) {
       console.error(`On-demand reply fetch failed for post ${postId}:`, err);
