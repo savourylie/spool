@@ -157,3 +157,35 @@ export function getComposerEmptyStateCopy() {
       "Enter a topic to generate AI-powered draft variations optimized for your audience and the Threads algorithm.",
   };
 }
+
+export function getPulseEmptyStateCopy(isImporting: boolean) {
+  if (isImporting) {
+    return {
+      title: "Gathering your first week of data",
+      description:
+        "Weekly pulse metrics will appear automatically as the backfill continues.",
+    };
+  }
+
+  return {
+    title: "Not enough data for weekly pulse",
+    description:
+      "Post and grow for a few days to see your weekly metrics — follower growth, posting frequency, and engagement trends.",
+  };
+}
+
+export function getBestPostEmptyStateCopy(isImporting: boolean) {
+  if (isImporting) {
+    return {
+      title: "Importing your post history",
+      description:
+        "Your best-performing post will appear here once the backfill completes.",
+    };
+  }
+
+  return {
+    title: "No posts in the last 7 days",
+    description:
+      "Post to see your top-performing content highlighted here with insights into why it worked.",
+  };
+}
