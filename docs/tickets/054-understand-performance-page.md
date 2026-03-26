@@ -4,7 +4,7 @@
 `pending`
 
 ## Dependencies
-- Requires: #049, #053
+- Requires: #049 ✅, #053
 
 ## Description
 Build the Understand Performance page at `/dashboard/understand` with a 2-column layout: the post performance table (with filters, reselection alert, pagination) on the left, and a sticky timing sidebar (compact heatmap, best 3 times, compact cadence) on the right. Format analysis renders full-width below the 2-column section. This migrates content from the old `/dashboard/posts` and `/dashboard/timing` routes into a unified view.

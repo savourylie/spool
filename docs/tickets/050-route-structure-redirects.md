@@ -4,7 +4,7 @@
 `pending`
 
 ## Dependencies
-- Requires: #049
+- Requires: #049 ✅
 
 ## Description
 Set up the new route file structure under `/dashboard/*` and add redirects from old routes to new ones. The new structure organizes pages into `/understand`, `/insights`, and `/create` sections. Old routes (`/dashboard/posts`, `/dashboard/timing`, `/dashboard/audience`, `/dashboard/scanner`, `/dashboard/compose`) redirect to their new locations to preserve bookmarks and shared links.

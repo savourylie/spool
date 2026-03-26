@@ -4,7 +4,7 @@
 `pending`
 
 ## Dependencies
-- Requires: #049
+- Requires: #049 ✅
 
 ## Description
 Migrate the Scanner and Composer pages to their new routes under `/dashboard/create/` and add cross-flow CTAs that connect the creation workflow. Scanner gets a "Generate a better version" button that opens the Composer with the analyzed topic. Composer accepts a `?topic=` query parameter to pre-populate the topic field from external navigation (Discover page, Scanner, post detail rows).

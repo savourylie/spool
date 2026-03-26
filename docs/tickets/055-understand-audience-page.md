@@ -4,7 +4,7 @@
 `pending`
 
 ## Dependencies
-- Requires: #049
+- Requires: #049 ✅
 
 ## Description
 Build the Understand Audience page at `/dashboard/understand/audience`. This relocates `FollowerChart` and `DemographicsCharts` from the old `/dashboard/audience` route into a 2-column top section, with `SemanticFocus` and `AudienceFit` remaining as collapsible sections below (they will also appear on the Insights page — shared components). The collapsible sections show a summary metric in the header when collapsed.

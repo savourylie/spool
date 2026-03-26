@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 48    |
+| Done        | 49    |
 | In Progress | 0     |
-| Pending     | 16    |
+| Pending     | 15    |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -91,23 +91,23 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | #   | Ticket                                                        | Status    | Depends On | Notes |
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
 | 048 | [Dashboard Sidebar Component](./048-dashboard-sidebar.md)     | `done`    | —          | Replaces DashboardTabs + DashboardHeader with collapsible sidebar |
-| 049 | [Dashboard Layout Restructure](./049-dashboard-layout-restructure.md) | `pending` | #048 ✅ | Sidebar + content shell, max-w-7xl, banners in content area |
-| 050 | [Route Structure & Redirects](./050-route-structure-redirects.md) | `pending` | #049 | New route dirs + old route redirects |
+| 049 | [Dashboard Layout Restructure](./049-dashboard-layout-restructure.md) | `done`    | #048 ✅ | Sidebar + content shell, max-w-7xl, banners in content area |
+| 050 | [Route Structure & Redirects](./050-route-structure-redirects.md) | `pending` | #049 ✅ | New route dirs + old route redirects |
 
 ### v2 Phase 2 — Today Hub (051-052)
 
 | #   | Ticket                                                        | Status    | Depends On | Notes |
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
 | 051 | [Today Hub Summary Components](./051-today-hub-components.md) | `pending` | —          | PulseCard, BestPostCard, WhatToPostCard, WhenToPostCard |
-| 052 | [Today Hub Page](./052-today-hub-page.md)                     | `pending` | #049, #051 | Action-first 2-col grid, alerts row, data fetching |
+| 052 | [Today Hub Page](./052-today-hub-page.md)                     | `pending` | #049 ✅, #051 | Action-first 2-col grid, alerts row, data fetching |
 
 ### v2 Phase 3 — Understand Section (053-055)
 
 | #   | Ticket                                                        | Status    | Depends On | Notes |
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
 | 053 | [Compact Timing Variants](./053-compact-timing-variants.md)   | `pending` | —          | compact prop for TimingHeatmap + CadenceOptimizer |
-| 054 | [Understand Performance Page](./054-understand-performance-page.md) | `pending` | #049, #053 | 2-col: post table + sticky timing sidebar |
-| 055 | [Understand Audience Page](./055-understand-audience-page.md) | `pending` | #049       | Relocated components + collapsible sections |
+| 054 | [Understand Performance Page](./054-understand-performance-page.md) | `pending` | #049 ✅, #053 | 2-col: post table + sticky timing sidebar |
+| 055 | [Understand Audience Page](./055-understand-audience-page.md) | `pending` | #049 ✅    | Relocated components + collapsible sections |
 
 ### v2 Phase 4 — Insights & Topic Model (056-058)
 
@@ -115,7 +115,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
 | 056 | [Topic Model Library](./056-topic-model-lib.md)               | `pending` | —          | lib/topic-model.ts: clustering + metrics aggregation |
 | 057 | [Topic Model UI Components](./057-topic-model-ui.md)          | `pending` | #056       | Treemap, performance bars, audience-topic fit |
-| 058 | [Insights Page Assembly](./058-insights-page.md)              | `pending` | #049, #057 | Full page with topic model + relocated SemanticFocus |
+| 058 | [Insights Page Assembly](./058-insights-page.md)              | `pending` | #049 ✅, #057 | Full page with topic model + relocated SemanticFocus |
 
 ### v2 Phase 5 — Create Section (059-062)
 
@@ -123,8 +123,8 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | --- | ------------------------------------------------------------- | --------- | ------------ | ----- |
 | 059 | [Grok Search Integration](./059-grok-search-integration.md)   | `pending` | —            | API route + GrokTrending component |
 | 060 | [YouTube Suggestions](./060-youtube-suggestions.md)           | `pending` | —            | API route + YouTubeInspiration component |
-| 061 | [Discover Page Assembly](./061-discover-page.md)              | `pending` | #049, #059, #060 | Discover landing with all create section components |
-| 062 | [Scanner & Compose Migration](./062-scanner-compose-migration.md) | `pending` | #049    | New routes + cross-flow CTAs + ?topic= param |
+| 061 | [Discover Page Assembly](./061-discover-page.md)              | `pending` | #049 ✅, #059, #060 | Discover landing with all create section components |
+| 062 | [Scanner & Compose Migration](./062-scanner-compose-migration.md) | `pending` | #049 ✅ | New routes + cross-flow CTAs + ?topic= param |
 
 ### v2 Phase 6 — Mobile & Polish (063-064)
 
@@ -139,30 +139,30 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 ```
 Phase 1 (shell):
-  048 Sidebar Component ✅ DONE ──► 049 Layout Restructure ──► 050 Routes & Redirects
+  048 Sidebar Component ✅ DONE ──► 049 Layout Restructure ✅ DONE ──► 050 Routes & Redirects
                        │
 Phase 2 (today hub):   │
   051 Summary Components ──┤
                             ├──► 052 Today Hub Page
-  049 ─────────────────────┘
+  049 ✅ DONE ────────────────┘
 
 Phase 3 (understand):
   053 Compact Timing ──┐
                        ├──► 054 Performance Page
-  049 ────────────────┘
-  049 ──────────────────────► 055 Audience Page
+  049 ✅ DONE ────────┘
+  049 ✅ DONE ─────────────────► 055 Audience Page
 
 Phase 4 (insights):
   056 Topic Model Lib ──► 057 Topic Model UI ──┐
                                                 ├──► 058 Insights Page
-  049 ────────────────────────────────────────┘
+  049 ✅ DONE ─────────────────────────────────┘
 
 Phase 5 (create):
   059 Grok Search ────┐
   060 YouTube ────────┤
                       ├──► 061 Discover Page
-  049 ───────────────┘
-  049 ──────────────────────► 062 Scanner & Compose Migration
+  049 ✅ DONE ───────┘
+  049 ✅ DONE ─────────────────► 062 Scanner & Compose Migration
 
 Phase 6 (polish):
   048 ✅ DONE ─────────────► 063 Responsive Navigation

@@ -4,7 +4,7 @@
 `pending`
 
 ## Dependencies
-- Requires: #049, #057
+- Requires: #049 ✅, #057
 
 ## Description
 Build the Insights page at `/dashboard/insights` that assembles the Topic Model components and relocated analytical components into a cohesive "So What" view. The page shows the topic cluster treemap at the top, topic performance and content focus (relocated `SemanticFocus`) in a 2-column grid below, and audience-topic fit at the bottom. This is the primary home for understanding content patterns.

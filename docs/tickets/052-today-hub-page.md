@@ -4,7 +4,7 @@
 `pending`
 
 ## Dependencies
-- Requires: #049, #051
+- Requires: #049 ✅, #051
 
 ## Description
 Build the Today Hub as the new default landing page at `/dashboard`. This replaces the previous redirect to `/dashboard/posts`. The page uses a 2-column grid layout with action-first ordering: "What to Post Next" and "When to Post" on top, "Pulse" and "Best Post" below, conditional alerts (reselection + viral recovery) at the bottom. Data fetching happens server-side, reusing patterns from the existing dashboard layout and compose page.

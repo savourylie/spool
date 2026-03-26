@@ -4,7 +4,7 @@
 `pending`
 
 ## Dependencies
-- Requires: #049, #059, #060
+- Requires: #049 ✅, #059, #060
 
 ## Description
 Build the Discover page at `/dashboard/create` as the landing page for the Create section. This page assembles topic suggestions, Grok trending, YouTube inspiration, and quick-action entry points (Quick Scan + Quick Compose) into a cohesive "What Next" view. The page surfaces content opportunities from multiple sources and provides quick paths to the full Scanner and Composer.

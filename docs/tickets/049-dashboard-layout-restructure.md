@@ -1,7 +1,7 @@
 # [TICKET-049] Dashboard Layout Restructure
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #048 ✅
@@ -10,14 +10,14 @@
 Restructure `src/app/dashboard/layout.tsx` from the current header + horizontal tabs + centered container layout to a sidebar + content shell layout. The `DashboardHeader` and `DashboardTabs` are replaced by the new `DashboardSidebar`. The content container widens from `max-w-6xl` to `max-w-7xl` to compensate for sidebar width. Banners (token expiry, backfill) remain in the main content area. `ViralRecoveryCard` moves out of the layout (will be placed in Today hub in #052).
 
 ## Acceptance Criteria
-- [ ] `dashboard/layout.tsx` uses a horizontal flex layout: `<DashboardSidebar>` + `<main>` content area
-- [ ] `DashboardHeader` component removed from layout (absorbed into sidebar)
-- [ ] `DashboardTabs` component removed from layout (replaced by sidebar)
-- [ ] Content area uses `max-w-7xl` (up from `max-w-6xl`)
-- [ ] `TokenExpiryBanner` and `DashboardBackfillBanner` remain at top of content area
-- [ ] `ViralRecoveryCard` removed from layout (will be relocated to Today hub in #052)
-- [ ] All existing dashboard pages still render correctly within the new shell
-- [ ] Layout passes `min-h-screen` with proper flex sizing
+- [x] `dashboard/layout.tsx` uses a horizontal flex layout: `<DashboardSidebar>` + `<main>` content area
+- [x] `DashboardHeader` component removed from layout (absorbed into sidebar)
+- [x] `DashboardTabs` component removed from layout (replaced by sidebar)
+- [x] Content area uses `max-w-7xl` (up from `max-w-6xl`)
+- [x] `TokenExpiryBanner` and `DashboardBackfillBanner` remain at top of content area
+- [x] `ViralRecoveryCard` removed from layout (will be relocated to Today hub in #052)
+- [x] All existing dashboard pages still render correctly within the new shell
+- [x] Layout passes `min-h-screen` with proper flex sizing
 
 ## Visual Reference
 The dashboard now shows a 240px sidebar on the left with the main content area filling the remaining width. Banners stack at the top of the content area. The old header bar and horizontal tab navigation are gone.
