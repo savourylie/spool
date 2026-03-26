@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 50    |
+| Done        | 51    |
 | In Progress | 0     |
-| Pending     | 14    |
+| Pending     | 13    |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -98,8 +98,8 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 | #   | Ticket                                                        | Status    | Depends On | Notes |
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
-| 051 | [Today Hub Summary Components](./051-today-hub-components.md) | `pending` | —          | PulseCard, BestPostCard, WhatToPostCard, WhenToPostCard |
-| 052 | [Today Hub Page](./052-today-hub-page.md)                     | `pending` | #049 ✅, #051 | Action-first 2-col grid, alerts row, data fetching |
+| 051 | [Today Hub Summary Components](./051-today-hub-components.md) | `done`    | —          | PulseCard, BestPostCard, WhatToPostCard, WhenToPostCard |
+| 052 | [Today Hub Page](./052-today-hub-page.md)                     | `pending` | #049 ✅, #051 ✅ | Action-first 2-col grid, alerts row, data fetching |
 
 ### v2 Phase 3 — Understand Section (053-055)
 
@@ -142,7 +142,7 @@ Phase 1 (shell):
   048 Sidebar Component ✅ DONE ──► 049 Layout Restructure ✅ DONE ──► 050 Routes & Redirects ✅ DONE
                        │
 Phase 2 (today hub):   │
-  051 Summary Components ──┤
+  051 Summary Components ✅ DONE ──┤
                             ├──► 052 Today Hub Page
   049 ✅ DONE ────────────────┘
 
