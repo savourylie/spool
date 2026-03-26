@@ -18,6 +18,7 @@ import {
   StickerCardIcon,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
 import { getAudienceFitEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import {
   computeAudienceAlignmentScore,
@@ -199,6 +200,43 @@ function buildTimelineData(
 }
 
 // ---------------------------------------------------------------------------
+// Skeleton
+// ---------------------------------------------------------------------------
+
+export function AudienceFitSkeleton() {
+  return (
+    <StickerCard className="hover:rotate-0 hover:scale-100">
+      <StickerCardIcon color="secondary">
+        <UsersFour weight="bold" className="size-6" />
+      </StickerCardIcon>
+      <StickerCardHeader>
+        <StickerCardTitle>Audience Fit</StickerCardTitle>
+        <StickerCardDescription>
+          Whether your followers match your content
+        </StickerCardDescription>
+      </StickerCardHeader>
+      <StickerCardContent>
+        <div role="status" aria-label="Loading audience fit">
+          <div aria-hidden="true" className="space-y-4">
+            {/* Score + badge */}
+            <div className="flex items-baseline gap-3">
+              <div className="h-12 w-20 animate-pulse rounded bg-muted" />
+              <div className="h-5 w-16 animate-pulse rounded-full bg-muted" />
+            </div>
+            {/* Engagement comparison */}
+            <div className="h-4 w-64 animate-pulse rounded bg-muted" />
+            {/* Shift summary */}
+            <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+            {/* Chart area */}
+            <div className="h-[200px] w-full animate-pulse rounded bg-muted" />
+          </div>
+        </div>
+      </StickerCardContent>
+    </StickerCard>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -223,45 +261,50 @@ export function AudienceFit({
   const isEmpty = uniqueDates.length < MIN_SNAPSHOTS_FOR_ANALYSIS;
 
   // Compute alignment score and shift analysis
-  const { alignment, shiftAnalysis, recommendations } = useMemo(() => {
+  const { alignment, shiftAnalysis, recommendations, computeError } = useMemo(() => {
     if (isEmpty) {
-      return { alignment: null, shiftAnalysis: null, recommendations: [] };
+      return { alignment: null, shiftAnalysis: null, recommendations: [], computeError: false };
     }
 
-    // Split posts by date midpoint
-    const sortedPosts = [...postMetrics].sort(
-      (a, b) =>
-        new Date(a.published_at).getTime() - new Date(b.published_at).getTime(),
-    );
-    const midIndex = Math.floor(sortedPosts.length / 2);
-    const prePosts = sortedPosts.slice(0, midIndex);
-    const postPosts = sortedPosts.slice(midIndex);
+    try {
+      // Split posts by date midpoint
+      const sortedPosts = [...postMetrics].sort(
+        (a, b) =>
+          new Date(a.published_at).getTime() - new Date(b.published_at).getTime(),
+      );
+      const midIndex = Math.floor(sortedPosts.length / 2);
+      const prePosts = sortedPosts.slice(0, midIndex);
+      const postPosts = sortedPosts.slice(midIndex);
 
-    const preWindow = aggregateWindow(prePosts, "Earlier posts");
-    const postWindow = aggregateWindow(postPosts, "Recent posts");
+      const preWindow = aggregateWindow(prePosts, "Earlier posts");
+      const postWindow = aggregateWindow(postPosts, "Recent posts");
 
-    const alignmentResult = computeAudienceAlignmentScore(preWindow, postWindow);
+      const alignmentResult = computeAudienceAlignmentScore(preWindow, postWindow);
 
-    // Split demographics history by midpoint date
-    const allDates = uniqueDates;
-    const midDateIndex = Math.floor(allDates.length / 2);
-    const splitDate = allDates[midDateIndex];
+      // Split demographics history by midpoint date
+      const allDates = uniqueDates;
+      const midDateIndex = Math.floor(allDates.length / 2);
+      const splitDate = allDates[midDateIndex];
 
-    const preSnapshots: DemographicSnapshot[] = demographicsHistory.filter(
-      (s) => s.fetched_at.split("T")[0] < splitDate,
-    );
-    const postSnapshots: DemographicSnapshot[] = demographicsHistory.filter(
-      (s) => s.fetched_at.split("T")[0] >= splitDate,
-    );
+      const preSnapshots: DemographicSnapshot[] = demographicsHistory.filter(
+        (s) => s.fetched_at.split("T")[0] < splitDate,
+      );
+      const postSnapshots: DemographicSnapshot[] = demographicsHistory.filter(
+        (s) => s.fetched_at.split("T")[0] >= splitDate,
+      );
 
-    const shiftResult = detectDemographicShift(preSnapshots, postSnapshots);
-    const recs = getAudienceFitRecommendations(alignmentResult, shiftResult);
+      const shiftResult = detectDemographicShift(preSnapshots, postSnapshots);
+      const recs = getAudienceFitRecommendations(alignmentResult, shiftResult);
 
-    return {
-      alignment: alignmentResult,
-      shiftAnalysis: shiftResult,
-      recommendations: recs,
-    };
+      return {
+        alignment: alignmentResult,
+        shiftAnalysis: shiftResult,
+        recommendations: recs,
+        computeError: false,
+      };
+    } catch {
+      return { alignment: null, shiftAnalysis: null, recommendations: [], computeError: true };
+    }
   }, [isEmpty, postMetrics, demographicsHistory, uniqueDates]);
 
   // Build timeline chart data
@@ -289,6 +332,28 @@ export function AudienceFit({
   const config = alignment ? SCORE_CONFIG[alignment.severity] : SCORE_CONFIG.good;
   const showRecommendations =
     alignment && alignment.score < 70 && recommendations.length > 0;
+
+  if (computeError) {
+    return (
+      <StickerCard className="hover:rotate-0 hover:scale-100">
+        <StickerCardIcon color="secondary">
+          <UsersFour weight="bold" className="size-6" />
+        </StickerCardIcon>
+        <StickerCardHeader>
+          <StickerCardTitle>Audience Fit</StickerCardTitle>
+          <StickerCardDescription>
+            Whether your followers match your content
+          </StickerCardDescription>
+        </StickerCardHeader>
+        <StickerCardContent>
+          <ErrorState
+            description="We couldn't compute your audience fit score right now."
+            className="border-0 shadow-none hover:rotate-0 hover:scale-100"
+          />
+        </StickerCardContent>
+      </StickerCard>
+    );
+  }
 
   return (
     <StickerCard className="hover:rotate-0 hover:scale-100">

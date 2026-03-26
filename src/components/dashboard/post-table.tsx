@@ -264,7 +264,7 @@ export function PostTable({
                         }}
                       >
                         <div className="overflow-hidden">
-                          {mountedIds.has(post.id) && <PostRowDetail post={post} />}
+                          {mountedIds.has(post.id) && <PostRowDetail post={post} isImporting={isImporting} />}
                         </div>
                       </div>
                     </td>

@@ -65,7 +65,7 @@ function computeChartData(metrics: MetricSnapshot[]): ChartDataPoint[] {
   });
 }
 
-export function PostRowDetail({ post }: { post: PostRow }) {
+export function PostRowDetail({ post, isImporting = false }: { post: PostRow; isImporting?: boolean }) {
   const [metrics, setMetrics] = useState<MetricSnapshot[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -184,7 +184,7 @@ export function PostRowDetail({ post }: { post: PostRow }) {
 
       {/* Comment quality */}
       <div className="mb-4">
-        <CommentQuality postId={post.id} />
+        <CommentQuality postId={post.id} isImporting={isImporting} />
       </div>
 
       {/* View on Threads link */}

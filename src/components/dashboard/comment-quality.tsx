@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ChatCircleDots, ArrowClockwise, WarningCircle } from "@phosphor-icons/react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { getCommentQualityEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 
 interface ReplyBreakdown {
   total: number;
@@ -12,15 +15,35 @@ interface ReplyBreakdown {
   discussionQualityScore: number;
 }
 
-export function CommentQuality({ postId }: { postId: string }) {
+interface CommentQualityProps {
+  postId: string;
+  isImporting?: boolean;
+}
+
+export function CommentQuality({ postId, isImporting = false }: CommentQualityProps) {
   const [data, setData] = useState<ReplyBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchReplies = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/posts/${postId}/replies`);
+      if (!res.ok) throw new Error("Failed to load replies");
+      const json = await res.json();
+      setData(json);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error");
+    } finally {
+      setLoading(false);
+    }
+  }, [postId]);
+
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchReplies() {
+    async function load() {
       try {
         const res = await fetch(`/api/posts/${postId}/replies`);
         if (!res.ok) throw new Error("Failed to load replies");
@@ -34,7 +57,7 @@ export function CommentQuality({ postId }: { postId: string }) {
       }
     }
 
-    fetchReplies();
+    load();
     return () => {
       cancelled = true;
     };
@@ -42,25 +65,52 @@ export function CommentQuality({ postId }: { postId: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-3 text-xs text-muted-foreground">
-        Loading comment quality…
+      <div role="status" aria-label="Loading comment quality">
+        <div aria-hidden="true" className="space-y-2">
+          <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+          <div className="h-2 w-full animate-pulse rounded-full bg-muted" />
+          <div className="flex items-center gap-3">
+            <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <div className="h-6 w-10 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-36 animate-pulse rounded bg-muted" />
+          </div>
+          <div className="h-3 w-48 animate-pulse rounded bg-muted" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-3 text-xs text-destructive">
-        {error}
+      <div className="flex items-center justify-center gap-3 py-3">
+        <WarningCircle weight="bold" className="size-4 text-destructive" />
+        <span className="text-xs text-destructive">{error}</span>
+        <button
+          type="button"
+          onClick={fetchReplies}
+          className="inline-flex items-center gap-1 rounded-full border-2 border-foreground px-2 py-0.5 text-xs font-semibold transition-colors hover:bg-tertiary"
+        >
+          <ArrowClockwise weight="bold" className="size-3" />
+          Try again
+        </button>
       </div>
     );
   }
 
   if (!data || data.total === 0) {
+    const emptyStateCopy = getCommentQualityEmptyStateCopy(isImporting);
     return (
-      <div className="flex items-center justify-center py-3 text-xs text-muted-foreground">
-        No replies yet
-      </div>
+      <EmptyState
+        icon={<ChatCircleDots weight="bold" className="size-7" />}
+        iconColor="tertiary"
+        title={emptyStateCopy.title}
+        description={emptyStateCopy.description}
+        className="py-6"
+      />
     );
   }
 

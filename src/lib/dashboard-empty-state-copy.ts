@@ -134,6 +134,22 @@ export function getAudienceFitEmptyStateCopy(isImporting: boolean) {
   };
 }
 
+export function getCommentQualityEmptyStateCopy(isImporting: boolean) {
+  if (isImporting) {
+    return {
+      title: "Importing replies...",
+      description:
+        "Reply data will appear as the backfill continues.",
+    };
+  }
+
+  return {
+    title: "No replies yet",
+    description:
+      "When this post gets replies, we'll break them down by quality — longer, thoughtful replies signal higher algorithmic value.",
+  };
+}
+
 export function getComposerEmptyStateCopy() {
   return {
     title: "Ready to compose",

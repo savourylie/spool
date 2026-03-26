@@ -18,6 +18,7 @@ import {
   StickerCardIcon,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
 import { getSemanticFocusEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import {
   computeSemanticFocusData,
@@ -57,6 +58,45 @@ const SCORE_CONFIG: Record<
 };
 
 // ---------------------------------------------------------------------------
+// Skeleton
+// ---------------------------------------------------------------------------
+
+export function SemanticFocusSkeleton() {
+  return (
+    <StickerCard className="hover:rotate-0 hover:scale-100">
+      <StickerCardIcon color="quaternary">
+        <Crosshair weight="bold" className="size-6" />
+      </StickerCardIcon>
+      <StickerCardHeader>
+        <StickerCardTitle>Semantic Focus</StickerCardTitle>
+        <StickerCardDescription>
+          How concentrated your content is around core topics
+        </StickerCardDescription>
+      </StickerCardHeader>
+      <StickerCardContent>
+        <div role="status" aria-label="Loading semantic focus">
+          <div aria-hidden="true" className="space-y-4">
+            {/* Score + badge */}
+            <div className="flex items-baseline gap-3">
+              <div className="h-12 w-20 animate-pulse rounded bg-muted" />
+              <div className="h-5 w-16 animate-pulse rounded-full bg-muted" />
+            </div>
+            {/* Topic badges */}
+            <div className="flex gap-2">
+              <div className="h-7 w-20 animate-pulse rounded-full bg-muted" />
+              <div className="h-7 w-24 animate-pulse rounded-full bg-muted" />
+              <div className="h-7 w-16 animate-pulse rounded-full bg-muted" />
+            </div>
+            {/* Chart area */}
+            <div className="h-[200px] w-full animate-pulse rounded bg-muted" />
+          </div>
+        </div>
+      </StickerCardContent>
+    </StickerCard>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -69,21 +109,47 @@ export function SemanticFocus({
   posts,
   isImporting = false,
 }: SemanticFocusProps) {
-  const focusData = useMemo(() => computeSemanticFocusData(posts), [posts]);
+  const { focusData, computeError } = useMemo(() => {
+    try {
+      return { focusData: computeSemanticFocusData(posts), computeError: null };
+    } catch {
+      return { focusData: null, computeError: true };
+    }
+  }, [posts]);
+
   const emptyStateCopy = getSemanticFocusEmptyStateCopy(isImporting);
+
+  if (computeError || !focusData) {
+    return (
+      <StickerCard className="hover:rotate-0 hover:scale-100">
+        <StickerCardIcon color="quaternary">
+          <Crosshair weight="bold" className="size-6" />
+        </StickerCardIcon>
+        <StickerCardHeader>
+          <StickerCardTitle>Semantic Focus</StickerCardTitle>
+          <StickerCardDescription>
+            How concentrated your content is around core topics
+          </StickerCardDescription>
+        </StickerCardHeader>
+        <StickerCardContent>
+          <ErrorState
+            description="We couldn't compute your focus score right now."
+            className="border-0 shadow-none hover:rotate-0 hover:scale-100"
+          />
+        </StickerCardContent>
+      </StickerCard>
+    );
+  }
+
   const scoreLevel = getScoreLevel(focusData.currentScore);
   const config = SCORE_CONFIG[scoreLevel];
 
-  const chartConfig = useMemo(
-    () =>
-      ({
-        score: {
-          label: "Focus Score",
-          color: config.chartColor,
-        },
-      }) satisfies ChartConfig,
-    [config.chartColor],
-  );
+  const chartConfig = {
+    score: {
+      label: "Focus Score",
+      color: config.chartColor,
+    },
+  } satisfies ChartConfig;
 
   const isEmpty =
     focusData.postCount < MIN_POSTS_FOR_FOCUS || focusData.currentScore === 0;
