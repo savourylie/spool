@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { QualityGauge } from "@/components/dashboard/quality-gauge";
 import { PredictionWidget } from "@/components/dashboard/prediction-widget";
 import { DraftCard, type DraftState } from "@/components/dashboard/draft-card";
+import { TopicSuggestions } from "@/components/dashboard/topic-suggestions";
 import { getComposerEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import {
   analyzeHeuristics,
@@ -550,6 +551,10 @@ export function Composer({
     });
   };
 
+  const handleSelectTopic = useCallback((topicName: string) => {
+    dispatch({ type: "SET_TOPIC", topic: topicName });
+  }, []);
+
   // ── Render ─────────────────────────────────────────────────────
 
   return (
@@ -752,6 +757,9 @@ export function Composer({
             </div>
           </div>
         )}
+
+        {/* Topic suggestions — always visible */}
+        <TopicSuggestions onSelectTopic={handleSelectTopic} />
       </div>
     </div>
   );
