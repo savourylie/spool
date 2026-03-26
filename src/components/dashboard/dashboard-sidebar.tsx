@@ -24,15 +24,19 @@ interface NavSection {
 }
 
 const standaloneItems: NavItem[] = [
-  { label: "Today", href: "/dashboard/today", icon: House },
+  { label: "Today", href: "/dashboard", icon: House },
 ];
 
 const sections: NavSection[] = [
   {
     label: "UNDERSTAND",
     items: [
-      { label: "Performance", href: "/dashboard/posts", icon: ChartBar },
-      { label: "Audience", href: "/dashboard/audience", icon: Users },
+      { label: "Performance", href: "/dashboard/understand", icon: ChartBar },
+      {
+        label: "Audience",
+        href: "/dashboard/understand/audience",
+        icon: Users,
+      },
     ],
   },
   {
@@ -48,13 +52,17 @@ const sections: NavSection[] = [
   {
     label: "CREATE",
     items: [
-      { label: "Discover", href: "/dashboard/discover", icon: Compass },
+      { label: "Discover", href: "/dashboard/create", icon: Compass },
       {
         label: "Scanner",
-        href: "/dashboard/scanner",
+        href: "/dashboard/create/scanner",
         icon: MagnifyingGlass,
       },
-      { label: "Compose", href: "/dashboard/compose", icon: PencilLine },
+      {
+        label: "Compose",
+        href: "/dashboard/create/compose",
+        icon: PencilLine,
+      },
     ],
   },
 ];
@@ -84,6 +92,15 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
 export function DashboardSidebar({ username }: { username: string }) {
   const pathname = usePathname();
 
+  const allItems = [...standaloneItems, ...sections.flatMap((s) => s.items)];
+  const activeHref =
+    [...allItems]
+      .sort((a, b) => b.href.length - a.href.length)
+      .find(
+        (item) =>
+          pathname === item.href || pathname.startsWith(item.href + "/")
+      )?.href ?? null;
+
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar)]">
       {/* Header */}
@@ -101,7 +118,7 @@ export function DashboardSidebar({ username }: { username: string }) {
           <NavLink
             key={item.href}
             item={item}
-            isActive={pathname.startsWith(item.href)}
+            isActive={item.href === activeHref}
           />
         ))}
 
@@ -116,7 +133,7 @@ export function DashboardSidebar({ username }: { username: string }) {
                 <NavLink
                   key={item.href}
                   item={item}
-                  isActive={pathname.startsWith(item.href)}
+                  isActive={item.href === activeHref}
                 />
               ))}
             </div>
