@@ -1,7 +1,7 @@
 # [TICKET-047] v1 QA & Integration Pass
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #024 ✅, #025 ✅, #026 ✅, #028 ✅, #030 ✅, #032 ✅, #034 ✅, #036 ✅, #040 ✅, #043 ✅, #044 ✅, #045 ✅, #046 ✅
@@ -10,18 +10,18 @@
 Final quality assurance and integration pass for all v1 features. Verify cross-feature interactions, banner stacking order, chart library compliance, responsive behavior, keyboard navigation, screen reader accessibility, reduced-motion handling, and streaming functionality. Ensure no regressions on v0 features.
 
 ## Acceptance Criteria
-- [ ] **Banner stacking order** correct per UX_DESIGN.md §3.2: token expiry (top) → backfill → viral recovery → reselection (within Posts tab)
-- [ ] **Charts** all use shadcn `ChartContainer`/`ChartTooltip`/`ChartTooltipContent` wrappers — no bare Recharts imports
-- [ ] **Responsive** all new sections stack correctly on mobile: cards full-width, composer panels stack vertically, touch targets ≥ 48px
-- [ ] **Keyboard navigation** works for: cadence scatter chart, format analysis chart, reselection alert dismiss, viral recovery dismiss, scanner text input, composer topic input, draft card actions, topic suggestion selection
-- [ ] **ARIA attributes** present on all new interactive elements: role, aria-label, aria-expanded, aria-current as appropriate
-- [ ] **Reduced motion** (`prefers-reduced-motion`): all new animations degrade gracefully — no bounce, no wiggle, fall back to instant state changes
-- [ ] **4-state machine** all new data-driven sections correctly implement loading → success / error / empty states
-- [ ] **Scanner streaming** works end-to-end: type text → heuristic results appear → LLM results stream in → gauge updates → issues list populates
-- [ ] **Composer streaming** works end-to-end: enter topic → drafts stream → cursor animation → quality scores appear → copy-to-clipboard works
-- [ ] **No v0 regressions**: post table sorting/filtering, heatmap, follower chart, demographics, backfill progress, OAuth flow all still work
-- [ ] **Empty states** show correct copy for all new sections when no data exists
-- [ ] **Token expiry** banner still renders correctly above all new content
+- [x] **Banner stacking order** correct per UX_DESIGN.md §3.2: token expiry (top) → backfill → viral recovery → reselection (within Posts tab)
+- [x] **Charts** all use shadcn `ChartContainer`/`ChartTooltip`/`ChartTooltipContent` wrappers — no bare Recharts imports
+- [x] **Responsive** all new sections stack correctly on mobile: cards full-width, composer panels stack vertically, touch targets ≥ 48px
+- [x] **Keyboard navigation** works for: cadence scatter chart, format analysis chart, reselection alert dismiss, viral recovery dismiss, scanner text input, composer topic input, draft card actions, topic suggestion selection
+- [x] **ARIA attributes** present on all new interactive elements: role, aria-label, aria-expanded, aria-current as appropriate
+- [x] **Reduced motion** (`prefers-reduced-motion`): all new animations degrade gracefully — no bounce, no wiggle, fall back to instant state changes
+- [x] **4-state machine** all new data-driven sections correctly implement loading → success / error / empty states
+- [x] **Scanner streaming** works end-to-end: type text → heuristic results appear → LLM results stream in → gauge updates → issues list populates
+- [x] **Composer streaming** works end-to-end: enter topic → drafts stream → cursor animation → quality scores appear → copy-to-clipboard works
+- [x] **No v0 regressions**: post table sorting/filtering, heatmap, follower chart, demographics, backfill progress, OAuth flow all still work
+- [x] **Empty states** show correct copy for all new sections when no data exists
+- [x] **Token expiry** banner still renders correctly above all new content
 
 ## Implementation Notes
 - This is a cross-cutting verification ticket — primarily manual testing with targeted fixes

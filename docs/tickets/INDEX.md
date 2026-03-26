@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 46    |
+| Done        | 47    |
 | In Progress | 0     |
-| Pending     | 1     |
+| Pending     | 0     |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -78,7 +78,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | --- | ------------------------------------------------------------- | --------- | --------------------------------- | ----- |
 | 045 | [Landing Page & Tabs Update](./045-landing-and-tabs-update.md) | `done`    | #040 ✅, #043 ✅                   | Remove "Soon" badges, update feature cards |
 | 046 | [Phase 2 Empty & Error States](./046-empty-error-states.md)   | `done`    | #030 ✅, #032 ✅, #034 ✅, #036 ✅  | Loading skeletons, empty/error states, isImporting |
-| 047 | [v1 QA & Integration Pass](./047-v1-qa-integration.md)        | `pending` | #024-#028, #030-#036, #040-#046 ✅ | Cross-feature testing, a11y, responsive, streaming — Unblocked |
+| 047 | [v1 QA & Integration Pass](./047-v1-qa-integration.md)        | `done`    | #024-#028, #030-#036, #040-#046 ✅ | Cross-feature testing, a11y, responsive, streaming |
 
 ---
 
@@ -110,7 +110,7 @@ Phase 3 (AI features):                    │
 Phase 4 (polish):                          │
   045 Landing Update ✅ DONE ◄── 040 + 043        │
   046 Empty States ✅ DONE ◄── 030 + 032 + 034 + 036
-  047 QA Pass 📋 PENDING ◄── All
+  047 QA Pass ✅ DONE ◄── All
 ```
 
 ---
