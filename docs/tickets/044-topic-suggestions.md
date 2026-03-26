@@ -1,7 +1,7 @@
 # [TICKET-044] Topic Suggestions
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #042 ✅, #033 ✅
@@ -10,12 +10,12 @@
 Build the Topic Suggestion Engine — analyzes the user's top-performing posts to extract core topics, then uses the LLM to generate semantically adjacent topic suggestions scored by audience relevance and semantic distance. Integrates into the Composer's right panel as a "Suggested Topics" card.
 
 ## Acceptance Criteria
-- [ ] `generateTopicSuggestions()` analyzes top-performing posts, extracts core topics (reusing `topic-classification.ts`), and calls the LLM to suggest adjacent topics
-- [ ] Each suggestion includes: topic name, relevance score (0-100), and semantic distance indicator (near/medium/far)
-- [ ] `TopicSuggestions` component renders as a card in the Composer's right panel showing 5-8 suggestions
-- [ ] Clicking a suggestion populates the Composer's topic input and triggers draft generation
-- [ ] Suggestions refresh when the user's post data changes significantly
-- [ ] Empty state when insufficient posts for topic extraction (< 5 posts with topic_tag)
+- [x] `generateTopicSuggestions()` analyzes top-performing posts, extracts core topics (reusing `topic-classification.ts`), and calls the LLM to suggest adjacent topics
+- [x] Each suggestion includes: topic name, relevance score (0-100), and semantic distance indicator (near/medium/far)
+- [x] `TopicSuggestions` component renders as a card in the Composer's right panel showing 5-8 suggestions
+- [x] Clicking a suggestion populates the Composer's topic input and triggers draft generation
+- [x] Suggestions refresh when the user's post data changes significantly
+- [x] Empty state when insufficient posts for topic extraction (< 5 posts with topic_tag)
 
 ## Design Reference
 - **Components**: § Components > Cards ("Sticker Card")

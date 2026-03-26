@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 43    |
+| Done        | 44    |
 | In Progress | 0     |
-| Pending     | 3     |
+| Pending     | 2     |
 | Blocked     | 1     |
 | Deferred    | 0     |
 
@@ -70,7 +70,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | 041 | [Engagement Prediction](./041-engagement-prediction.md)       | `done`    | #037 ✅      | Statistical model + prediction range widget |
 | 042 | [Composer Infrastructure](./042-composer-infra.md)            | `done`    | #037 ✅      | drafts table, prompt construction, /api/compose |
 | 043 | [AI Content Composer UI](./043-composer-ui.md)                | `done`    | #040 ✅, #041 ✅, #042 ✅ | Three-panel layout, streaming drafts, scanner integration |
-| 044 | [Topic Suggestions](./044-topic-suggestions.md)               | `pending` | #042 ✅, #033 ✅ | Adjacent topic recommendations in composer — Unblocked |
+| 044 | [Topic Suggestions](./044-topic-suggestions.md)               | `done`    | #042 ✅, #033 ✅ | Adjacent topic recommendations in composer |
 
 ## v1 Phase 4 — Polish & Shipping (045-047)
 
@@ -78,7 +78,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | --- | ------------------------------------------------------------- | --------- | --------------------------------- | ----- |
 | 045 | [Landing Page & Tabs Update](./045-landing-and-tabs-update.md) | `pending` | #040 ✅, #043 ✅                   | Remove "Soon" badges, update feature cards — Unblocked |
 | 046 | [Phase 2 Empty & Error States](./046-empty-error-states.md)   | `pending` | #030 ✅, #032 ✅, #034 ✅, #036 ✅  | Loading skeletons, empty/error states, isImporting — Unblocked |
-| 047 | [v1 QA & Integration Pass](./047-v1-qa-integration.md)        | `blocked` | #024-#028, #030-#036, #040-#046  | Cross-feature testing, a11y, responsive, streaming (#043 done) |
+| 047 | [v1 QA & Integration Pass](./047-v1-qa-integration.md)        | `blocked` | #024-#028, #030-#036, #040-#046  | Cross-feature testing, a11y, responsive, streaming (#044 done) |
 
 ---
 
@@ -105,7 +105,7 @@ Phase 3 (AI features):                    │
                          │               ││
   040 Scanner UI ✅ DONE ◄── 038 + 039           ││
   043 Composer UI ✅ DONE ◄── 040 + 041 + 042       ││
-  044 Topic Suggestions 📋 PENDING ◄── 042 + 033 ◄──┘│
+  044 Topic Suggestions ✅ DONE ◄── 042 + 033 ◄──┘│
                                            │
 Phase 4 (polish):                          │
   045 Landing Update 📋 PENDING ◄── 040 + 043        │
