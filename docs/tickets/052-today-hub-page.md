@@ -1,7 +1,7 @@
 # [TICKET-052] Today Hub Page
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #049 ✅, #051 ✅
@@ -10,14 +10,14 @@
 Build the Today Hub as the new default landing page at `/dashboard`. This replaces the previous redirect to `/dashboard/posts`. The page uses a 2-column grid layout with action-first ordering: "What to Post Next" and "When to Post" on top, "Pulse" and "Best Post" below, conditional alerts (reselection + viral recovery) at the bottom. Data fetching happens server-side, reusing patterns from the existing dashboard layout and compose page.
 
 ## Acceptance Criteria
-- [ ] `/dashboard` renders the Today Hub (no longer redirects to `/dashboard/posts`)
-- [ ] Page title: "Welcome back, {username}" with subtitle "Here's what to focus on today."
-- [ ] 2-column responsive grid: `grid-cols-1 lg:grid-cols-2 gap-6`
-- [ ] Top row: `WhatToPostCard` (left) + `WhenToPostCard` (right)
-- [ ] Bottom row: `PulseCard` (left) + `BestPostCard` (right)
-- [ ] Conditional alerts row below cards: `ReselectionAlert` (if applicable) + `ViralRecoveryCard` (if applicable)
-- [ ] Server-side data fetching with `Promise.all` for parallel queries
-- [ ] Page works correctly when user has no posts yet (all cards show empty states)
+- [x] `/dashboard` renders the Today Hub (no longer redirects to `/dashboard/posts`)
+- [x] Page title: "Welcome back, {username}" with subtitle "Here's what to focus on today."
+- [x] 2-column responsive grid: `grid-cols-1 lg:grid-cols-2 gap-6`
+- [x] Top row: `WhatToPostCard` (left) + `WhenToPostCard` (right)
+- [x] Bottom row: `PulseCard` (left) + `BestPostCard` (right)
+- [x] Conditional alerts row below cards: `ReselectionAlert` (if applicable) + `ViralRecoveryCard` (if applicable)
+- [x] Server-side data fetching with `Promise.all` for parallel queries
+- [x] Page works correctly when user has no posts yet (all cards show empty states)
 
 ## Design Reference
 - **Mockup**: Pencil file — Screen 2 "Today Hub"
