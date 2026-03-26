@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 53    |
+| Done        | 54    |
 | In Progress | 0     |
-| Pending     | 11    |
+| Pending     | 10    |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -106,7 +106,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | #   | Ticket                                                        | Status    | Depends On | Notes |
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
 | 053 | [Compact Timing Variants](./053-compact-timing-variants.md)   | `done`    | —          | compact prop for TimingHeatmap + CadenceOptimizer |
-| 054 | [Understand Performance Page](./054-understand-performance-page.md) | `pending` | #049 ✅, #053 ✅ | 2-col: post table + sticky timing sidebar |
+| 054 | [Understand Performance Page](./054-understand-performance-page.md) | `done`    | #049 ✅, #053 ✅ | 2-col: post table + sticky timing sidebar |
 | 055 | [Understand Audience Page](./055-understand-audience-page.md) | `pending` | #049 ✅    | Relocated components + collapsible sections |
 
 ### v2 Phase 4 — Insights & Topic Model (056-058)
@@ -148,7 +148,7 @@ Phase 2 (today hub):   │
 
 Phase 3 (understand):
   053 Compact Timing ✅ DONE ──┐
-                       ├──► 054 Performance Page
+                       ├──► 054 Performance Page ✅ DONE
   049 ✅ DONE ────────┘
   049 ✅ DONE ─────────────────► 055 Audience Page
 
