@@ -1,7 +1,7 @@
 # [TICKET-046] Phase 2 Empty & Error States
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #030 ✅, #032 ✅, #034 ✅, #036 ✅
@@ -10,14 +10,14 @@
 Add comprehensive empty states, error states, and loading skeletons for all Phase 2 UI components. Ensures every new data-driven section implements the 4-state machine (loading → success / error / empty) and correctly handles the `isImporting` flag for backfill-in-progress copy variants.
 
 ## Acceptance Criteria
-- [ ] Velocity Indicator (#030): graceful absence when no velocity data exists (no badge, no error)
-- [ ] Comment Quality (#032): loading skeleton while fetching replies, "No replies yet" empty state, error state on fetch failure
-- [ ] Semantic Focus (#034): loading skeleton, "Not enough posts for topic analysis" empty state (< 10 posts with text_full), error state
-- [ ] Audience Fit (#036): loading skeleton, "Not enough demographic history" empty state (< 2 snapshots), error state
-- [ ] All empty states show `isImporting` variant when backfill is in progress ("Importing your posts" copy)
-- [ ] All loading states use pulse-animated `bg-muted` skeleton bars within StickerCard (matches existing pattern)
-- [ ] Empty state copy added to `dashboard-empty-state-copy.ts` for each new section
-- [ ] Screen reader attributes (`role="status"`, `aria-label`) on all loading skeletons
+- [x] Velocity Indicator (#030): graceful absence when no velocity data exists (no badge, no error)
+- [x] Comment Quality (#032): loading skeleton while fetching replies, "No replies yet" empty state, error state on fetch failure
+- [x] Semantic Focus (#034): loading skeleton, "Not enough posts for topic analysis" empty state (< 10 posts with text_full), error state
+- [x] Audience Fit (#036): loading skeleton, "Not enough demographic history" empty state (< 2 snapshots), error state
+- [x] All empty states show `isImporting` variant when backfill is in progress ("Importing your posts" copy)
+- [x] All loading states use pulse-animated `bg-muted` skeleton bars within StickerCard (matches existing pattern)
+- [x] Empty state copy added to `dashboard-empty-state-copy.ts` for each new section
+- [x] Screen reader attributes (`role="status"`, `aria-label`) on all loading skeletons
 
 ## Design Reference
 - **Components**: § Components > Cards — skeleton within StickerCard pattern
