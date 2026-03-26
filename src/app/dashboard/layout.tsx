@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardBackfillBanner } from "@/components/dashboard/backfill-status-banner";
 import {
   TokenExpiryBanner,
@@ -92,22 +93,25 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader username={user.username} />
-      <div className="mx-auto max-w-6xl px-6">
-        {tokenStatus !== "valid" && (
-          <div className="mb-4">
-            <TokenExpiryBanner status={tokenStatus} />
-          </div>
-        )}
-        <DashboardBackfillBanner
-          initialJob={backfillJob}
-        />
-        {viralRecoveryState && (
-          <ViralRecoveryCard recoveryState={viralRecoveryState} />
-        )}
-        <DashboardTabs />
-        {children}
+    <div className="flex min-h-screen bg-background">
+      <DashboardSidebar username={user.username} />
+      <div className="flex min-h-screen flex-1 flex-col">
+        <DashboardHeader username={user.username} />
+        <div className="mx-auto max-w-6xl px-6">
+          {tokenStatus !== "valid" && (
+            <div className="mb-4">
+              <TokenExpiryBanner status={tokenStatus} />
+            </div>
+          )}
+          <DashboardBackfillBanner
+            initialJob={backfillJob}
+          />
+          {viralRecoveryState && (
+            <ViralRecoveryCard recoveryState={viralRecoveryState} />
+          )}
+          <DashboardTabs />
+          {children}
+        </div>
       </div>
     </div>
   );
