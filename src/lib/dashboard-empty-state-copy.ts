@@ -136,8 +136,8 @@ export function getAudienceFitEmptyStateCopy(isImporting: boolean) {
 
 export function getComposerEmptyStateCopy() {
   return {
-    title: "AI Content Composer",
+    title: "Ready to compose",
     description:
-      "Draft algorithm-optimized posts based on your performance history, audience data, and what triggers shares. Coming soon.",
+      "Enter a topic to generate AI-powered draft variations optimized for your audience and the Threads algorithm.",
   };
 }
