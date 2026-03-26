@@ -12,6 +12,8 @@
  * input data, ensuring deterministic output for identical input.
  */
 
+import { computePercentile } from "@/lib/engagement-prediction";
+
 export const CADENCE_THRESHOLDS = {
   /** Average gap (hours) below which a spacing recommendation triggers */
   minGapHours: 18,
@@ -19,6 +21,8 @@ export const CADENCE_THRESHOLDS = {
   recentWindowDays: 30,
   /** Minimum scatter data points needed to produce a recommendation */
   minPostsForRecommendation: 3,
+  /** Percentile above which points are treated as outliers */
+  outlierPercentile: 95,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -68,6 +72,29 @@ export interface CadenceRecommendation {
   avgViewsAboveThreshold: number;
   /** Percentage improvement: ((above - below) / below) * 100 */
   percentageImprovement: number;
+}
+
+export interface AxisThresholds {
+  /** Clamped X-axis maximum (hours since previous) */
+  x: number;
+  /** Clamped Y-axis maximum (views) */
+  y: number;
+}
+
+export interface ClampedScatterPoint extends CadenceScatterPoint {
+  /** Original hours value before clamping */
+  originalHoursSincePrevious: number;
+  /** Original views value before clamping */
+  originalViews: number;
+  /** Whether this point was clamped on at least one axis */
+  isOutlier: boolean;
+}
+
+export interface ClampedScatterResult {
+  normalPoints: ClampedScatterPoint[];
+  outlierPoints: ClampedScatterPoint[];
+  thresholds: AxisThresholds;
+  outlierCount: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -238,5 +265,74 @@ export function getCadenceRecommendation(
     avgViewsBelowThreshold: avgViewsBelow,
     avgViewsAboveThreshold: avgViewsAbove,
     percentageImprovement,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Outlier clamping
+// ---------------------------------------------------------------------------
+
+/** Round a value up to a human-friendly axis tick number. */
+export function ceilToNiceNumber(value: number): number {
+  if (value <= 0) return 0;
+  let step: number;
+  if (value < 100) step = 10;
+  else if (value < 1_000) step = 50;
+  else if (value < 10_000) step = 500;
+  else if (value < 100_000) step = 5_000;
+  else step = 50_000;
+  return Math.ceil(value / step) * step;
+}
+
+/** Compute axis thresholds by taking the percentile and rounding to a nice number. */
+export function computeAxisThresholds(
+  points: CadenceScatterPoint[],
+  percentile: number = CADENCE_THRESHOLDS.outlierPercentile,
+): AxisThresholds {
+  if (points.length === 0) return { x: 0, y: 0 };
+
+  const sortedHours = [...points.map((p) => p.hoursSincePrevious)].sort(
+    (a, b) => a - b,
+  );
+  const sortedViews = [...points.map((p) => p.views)].sort((a, b) => a - b);
+
+  return {
+    x: ceilToNiceNumber(computePercentile(sortedHours, percentile)),
+    y: ceilToNiceNumber(computePercentile(sortedViews, percentile)),
+  };
+}
+
+/** Clamp scatter points to thresholds and split into normal/outlier sets. */
+export function clampAndSplitScatterData(
+  points: CadenceScatterPoint[],
+  thresholds: AxisThresholds,
+): ClampedScatterResult {
+  const normalPoints: ClampedScatterPoint[] = [];
+  const outlierPoints: ClampedScatterPoint[] = [];
+
+  for (const point of points) {
+    const isOutlier =
+      point.hoursSincePrevious > thresholds.x || point.views > thresholds.y;
+
+    const clamped: ClampedScatterPoint = {
+      hoursSincePrevious: Math.min(point.hoursSincePrevious, thresholds.x),
+      views: Math.min(point.views, thresholds.y),
+      originalHoursSincePrevious: point.hoursSincePrevious,
+      originalViews: point.views,
+      isOutlier,
+    };
+
+    if (isOutlier) {
+      outlierPoints.push(clamped);
+    } else {
+      normalPoints.push(clamped);
+    }
+  }
+
+  return {
+    normalPoints,
+    outlierPoints,
+    thresholds,
+    outlierCount: outlierPoints.length,
   };
 }

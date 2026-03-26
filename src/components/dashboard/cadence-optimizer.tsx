@@ -31,8 +31,12 @@ import {
   computeCadenceScatterData,
   getCadenceRecommendation,
   detectSameDayCollisions,
+  computeAxisThresholds,
+  clampAndSplitScatterData,
   CADENCE_THRESHOLDS,
+  type ClampedScatterPoint,
 } from "@/lib/cadence-analysis";
+import { formatNumber } from "@/lib/engagement-prediction";
 
 /* ------------------------------------------------------------------ */
 /*  Chart config                                                       */
@@ -42,6 +46,10 @@ const chartConfig = {
   views: {
     label: "Views",
     color: "var(--chart-1)",
+  },
+  outliers: {
+    label: "Outliers (beyond axis range)",
+    color: "var(--chart-5)",
   },
 } satisfies ChartConfig;
 
@@ -115,6 +123,47 @@ function CollisionList({ collisions }: { collisions: { date: string; postViews: 
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function OutlierDot(props: any) {
+  const { cx, cy } = props;
+  return (
+    <g transform={`translate(${cx},${cy})`}>
+      <rect
+        x={-4}
+        y={-4}
+        width={8}
+        height={8}
+        transform="rotate(45)"
+        fill="var(--color-outliers)"
+        fillOpacity={0.5}
+        stroke="var(--color-outliers)"
+        strokeWidth={1}
+      />
+    </g>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CadenceTooltipContent({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+
+  const data = payload[0].payload as ClampedScatterPoint;
+  const hours = data.originalHoursSincePrevious;
+  const views = data.originalViews;
+
+  return (
+    <div className="rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+      <p className="text-muted-foreground">
+        {Math.round(hours)}h since previous post
+      </p>
+      <p className="font-medium">{formatNumber(views)} views</p>
+      {data.isOutlier && (
+        <p className="mt-1 text-muted-foreground italic">Beyond chart range</p>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
@@ -129,7 +178,15 @@ export function CadenceOptimizer({
   const timezone = useSyncExternalStore(subscribeBrowserTz, getBrowserTz, getServerTz);
 
   const stats = useMemo(() => computeCadenceStats(posts), [posts]);
-  const scatterData = useMemo(() => computeCadenceScatterData(posts), [posts]);
+  const rawScatterData = useMemo(() => computeCadenceScatterData(posts), [posts]);
+  const clampedResult = useMemo(() => {
+    if (rawScatterData.length < CADENCE_THRESHOLDS.minPostsForRecommendation) return null;
+    const thresholds = computeAxisThresholds(rawScatterData);
+    const result = clampAndSplitScatterData(rawScatterData, thresholds);
+    // If all points are outliers, fall back to auto-scaling
+    if (result.outlierCount === rawScatterData.length) return null;
+    return result;
+  }, [rawScatterData]);
   const recommendation = useMemo(() => getCadenceRecommendation(posts), [posts]);
   const collisions = useMemo(
     () => detectSameDayCollisions(posts, timezone),
@@ -137,7 +194,7 @@ export function CadenceOptimizer({
   );
   const emptyStateCopy = useMemo(() => getCadenceEmptyStateCopy(isImporting), [isImporting]);
 
-  const hasEnoughData = scatterData.length >= CADENCE_THRESHOLDS.minPostsForRecommendation;
+  const hasEnoughData = rawScatterData.length >= CADENCE_THRESHOLDS.minPostsForRecommendation;
 
   return (
     <StickerCard className="mt-10 hover:rotate-0 hover:scale-100">
@@ -179,6 +236,7 @@ export function CadenceOptimizer({
                   name="Hours since previous post"
                   unit="h"
                   tick={{ fontSize: 12 }}
+                  domain={clampedResult ? [0, clampedResult.thresholds.x] : undefined}
                 />
                 <YAxis
                   type="number"
@@ -186,18 +244,46 @@ export function CadenceOptimizer({
                   name="Views"
                   tick={{ fontSize: 12 }}
                   tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)}
+                  domain={clampedResult ? [0, clampedResult.thresholds.y] : undefined}
                 />
                 <ChartTooltip
                   cursor={{ strokeDasharray: "3 3" }}
-                  content={<ChartTooltipContent hideLabel />}
+                  content={<CadenceTooltipContent />}
                 />
                 <Scatter
-                  data={scatterData}
+                  data={clampedResult ? clampedResult.normalPoints : rawScatterData}
                   fill="var(--color-views)"
                   name="views"
                 />
+                {clampedResult && clampedResult.outlierPoints.length > 0 && (
+                  <Scatter
+                    data={clampedResult.outlierPoints}
+                    fill="var(--color-outliers)"
+                    name="outliers"
+                    shape={<OutlierDot />}
+                  />
+                )}
               </ScatterChart>
             </ChartContainer>
+
+            {clampedResult && clampedResult.outlierCount > 0 && (
+              <>
+                <p className="mt-1 text-right text-xs text-muted-foreground">
+                  {clampedResult.outlierCount}{" "}
+                  {clampedResult.outlierCount === 1 ? "post" : "posts"} beyond
+                  range
+                </p>
+                <p className="sr-only">
+                  Chart axes clamped at {clampedResult.thresholds.x} hours and{" "}
+                  {formatNumber(clampedResult.thresholds.y)} views.{" "}
+                  {clampedResult.outlierCount}{" "}
+                  {clampedResult.outlierCount === 1
+                    ? "post exceeds"
+                    : "posts exceed"}{" "}
+                  these thresholds.
+                </p>
+              </>
+            )}
 
             {recommendation?.triggered && (
               <RecommendationBanner

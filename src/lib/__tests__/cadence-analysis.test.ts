@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   CADENCE_THRESHOLDS,
   type CadencePost,
+  type CadenceScatterPoint,
   computeCadenceScatterData,
   computeCadenceStats,
   detectSameDayCollisions,
   getCadenceRecommendation,
+  ceilToNiceNumber,
+  computeAxisThresholds,
+  clampAndSplitScatterData,
 } from "../cadence-analysis";
 
 function makePost(isoDate: string, views: number): CadencePost {
@@ -27,6 +31,10 @@ describe("CADENCE_THRESHOLDS", () => {
 
   it("has minPostsForRecommendation of 3", () => {
     expect(CADENCE_THRESHOLDS.minPostsForRecommendation).toBe(3);
+  });
+
+  it("has outlierPercentile of 95", () => {
+    expect(CADENCE_THRESHOLDS.outlierPercentile).toBe(95);
   });
 });
 
@@ -283,5 +291,179 @@ describe("getCadenceRecommendation", () => {
     expect(result).not.toBeNull();
     expect(result!.triggered).toBe(false);
     expect(result!.currentAvgGapHours).toBe(20);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ceilToNiceNumber
+// ---------------------------------------------------------------------------
+
+describe("ceilToNiceNumber", () => {
+  it("returns 0 for 0", () => {
+    expect(ceilToNiceNumber(0)).toBe(0);
+  });
+
+  it("returns 0 for negative values", () => {
+    expect(ceilToNiceNumber(-5)).toBe(0);
+  });
+
+  it("rounds up to next multiple of 10 for values < 100", () => {
+    expect(ceilToNiceNumber(1)).toBe(10);
+    expect(ceilToNiceNumber(47)).toBe(50);
+    expect(ceilToNiceNumber(91)).toBe(100);
+  });
+
+  it("keeps exact multiples of 10 for values < 100", () => {
+    expect(ceilToNiceNumber(50)).toBe(50);
+  });
+
+  it("rounds up to next multiple of 50 for values 100–999", () => {
+    expect(ceilToNiceNumber(101)).toBe(150);
+    expect(ceilToNiceNumber(870)).toBe(900);
+  });
+
+  it("rounds up to next multiple of 500 for values 1000–9999", () => {
+    expect(ceilToNiceNumber(1001)).toBe(1500);
+    expect(ceilToNiceNumber(4200)).toBe(4500);
+  });
+
+  it("rounds up to next multiple of 5000 for values 10000–99999", () => {
+    expect(ceilToNiceNumber(10001)).toBe(15000);
+    expect(ceilToNiceNumber(45000)).toBe(45000);
+    expect(ceilToNiceNumber(46000)).toBe(50000);
+  });
+
+  it("rounds up to next multiple of 50000 for values >= 100000", () => {
+    expect(ceilToNiceNumber(100001)).toBe(150000);
+    expect(ceilToNiceNumber(230000)).toBe(250000);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeAxisThresholds
+// ---------------------------------------------------------------------------
+
+function makePoint(hours: number, views: number): CadenceScatterPoint {
+  return { hoursSincePrevious: hours, views };
+}
+
+describe("computeAxisThresholds", () => {
+  it("returns { x: 0, y: 0 } for empty array", () => {
+    expect(computeAxisThresholds([])).toEqual({ x: 0, y: 0 });
+  });
+
+  it("returns nice-rounded values for a single point", () => {
+    const result = computeAxisThresholds([makePoint(47, 3200)]);
+    expect(result.x).toBe(50);   // 47 → ceil to nice → 50
+    expect(result.y).toBe(3500); // 3200 → ceil to nice → 3500
+  });
+
+  it("computes 95th percentile and rounds up for a 20-point dataset", () => {
+    // 20 points with hours 5,10,...,100 and views 1000,2000,...,20000
+    const points = Array.from({ length: 20 }, (_, i) =>
+      makePoint((i + 1) * 5, (i + 1) * 1000),
+    );
+    // 95th percentile of hours [5..100]: rank = 0.95 * 19 = 18.05
+    //   sorted[18] = 95, sorted[19] = 100 → 95 + 0.05 * 5 = 95.25 → nice → 100
+    // 95th percentile of views [1000..20000]: rank = 18.05
+    //   sorted[18] = 19000, sorted[19] = 20000 → 19000 + 0.05 * 1000 = 19050 → nice → 20000
+    const result = computeAxisThresholds(points);
+    expect(result.x).toBe(100);
+    expect(result.y).toBe(20000);
+  });
+
+  it("respects custom percentile parameter", () => {
+    const points = Array.from({ length: 20 }, (_, i) =>
+      makePoint((i + 1) * 5, (i + 1) * 1000),
+    );
+    const result = computeAxisThresholds(points, 50);
+    // 50th percentile: rank = 0.5 * 19 = 9.5
+    //   hours: sorted[9] = 50, sorted[10] = 55 → 50 + 0.5 * 5 = 52.5 → nice → 60
+    //   views: sorted[9] = 10000, sorted[10] = 11000 → 10000 + 0.5 * 1000 = 10500 → nice → 15000
+    expect(result.x).toBe(60);
+    expect(result.y).toBe(15000);
+  });
+
+  it("handles all-identical values", () => {
+    const points = [makePoint(24, 5000), makePoint(24, 5000), makePoint(24, 5000)];
+    const result = computeAxisThresholds(points);
+    expect(result.x).toBe(30);   // 24 → nice → 30
+    expect(result.y).toBe(5000); // 5000 → nice → 5000
+  });
+});
+
+// ---------------------------------------------------------------------------
+// clampAndSplitScatterData
+// ---------------------------------------------------------------------------
+
+describe("clampAndSplitScatterData", () => {
+  const thresholds = { x: 150, y: 45000 };
+
+  it("returns empty arrays for empty input", () => {
+    const result = clampAndSplitScatterData([], thresholds);
+    expect(result.normalPoints).toEqual([]);
+    expect(result.outlierPoints).toEqual([]);
+    expect(result.outlierCount).toBe(0);
+  });
+
+  it("classifies all points as normal when none exceed thresholds", () => {
+    const points = [makePoint(24, 1000), makePoint(48, 30000)];
+    const result = clampAndSplitScatterData(points, thresholds);
+    expect(result.normalPoints).toHaveLength(2);
+    expect(result.outlierPoints).toHaveLength(0);
+    expect(result.outlierCount).toBe(0);
+  });
+
+  it("classifies X-axis outlier and clamps hours", () => {
+    const points = [makePoint(200, 1000)];
+    const result = clampAndSplitScatterData(points, thresholds);
+    expect(result.outlierPoints).toHaveLength(1);
+    expect(result.outlierPoints[0].hoursSincePrevious).toBe(150); // clamped
+    expect(result.outlierPoints[0].originalHoursSincePrevious).toBe(200);
+    expect(result.outlierPoints[0].isOutlier).toBe(true);
+  });
+
+  it("classifies Y-axis outlier and clamps views", () => {
+    const points = [makePoint(24, 80000)];
+    const result = clampAndSplitScatterData(points, thresholds);
+    expect(result.outlierPoints).toHaveLength(1);
+    expect(result.outlierPoints[0].views).toBe(45000); // clamped
+    expect(result.outlierPoints[0].originalViews).toBe(80000);
+  });
+
+  it("classifies dual-axis outlier and clamps both", () => {
+    const points = [makePoint(200, 80000)];
+    const result = clampAndSplitScatterData(points, thresholds);
+    expect(result.outlierPoints).toHaveLength(1);
+    expect(result.outlierPoints[0].hoursSincePrevious).toBe(150);
+    expect(result.outlierPoints[0].views).toBe(45000);
+  });
+
+  it("treats point exactly at threshold as normal (> not >=)", () => {
+    const points = [makePoint(150, 45000)];
+    const result = clampAndSplitScatterData(points, thresholds);
+    expect(result.normalPoints).toHaveLength(1);
+    expect(result.outlierPoints).toHaveLength(0);
+  });
+
+  it("preserves original values on normal points", () => {
+    const points = [makePoint(24, 5000)];
+    const result = clampAndSplitScatterData(points, thresholds);
+    const p = result.normalPoints[0];
+    expect(p.originalHoursSincePrevious).toBe(24);
+    expect(p.originalViews).toBe(5000);
+    expect(p.isOutlier).toBe(false);
+  });
+
+  it("outlierCount matches outlierPoints length", () => {
+    const points = [
+      makePoint(24, 1000),   // normal
+      makePoint(200, 1000),  // X outlier
+      makePoint(24, 80000),  // Y outlier
+    ];
+    const result = clampAndSplitScatterData(points, thresholds);
+    expect(result.outlierCount).toBe(2);
+    expect(result.outlierPoints).toHaveLength(2);
+    expect(result.normalPoints).toHaveLength(1);
   });
 });
