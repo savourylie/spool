@@ -37,6 +37,9 @@ import {
   type ClampedScatterPoint,
 } from "@/lib/cadence-analysis";
 import { formatNumber } from "@/lib/engagement-prediction";
+import { deriveCadenceStatus, type CadenceStatus } from "@/lib/today-hub-helpers";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 /* ------------------------------------------------------------------ */
 /*  Chart config                                                       */
@@ -165,15 +168,27 @@ function CadenceTooltipContent({ active, payload }: any) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Compact status config                                              */
+/* ------------------------------------------------------------------ */
+
+const COMPACT_CADENCE_DOT: Record<CadenceStatus, string> = {
+  on_track: "bg-quaternary",
+  due: "bg-tertiary",
+  overdue: "bg-destructive",
+};
+
+/* ------------------------------------------------------------------ */
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
 export function CadenceOptimizer({
   posts,
   isImporting,
+  compact = false,
 }: {
   posts: TimingPost[];
   isImporting: boolean;
+  compact?: boolean;
 }) {
   const timezone = useSyncExternalStore(subscribeBrowserTz, getBrowserTz, getServerTz);
 
@@ -195,6 +210,64 @@ export function CadenceOptimizer({
   const emptyStateCopy = useMemo(() => getCadenceEmptyStateCopy(isImporting), [isImporting]);
 
   const hasEnoughData = rawScatterData.length >= CADENCE_THRESHOLDS.minPostsForRecommendation;
+
+  // Compact-mode extras
+  const lastPostAt = useMemo(() => {
+    if (posts.length === 0) return null;
+    return posts.reduce((latest, p) =>
+      new Date(p.published_at) > new Date(latest.published_at) ? p : latest
+    ).published_at;
+  }, [posts]);
+
+  const cadenceStatus = useMemo(
+    () => deriveCadenceStatus(lastPostAt, new Date()),
+    [lastPostAt],
+  );
+
+  /* ── Compact render ─────────────────────────────────────────────── */
+
+  if (compact) {
+    const dotClass = COMPACT_CADENCE_DOT[cadenceStatus.status];
+    const statusLabel =
+      cadenceStatus.hoursAgo === Infinity
+        ? "No posts yet"
+        : cadenceStatus.status === "on_track"
+          ? `On track (${Math.round(cadenceStatus.hoursAgo)}h ago)`
+          : cadenceStatus.status === "due"
+            ? `Due to post (${Math.round(cadenceStatus.hoursAgo)}h ago)`
+            : `Overdue (${Math.round(cadenceStatus.hoursAgo)}h ago)`;
+
+    const spacingSummary = hasEnoughData
+      ? `Optimal spacing: ${CADENCE_THRESHOLDS.minGapHours}\u201324h \u00B7 Averaging ${Math.round(stats.avgGapHours)}h`
+      : "Need more posts for cadence analysis";
+
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm font-bold">Posting Cadence</p>
+
+        {/* Status dot + label */}
+        <div className="flex items-center gap-2">
+          <span className={cn("size-2 shrink-0 rounded-full", dotClass)} />
+          <span className="text-xs font-medium text-muted-foreground">
+            {statusLabel}
+          </span>
+        </div>
+
+        {/* Spacing summary */}
+        <p className="text-xs text-muted-foreground">{spacingSummary}</p>
+
+        {/* See full analysis link */}
+        <Link
+          href="/dashboard/understand"
+          className="text-xs font-semibold text-primary hover:underline"
+        >
+          See full analysis &rarr;
+        </Link>
+      </div>
+    );
+  }
+
+  /* ── Full render ────────────────────────────────────────────────── */
 
   return (
     <StickerCard className="mt-10 hover:rotate-0 hover:scale-100">

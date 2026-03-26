@@ -29,7 +29,7 @@ export type TimingPost = {
 type Bucket = { count: number; totalEngRate: number; totalViews: number };
 type Grid = Bucket[][];
 
-const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+export const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 const HOUR_LABELS = Array.from({ length: 24 }, (_, i) => {
   if (i === 0) return "12a";
   if (i < 12) return `${i}a`;
@@ -38,6 +38,16 @@ const HOUR_LABELS = Array.from({ length: 24 }, (_, i) => {
 });
 
 const MIN_POSTS_FOR_CELL = 2;
+
+const BLOCK_LABELS = ["12a\u20134a", "4a\u20138a", "8a\u201312p", "12p\u20134p", "4p\u20138p", "8p\u201312a"] as const;
+const HOURS_PER_BLOCK = 4;
+const NUM_BLOCKS = 6;
+
+export function formatSlot(day: number, hour: number): string {
+  const timeStr =
+    hour === 0 ? "12 AM" : hour < 12 ? `${hour} AM` : hour === 12 ? "12 PM" : `${hour - 12} PM`;
+  return `${DAY_LABELS[day]} ${timeStr}`;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Color interpolation                                                */
@@ -156,9 +166,11 @@ const getServerTz = () => "UTC";
 export function TimingHeatmap({
   posts,
   isImporting = false,
+  compact = false,
 }: {
   posts: TimingPost[];
   isImporting?: boolean;
+  compact?: boolean;
 }) {
   const initialTz = useSyncExternalStore(subscribeBrowserTz, getBrowserTz, getServerTz);
   const [timezone, setTimezone] = useState(initialTz);
@@ -262,6 +274,41 @@ export function TimingHeatmap({
     return { minEng: min, maxEng: max };
   }, [grid]);
 
+  // Compact 7x6 grid — aggregate 4-hour blocks from the full grid
+  const compactGrid = useMemo(() => {
+    if (!compact) return null;
+    return Array.from({ length: 7 }, (_, d) =>
+      Array.from({ length: NUM_BLOCKS }, (_, b) => {
+        let count = 0;
+        let totalEngRate = 0;
+        let totalViews = 0;
+        for (let h = b * HOURS_PER_BLOCK; h < (b + 1) * HOURS_PER_BLOCK; h++) {
+          count += grid[d][h].count;
+          totalEngRate += grid[d][h].totalEngRate;
+          totalViews += grid[d][h].totalViews;
+        }
+        return { count, totalEngRate, totalViews } as Bucket;
+      })
+    );
+  }, [compact, grid]);
+
+  const { compactMinEng, compactMaxEng } = useMemo(() => {
+    if (!compactGrid) return { compactMinEng: 0, compactMaxEng: 0 };
+    let min = Infinity;
+    let max = -Infinity;
+    for (let d = 0; d < 7; d++) {
+      for (let b = 0; b < NUM_BLOCKS; b++) {
+        if (compactGrid[d][b].count >= MIN_POSTS_FOR_CELL) {
+          const avg = compactGrid[d][b].totalEngRate / compactGrid[d][b].count;
+          if (avg < min) min = avg;
+          if (avg > max) max = avg;
+        }
+      }
+    }
+    if (min === Infinity) { min = 0; max = 0; }
+    return { compactMinEng: min, compactMaxEng: max };
+  }, [compactGrid]);
+
   const showTooltipForElement = useCallback(
     (el: HTMLElement, day: number, hour: number) => {
       const rect = el.getBoundingClientRect();
@@ -292,17 +339,95 @@ export function TimingHeatmap({
 
   const handleCellLeave = useCallback(() => setTooltip(null), []);
 
-  // Summary text
-  function formatSlot(day: number, hour: number) {
-    const timeStr =
-      hour === 0 ? "12 AM" : hour < 12 ? `${hour} AM` : hour === 12 ? "12 PM" : `${hour - 12} PM`;
-    return `${DAY_LABELS[day]} ${timeStr}`;
-  }
-
   const summaryText =
     bestSlots.length > 0
       ? `Best times: ${bestSlots.map((s) => formatSlot(s.day, s.hour)).join(", ")}`
       : "Not enough data to determine best posting times yet.";
+
+  /* ── Compact render ─────────────────────────────────────────────── */
+
+  if (compact && compactGrid) {
+    const cRange = compactMaxEng - compactMinEng;
+
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm font-bold">Best Time to Post</p>
+
+        <div role="grid" aria-label="Compact posting time heatmap: engagement rate by day and 4-hour block">
+          {/* Block labels */}
+          <div
+            className="grid gap-0.5 mb-0.5"
+            style={{ gridTemplateColumns: `2.5rem repeat(${NUM_BLOCKS}, 1fr)` }}
+          >
+            <div /> {/* spacer for day labels */}
+            {BLOCK_LABELS.map((label) => (
+              <div key={label} className="text-center text-[9px] text-muted-foreground">
+                {label}
+              </div>
+            ))}
+          </div>
+
+          {/* Grid rows */}
+          {DAY_LABELS.map((dayLabel, dayIdx) => (
+            <div
+              key={dayLabel}
+              className="grid gap-0.5 mb-0.5"
+              style={{ gridTemplateColumns: `2.5rem repeat(${NUM_BLOCKS}, 1fr)` }}
+            >
+              <div className="flex items-center text-xs font-medium text-muted-foreground pr-1 justify-end">
+                {dayLabel}
+              </div>
+              {Array.from({ length: NUM_BLOCKS }, (_, blockIdx) => {
+                const bucket = compactGrid[dayIdx][blockIdx];
+                const hasData = bucket.count >= MIN_POSTS_FOR_CELL;
+                const avgEng = hasData ? bucket.totalEngRate / bucket.count : 0;
+                const t = hasData && cRange > 0 ? (avgEng - compactMinEng) / cRange : 0;
+
+                return (
+                  <div
+                    key={blockIdx}
+                    role="gridcell"
+                    aria-label={
+                      hasData
+                        ? `${dayLabel} ${BLOCK_LABELS[blockIdx]}: ${bucket.count} posts, ${avgEng.toFixed(1)}% avg engagement`
+                        : `${dayLabel} ${BLOCK_LABELS[blockIdx]}: no data`
+                    }
+                    className={`aspect-square rounded-sm flex items-center justify-center text-[9px] font-bold leading-none ${
+                      hasData
+                        ? ""
+                        : "border border-dashed border-border"
+                    }`}
+                    style={{
+                      backgroundColor: hasData ? interpolateColor(t) : undefined,
+                      color: hasData
+                        ? t > 0.5
+                          ? "white"
+                          : "var(--foreground)"
+                        : undefined,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center justify-end gap-2 text-[10px] text-muted-foreground">
+          <span>Lower</span>
+          <div
+            className="h-2 w-20 rounded-sm"
+            style={{
+              background: `linear-gradient(to right, ${interpolateColor(0)}, ${interpolateColor(0.5)}, ${interpolateColor(1)})`,
+            }}
+          />
+          <span>Higher</span>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Full render ────────────────────────────────────────────────── */
 
   return (
     <StickerCard className="hover:rotate-0 hover:scale-100">
