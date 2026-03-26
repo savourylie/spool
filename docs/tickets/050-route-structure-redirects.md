@@ -1,7 +1,7 @@
 # [TICKET-050] Route Structure & Redirects
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #049 ✅
@@ -10,15 +10,15 @@
 Set up the new route file structure under `/dashboard/*` and add redirects from old routes to new ones. The new structure organizes pages into `/understand`, `/insights`, and `/create` sections. Old routes (`/dashboard/posts`, `/dashboard/timing`, `/dashboard/audience`, `/dashboard/scanner`, `/dashboard/compose`) redirect to their new locations to preserve bookmarks and shared links.
 
 ## Acceptance Criteria
-- [ ] New route directories created: `dashboard/understand/`, `dashboard/understand/audience/`, `dashboard/insights/`, `dashboard/create/`, `dashboard/create/scanner/`, `dashboard/create/compose/`
-- [ ] Each new route has a placeholder `page.tsx` that renders a basic title (e.g., "Performance", "Insights")
-- [ ] `/dashboard` no longer redirects to `/dashboard/posts` — it renders the Today hub placeholder
-- [ ] `/dashboard/posts` redirects to `/dashboard/understand`
-- [ ] `/dashboard/timing` redirects to `/dashboard/understand`
-- [ ] `/dashboard/audience` redirects to `/dashboard/understand/audience`
-- [ ] `/dashboard/scanner` redirects to `/dashboard/create/scanner`
-- [ ] `/dashboard/compose` redirects to `/dashboard/create/compose`
-- [ ] All redirects use `next/navigation` `redirect()` (server-side, 307)
+- [x] New route directories created: `dashboard/understand/`, `dashboard/understand/audience/`, `dashboard/insights/`, `dashboard/create/`, `dashboard/create/scanner/`, `dashboard/create/compose/`
+- [x] Each new route has a placeholder `page.tsx` that renders a basic title (e.g., "Performance", "Insights")
+- [x] `/dashboard` no longer redirects to `/dashboard/posts` — it renders the Today hub placeholder
+- [x] `/dashboard/posts` redirects to `/dashboard/understand`
+- [x] `/dashboard/timing` redirects to `/dashboard/understand`
+- [x] `/dashboard/audience` redirects to `/dashboard/understand/audience`
+- [x] `/dashboard/scanner` redirects to `/dashboard/create/scanner`
+- [x] `/dashboard/compose` redirects to `/dashboard/create/compose`
+- [x] All redirects use `next/navigation` `redirect()` (server-side, 307)
 
 ## Implementation Notes
 - Key files: Create new `page.tsx` files in each new route directory; modify old route `page.tsx` files to `redirect()`

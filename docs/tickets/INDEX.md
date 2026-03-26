@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 49    |
+| Done        | 50    |
 | In Progress | 0     |
-| Pending     | 15    |
+| Pending     | 14    |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -92,7 +92,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
 | 048 | [Dashboard Sidebar Component](./048-dashboard-sidebar.md)     | `done`    | —          | Replaces DashboardTabs + DashboardHeader with collapsible sidebar |
 | 049 | [Dashboard Layout Restructure](./049-dashboard-layout-restructure.md) | `done`    | #048 ✅ | Sidebar + content shell, max-w-7xl, banners in content area |
-| 050 | [Route Structure & Redirects](./050-route-structure-redirects.md) | `pending` | #049 ✅ | New route dirs + old route redirects |
+| 050 | [Route Structure & Redirects](./050-route-structure-redirects.md) | `done`    | #049 ✅ | New route dirs + old route redirects |
 
 ### v2 Phase 2 — Today Hub (051-052)
 
@@ -139,7 +139,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 ```
 Phase 1 (shell):
-  048 Sidebar Component ✅ DONE ──► 049 Layout Restructure ✅ DONE ──► 050 Routes & Redirects
+  048 Sidebar Component ✅ DONE ──► 049 Layout Restructure ✅ DONE ──► 050 Routes & Redirects ✅ DONE
                        │
 Phase 2 (today hub):   │
   051 Summary Components ──┤
