@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowSquareOut } from "@phosphor-icons/react";
+import Link from "next/link";
+import { ArrowSquareOut, MagnifyingGlass } from "@phosphor-icons/react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import {
   ChartContainer,
@@ -187,18 +188,27 @@ export function PostRowDetail({ post, isImporting = false }: { post: PostRow; is
         <CommentQuality postId={post.id} isImporting={isImporting} />
       </div>
 
-      {/* View on Threads link */}
-      {post.permalink && (
-        <a
-          href={post.permalink}
-          target="_blank"
-          rel="noopener noreferrer"
+      {/* Actions */}
+      <div className="flex flex-wrap items-center gap-4">
+        {post.permalink && (
+          <a
+            href={post.permalink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline transition-colors"
+          >
+            View on Threads
+            <ArrowSquareOut weight="bold" className="size-4" />
+          </a>
+        )}
+        <Link
+          href="/dashboard/create/scanner"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline transition-colors"
         >
-          View on Threads
-          <ArrowSquareOut weight="bold" className="size-4" />
-        </a>
-      )}
+          Scan this post
+          <MagnifyingGlass weight="bold" className="size-4" />
+        </Link>
+      </div>
     </div>
   );
 }
