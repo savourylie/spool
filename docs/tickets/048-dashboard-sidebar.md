@@ -1,7 +1,7 @@
 # [TICKET-048] Dashboard Sidebar Component
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None
@@ -10,16 +10,16 @@
 Create a new `DashboardSidebar` component that replaces the existing `DashboardTabs` horizontal tab bar and `DashboardHeader`. The sidebar provides grouped navigation (Today / Understand / Insights / Create) with section labels, active state tracking, and responsive collapse behavior. This is the foundational UI change for the v2 redesign.
 
 ## Acceptance Criteria
-- [ ] `DashboardSidebar` component created at `src/components/dashboard/dashboard-sidebar.tsx`
-- [ ] Sidebar is 240px wide with vertical layout, using existing `--sidebar-*` CSS variables from `globals.css:47-55`
-- [ ] Header section shows "Spool" logo (Plus Jakarta Sans 800) and `@username`
-- [ ] Navigation items grouped under section labels: UNDERSTAND (Performance, Audience), INSIGHTS (Topics & Patterns), CREATE (Discover, Scanner, Compose), plus standalone "Today" at top
-- [ ] Active nav item uses `--sidebar-accent` background with `--sidebar-accent-foreground` text and `--primary` icon color
-- [ ] Inactive items use `--sidebar-foreground` color with hover state
-- [ ] Active state tracked via `usePathname()` from `next/navigation`
-- [ ] Footer section shows sign-out button with `SignOut` Phosphor icon
-- [ ] Sign-out triggers existing sign-out logic (same as current `DashboardHeader`)
-- [ ] Sidebar border-right using `--sidebar-border`
+- [x] `DashboardSidebar` component created at `src/components/dashboard/dashboard-sidebar.tsx`
+- [x] Sidebar is 240px wide with vertical layout, using existing `--sidebar-*` CSS variables from `globals.css:47-55`
+- [x] Header section shows "Spool" logo (Plus Jakarta Sans 800) and `@username`
+- [x] Navigation items grouped under section labels: UNDERSTAND (Performance, Audience), INSIGHTS (Topics & Patterns), CREATE (Discover, Scanner, Compose), plus standalone "Today" at top
+- [x] Active nav item uses `--sidebar-accent` background with `--sidebar-accent-foreground` text and `--primary` icon color
+- [x] Inactive items use `--sidebar-foreground` color with hover state
+- [x] Active state tracked via `usePathname()` from `next/navigation`
+- [x] Footer section shows sign-out button with `SignOut` Phosphor icon
+- [x] Sign-out triggers existing sign-out logic (same as current `DashboardHeader`)
+- [x] Sidebar border-right using `--sidebar-border`
 
 ## Design Reference
 - **Mockup**: Pencil file — Screen 1 "Dashboard Shell + Sidebar"

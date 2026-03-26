@@ -4,7 +4,7 @@
 `pending`
 
 ## Dependencies
-- Requires: #048
+- Requires: #048 ✅
 
 ## Description
 Restructure `src/app/dashboard/layout.tsx` from the current header + horizontal tabs + centered container layout to a sidebar + content shell layout. The `DashboardHeader` and `DashboardTabs` are replaced by the new `DashboardSidebar`. The content container widens from `max-w-6xl` to `max-w-7xl` to compensate for sidebar width. Banners (token expiry, backfill) remain in the main content area. `ViralRecoveryCard` moves out of the layout (will be placed in Today hub in #052).

@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 47    |
+| Done        | 48    |
 | In Progress | 0     |
-| Pending     | 17    |
+| Pending     | 16    |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -90,8 +90,8 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 | #   | Ticket                                                        | Status    | Depends On | Notes |
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
-| 048 | [Dashboard Sidebar Component](./048-dashboard-sidebar.md)     | `pending` | —          | Replaces DashboardTabs + DashboardHeader with collapsible sidebar |
-| 049 | [Dashboard Layout Restructure](./049-dashboard-layout-restructure.md) | `pending` | #048 | Sidebar + content shell, max-w-7xl, banners in content area |
+| 048 | [Dashboard Sidebar Component](./048-dashboard-sidebar.md)     | `done`    | —          | Replaces DashboardTabs + DashboardHeader with collapsible sidebar |
+| 049 | [Dashboard Layout Restructure](./049-dashboard-layout-restructure.md) | `pending` | #048 ✅ | Sidebar + content shell, max-w-7xl, banners in content area |
 | 050 | [Route Structure & Redirects](./050-route-structure-redirects.md) | `pending` | #049 | New route dirs + old route redirects |
 
 ### v2 Phase 2 — Today Hub (051-052)
@@ -130,7 +130,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 | #   | Ticket                                                        | Status    | Depends On   | Notes |
 | --- | ------------------------------------------------------------- | --------- | ------------ | ----- |
-| 063 | [Responsive Mobile Navigation](./063-responsive-navigation.md) | `pending` | #048        | Bottom tab bar (mobile), icon rail (tablet) |
+| 063 | [Responsive Mobile Navigation](./063-responsive-navigation.md) | `pending` | #048 ✅        | Bottom tab bar (mobile), icon rail (tablet) |
 | 064 | [v2 QA & Integration Pass](./064-v2-qa-integration.md)        | `pending` | #048-#063    | Cross-page flows, responsive, a11y, redirects |
 
 ---
@@ -139,7 +139,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 ```
 Phase 1 (shell):
-  048 Sidebar Component ──► 049 Layout Restructure ──► 050 Routes & Redirects
+  048 Sidebar Component ✅ DONE ──► 049 Layout Restructure ──► 050 Routes & Redirects
                        │
 Phase 2 (today hub):   │
   051 Summary Components ──┤
@@ -165,7 +165,7 @@ Phase 5 (create):
   049 ──────────────────────► 062 Scanner & Compose Migration
 
 Phase 6 (polish):
-  048 ──────────────────────► 063 Responsive Navigation
+  048 ✅ DONE ─────────────► 063 Responsive Navigation
   048-063 ─────────────────► 064 QA Pass
 ```
 
