@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 62    |
+| Done        | 63    |
 | In Progress | 0     |
-| Pending     | 2     |
+| Pending     | 1     |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -130,7 +130,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 | #   | Ticket                                                        | Status    | Depends On   | Notes |
 | --- | ------------------------------------------------------------- | --------- | ------------ | ----- |
-| 063 | [Responsive Mobile Navigation](./063-responsive-navigation.md) | `pending` | #048 ✅        | Bottom tab bar (mobile), icon rail (tablet) |
+| 063 | [Responsive Mobile Navigation](./063-responsive-navigation.md) | `done` | #048 ✅        | Bottom tab bar (mobile), icon rail (tablet) |
 | 064 | [v2 QA & Integration Pass](./064-v2-qa-integration.md)        | `pending` | #048-#063    | Cross-page flows, responsive, a11y, redirects |
 
 ---
@@ -165,7 +165,7 @@ Phase 5 (create):
   049 ✅ DONE ─────────────────► 062 Scanner & Compose Migration ✅ DONE
 
 Phase 6 (polish):
-  048 ✅ DONE ─────────────► 063 Responsive Navigation
+  048 ✅ DONE ─────────────► 063 Responsive Navigation ✅ DONE
   048-063 ─────────────────► 064 QA Pass
 ```
 
