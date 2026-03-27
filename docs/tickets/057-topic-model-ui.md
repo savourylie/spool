@@ -1,7 +1,7 @@
 # [TICKET-057] Topic Model UI Components
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #056 ✅
@@ -10,14 +10,14 @@
 Build the UI components for the Topic Model feature: `TopicModelViz` (treemap/bubble chart showing topic clusters), `TopicPerformance` (horizontal bar chart comparing topics by engagement), and `AudienceTopicFit` (matrix showing which demographics engage with which topics). These components receive pre-computed data from `buildTopicModel()` and render interactive visualizations.
 
 ## Acceptance Criteria
-- [ ] `TopicModelViz` renders a Recharts `Treemap` with topic clusters — size = post count, color = brand palette per topic
-- [ ] Each treemap cell shows topic name + "N posts · X% eng" label
-- [ ] Clicking a topic cluster shows a detail panel (slide-over or expandable) with: posts in that cluster, avg metrics, trend
-- [ ] `TopicPerformance` renders horizontal bar chart with one bar per topic, sorted by avg engagement
-- [ ] Each bar labeled with topic name + "X% avg eng" — bar color matches topic's assigned color
-- [ ] `AudienceTopicFit` renders a summary card showing which demographics engage most with each topic (text-based, not full matrix — simplified for v1)
-- [ ] All components have loading skeletons and empty states
-- [ ] All components use existing chart theming (`ChartContainer` wrapper, brand colors)
+- [x] `TopicModelViz` renders a Recharts `Treemap` with topic clusters — size = post count, color = brand palette per topic
+- [x] Each treemap cell shows topic name + "N posts · X% eng" label
+- [x] Clicking a topic cluster shows a detail panel (slide-over or expandable) with: posts in that cluster, avg metrics, trend
+- [x] `TopicPerformance` renders horizontal bar chart with one bar per topic, sorted by avg engagement
+- [x] Each bar labeled with topic name + "X% avg eng" — bar color matches topic's assigned color
+- [x] `AudienceTopicFit` renders a summary card showing which demographics engage most with each topic (text-based, not full matrix — simplified for v1)
+- [x] All components have loading skeletons and empty states
+- [x] All components use existing chart theming (`ChartContainer` wrapper, brand colors)
 
 ## Design Reference
 - **Mockup**: Pencil file — Screen 5 "Insights - Topics & Patterns"
