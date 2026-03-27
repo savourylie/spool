@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 57    |
+| Done        | 58    |
 | In Progress | 0     |
-| Pending     | 7     |
+| Pending     | 6     |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -115,7 +115,7 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 | --- | ------------------------------------------------------------- | --------- | ---------- | ----- |
 | 056 | [Topic Model Library](./056-topic-model-lib.md)               | `done`    | —          | lib/topic-model.ts: clustering + metrics aggregation |
 | 057 | [Topic Model UI Components](./057-topic-model-ui.md)          | `done`    | #056 ✅    | Treemap, performance bars, audience-topic fit |
-| 058 | [Insights Page Assembly](./058-insights-page.md)              | `pending` | #049 ✅, #057 ✅ | Full page with topic model + relocated SemanticFocus |
+| 058 | [Insights Page Assembly](./058-insights-page.md)              | `done`    | #049 ✅, #057 ✅ | Full page with topic model + relocated SemanticFocus |
 
 ### v2 Phase 5 — Create Section (059-062)
 
@@ -154,7 +154,7 @@ Phase 3 (understand):
 
 Phase 4 (insights):
   056 Topic Model Lib ✅ DONE ──► 057 Topic Model UI ✅ DONE ──┐
-                                                ├──► 058 Insights Page
+                                                ├──► 058 Insights Page ✅ DONE
   049 ✅ DONE ─────────────────────────────────┘
 
 Phase 5 (create):
