@@ -1,7 +1,7 @@
 # [TICKET-059] Grok Search Integration
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None
@@ -10,19 +10,19 @@
 Create the Grok/X search integration for surfacing trending topics related to the user's content domain. This includes a new API route `/api/grok-search` that accepts the user's core topics and returns trending X/Twitter topics in that domain, plus a `GrokTrending` client component that displays the results with topic matching indicators and compose CTAs.
 
 ## Acceptance Criteria
-- [ ] API route `src/app/api/grok-search/route.ts` created
-- [ ] Route accepts POST with `{ topics: string[] }` and returns `{ trends: TrendingTopic[] }`
-- [ ] Each `TrendingTopic` includes: `title`, `postCount`, `matchedTopic` (which user topic it relates to), `relevanceScore`
-- [ ] API calls xAI Responses API (`POST https://api.x.ai/v1/responses`) with `x_search` tool
-- [ ] `XAI_API_KEY` env var added to `.env.local.example`
-- [ ] API handles rate limiting and errors gracefully (returns empty array on failure, not 500)
-- [ ] `GrokTrending` component at `src/components/dashboard/grok-trending.tsx`
-- [ ] Component shows list of 3-5 trending topics with: title, post count ("12K posts today"), matched topic pill, and "Compose" button
-- [ ] Top trending item has highlighted background (pink accent)
-- [ ] "Compose" button links to `/dashboard/create/compose?topic={encoded_title}`
-- [ ] Loading state with skeleton while API call in progress
-- [ ] Error state with retry button
-- [ ] Empty state when no relevant trends found
+- [x] API route `src/app/api/grok-search/route.ts` created
+- [x] Route accepts POST with `{ topics: string[] }` and returns `{ trends: TrendingTopic[] }`
+- [x] Each `TrendingTopic` includes: `title`, `postCount`, `matchedTopic` (which user topic it relates to), `relevanceScore`
+- [x] API calls xAI Responses API (`POST https://api.x.ai/v1/responses`) with `x_search` tool
+- [x] `XAI_API_KEY` env var added to `.env.local.example`
+- [x] API handles rate limiting and errors gracefully (returns empty array on failure, not 500)
+- [x] `GrokTrending` component at `src/components/dashboard/grok-trending.tsx`
+- [x] Component shows list of 3-5 trending topics with: title, post count ("12K posts today"), matched topic pill, and "Compose" button
+- [x] Top trending item has highlighted background (pink accent)
+- [x] "Compose" button links to `/dashboard/create/compose?topic={encoded_title}`
+- [x] Loading state with skeleton while API call in progress
+- [x] Error state with retry button
+- [x] Empty state when no relevant trends found
 
 ## Implementation Notes
 

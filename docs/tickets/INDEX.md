@@ -7,9 +7,9 @@
 
 | Status        | Count |
 | ------------- | ----- |
-| Done        | 58    |
+| Done        | 59    |
 | In Progress | 0     |
-| Pending     | 6     |
+| Pending     | 5     |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -121,9 +121,9 @@ All v0 tickets are complete and archived in `docs/tickets/archive/`.
 
 | #   | Ticket                                                        | Status    | Depends On   | Notes |
 | --- | ------------------------------------------------------------- | --------- | ------------ | ----- |
-| 059 | [Grok Search Integration](./059-grok-search-integration.md)   | `pending` | —            | API route + GrokTrending component |
+| 059 | [Grok Search Integration](./059-grok-search-integration.md)   | `done`    | —            | API route + GrokTrending component |
 | 060 | [YouTube Suggestions](./060-youtube-suggestions.md)           | `pending` | —            | API route + YouTubeInspiration component |
-| 061 | [Discover Page Assembly](./061-discover-page.md)              | `pending` | #049 ✅, #059, #060 | Discover landing with all create section components |
+| 061 | [Discover Page Assembly](./061-discover-page.md)              | `pending` | #049 ✅, #059 ✅, #060 | Discover landing with all create section components |
 | 062 | [Scanner & Compose Migration](./062-scanner-compose-migration.md) | `pending` | #049 ✅ | New routes + cross-flow CTAs + ?topic= param |
 
 ### v2 Phase 6 — Mobile & Polish (063-064)
@@ -158,7 +158,7 @@ Phase 4 (insights):
   049 ✅ DONE ─────────────────────────────────┘
 
 Phase 5 (create):
-  059 Grok Search ────┐
+  059 Grok Search ✅ DONE ────┐
   060 YouTube ────────┤
                       ├──► 061 Discover Page
   049 ✅ DONE ───────┘
