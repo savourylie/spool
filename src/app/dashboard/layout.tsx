@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { MobileTabBar } from "@/components/dashboard/mobile-tab-bar";
 import { DashboardBackfillBanner } from "@/components/dashboard/backfill-status-banner";
 import {
   TokenExpiryBanner,
@@ -41,8 +42,8 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar username={user.username} />
-      <main className="flex min-h-screen flex-1 flex-col">
-        <div className="mx-auto w-full max-w-7xl px-6">
+      <main className="flex min-h-screen flex-1 flex-col pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
           {tokenStatus !== "valid" && (
             <div className="mb-4">
               <TokenExpiryBanner status={tokenStatus} />
@@ -54,6 +55,7 @@ export default async function DashboardLayout({
           {children}
         </div>
       </main>
+      <MobileTabBar />
     </div>
   );
 }

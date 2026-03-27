@@ -67,6 +67,8 @@ const sections: NavSection[] = [
   },
 ];
 
+// ── Full sidebar nav link (desktop) ──────────────────────────────────
+
 function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
   const Icon = item.icon;
   return (
@@ -89,6 +91,34 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
   );
 }
 
+// ── Icon-only rail link (tablet) ─────────────────────────────────────
+
+function RailLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      aria-current={isActive ? "page" : undefined}
+      aria-label={item.label}
+      title={item.label}
+      className={cn(
+        "group relative flex items-center justify-center rounded-lg p-2.5 transition-colors",
+        isActive
+          ? "bg-[var(--sidebar-accent)] text-primary"
+          : "text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)]/50",
+      )}
+    >
+      <Icon weight={isActive ? "fill" : "regular"} className="size-5" />
+      {/* Tooltip */}
+      <span className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-[var(--radius-sm)] border-2 border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground opacity-0 shadow-[var(--shadow-default)] transition-opacity group-hover:opacity-100">
+        {item.label}
+      </span>
+    </Link>
+  );
+}
+
+// ── Component ────────────────────────────────────────────────────────
+
 export function DashboardSidebar({ username }: { username: string }) {
   const pathname = usePathname();
 
@@ -102,57 +132,103 @@ export function DashboardSidebar({ username }: { username: string }) {
       )?.href ?? null;
 
   return (
-    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar)]">
-      {/* Header */}
-      <div className="border-b border-[var(--sidebar-border)] px-5 py-6">
-        <span className="font-heading text-[22px] font-extrabold text-primary">
-          Spool
-        </span>
-        <p className="mt-1 text-[13px] text-muted-foreground">@{username}</p>
-      </div>
+    <>
+      {/* ── Desktop sidebar (>1024px) ──────────────────────────────── */}
+      <aside className="hidden lg:flex h-full w-60 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar)]">
+        {/* Header */}
+        <div className="border-b border-[var(--sidebar-border)] px-5 py-6">
+          <span className="font-heading text-[22px] font-extrabold text-primary">
+            Spool
+          </span>
+          <p className="mt-1 text-[13px] text-muted-foreground">@{username}</p>
+        </div>
 
-      {/* Navigation */}
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2">
-        {/* Standalone: Today */}
-        {standaloneItems.map((item) => (
-          <NavLink
-            key={item.href}
-            item={item}
-            isActive={item.href === activeHref}
-          />
-        ))}
+        {/* Navigation */}
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2">
+          {standaloneItems.map((item) => (
+            <NavLink
+              key={item.href}
+              item={item}
+              isActive={item.href === activeHref}
+            />
+          ))}
 
-        {/* Grouped sections */}
-        {sections.map((section) => (
-          <div key={section.label} className="mt-2">
-            <span className="px-3 py-1 text-[11px] font-semibold tracking-wider text-muted-foreground">
-              {section.label}
-            </span>
-            <div className="mt-1 flex flex-col gap-1">
+          {sections.map((section) => (
+            <div key={section.label} className="mt-2">
+              <span className="px-3 py-1 text-[11px] font-semibold tracking-wider text-muted-foreground">
+                {section.label}
+              </span>
+              <div className="mt-1 flex flex-col gap-1">
+                {section.items.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    item={item}
+                    isActive={item.href === activeHref}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer */}
+        <div className="border-t border-[var(--sidebar-border)] px-5 py-4">
+          <form action="/api/auth/sign-out" method="POST">
+            <button
+              type="submit"
+              className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <SignOut className="size-[18px]" />
+              Sign out
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      {/* ── Tablet icon rail (768-1024px) ──────────────────────────── */}
+      <aside className="hidden md:flex lg:hidden h-full w-14 shrink-0 flex-col items-center border-r border-[var(--sidebar-border)] bg-[var(--sidebar)]">
+        {/* Logo */}
+        <div className="flex h-[73px] items-center justify-center border-b border-[var(--sidebar-border)]">
+          <span className="font-heading text-lg font-extrabold text-primary">S</span>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex flex-1 flex-col items-center gap-1 overflow-y-auto py-2">
+          {standaloneItems.map((item) => (
+            <RailLink
+              key={item.href}
+              item={item}
+              isActive={item.href === activeHref}
+            />
+          ))}
+
+          {sections.map((section) => (
+            <div key={section.label} className="mt-2 flex flex-col items-center gap-1">
               {section.items.map((item) => (
-                <NavLink
+                <RailLink
                   key={item.href}
                   item={item}
                   isActive={item.href === activeHref}
                 />
               ))}
             </div>
-          </div>
-        ))}
-      </nav>
+          ))}
+        </nav>
 
-      {/* Footer: Sign out */}
-      <div className="border-t border-[var(--sidebar-border)] px-5 py-4">
-        <form action="/api/auth/sign-out" method="POST">
-          <button
-            type="submit"
-            className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <SignOut className="size-[18px]" />
-            Sign out
-          </button>
-        </form>
-      </div>
-    </aside>
+        {/* Sign out */}
+        <div className="border-t border-[var(--sidebar-border)] py-4">
+          <form action="/api/auth/sign-out" method="POST">
+            <button
+              type="submit"
+              title="Sign out"
+              aria-label="Sign out"
+              className="flex items-center justify-center rounded-lg p-2.5 text-muted-foreground transition-colors hover:bg-[var(--sidebar-accent)]/50 hover:text-foreground"
+            >
+              <SignOut className="size-[18px]" />
+            </button>
+          </form>
+        </div>
+      </aside>
+    </>
   );
 }
