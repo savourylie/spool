@@ -202,7 +202,7 @@ export function PostRowDetail({ post, isImporting = false }: { post: PostRow; is
           </a>
         )}
         <Link
-          href="/dashboard/create/scanner"
+          href={`/dashboard/create/scanner?text=${encodeURIComponent(post.text_preview || "")}`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline transition-colors"
         >
           Scan this post

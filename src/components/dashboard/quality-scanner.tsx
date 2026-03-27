@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { Article } from "@phosphor-icons/react/dist/ssr/Article";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +42,7 @@ export interface ScannerPost {
 interface QualityScannerProps {
   posts: ScannerPost[];
   predictionPosts: HistoricalPost[];
+  initialText?: string;
 }
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -49,7 +52,7 @@ const THREADS_CHAR_LIMIT = 500;
 
 // ── Component ────────────────────────────────────────────────────────
 
-export function QualityScanner({ posts, predictionPosts }: QualityScannerProps) {
+export function QualityScanner({ posts, predictionPosts, initialText }: QualityScannerProps) {
   const [text, setText] = useState("");
   const [heuristicIssues, setHeuristicIssues] = useState<QualityIssue[]>([]);
   const [heuristicScore, setHeuristicScore] = useState(100);
@@ -262,6 +265,15 @@ export function QualityScanner({ posts, predictionPosts }: QualityScannerProps) 
     };
   }, []);
 
+  // ── Pre-fill from initialText ─────────────────────────────────
+
+  useEffect(() => {
+    if (initialText && !text) {
+      setText(initialText);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialText]);
+
   // ── Post selector handler ──────────────────────────────────────
 
   const handleSelectPost = (post: ScannerPost) => {
@@ -404,6 +416,22 @@ export function QualityScanner({ posts, predictionPosts }: QualityScannerProps) 
             rewrites={llmResult?.rewrites ?? []}
             onApply={handleApplyRewrite}
           />
+
+          {/* Cross-flow CTA: Scanner → Composer */}
+          {llmResult && !llmLoading && (
+            <div className="flex justify-center">
+              <Link
+                href={`/dashboard/create/compose?topic=${encodeURIComponent(
+                  text.trim().split(/(?<=[.!?])\s/)[0]?.slice(0, 120) || text.trim().slice(0, 120)
+                )}`}
+              >
+                <Button variant="candy" size="sm">
+                  Generate a better version
+                  <ArrowRight weight="bold" className="size-4" />
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       ) : (
         <EmptyState

@@ -45,6 +45,7 @@ interface ComposerProps {
   predictionPosts: HistoricalPost[];
   bestTimes: BestTimeSlot[];
   isImporting: boolean;
+  initialTopic?: string;
 }
 
 // ── State machine ────────────────────────────────────────────────────
@@ -343,6 +344,7 @@ export function Composer({
   predictionPosts,
   bestTimes,
   isImporting,
+  initialTopic,
 }: ComposerProps) {
   const [state, dispatch] = useReducer(composerReducer, initialState);
   const abortRef = useRef<AbortController | null>(null);
@@ -495,6 +497,15 @@ export function Composer({
       abortRef.current?.abort();
     };
   }, []);
+
+  // ── Pre-fill from initialTopic ────────────────────────────────
+
+  useEffect(() => {
+    if (initialTopic && !state.topic) {
+      dispatch({ type: "SET_TOPIC", topic: initialTopic });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTopic]);
 
   // ── Derived state ──────────────────────────────────────────────
 
