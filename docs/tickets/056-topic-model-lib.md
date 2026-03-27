@@ -1,7 +1,7 @@
 # [TICKET-056] Topic Model Library
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None
@@ -10,14 +10,14 @@
 Create `lib/topic-model.ts` that orchestrates topic extraction and metrics aggregation. This library takes all posts with their metrics and topic tags, groups them by topic cluster, and computes per-topic performance statistics (avg views, avg engagement, avg replies, follower impact). It builds on the existing `extractTopics()` and `classifyPostTopic()` from `lib/topic-classification.ts` and the existing `topic_tag` column in the `posts` table.
 
 ## Acceptance Criteria
-- [ ] `lib/topic-model.ts` created with exported function `buildTopicModel(posts: PostWithMetrics[]): TopicModelData`
-- [ ] `TopicModelData` type includes: `clusters: TopicCluster[]` with `name`, `postCount`, `avgEngagement`, `avgViews`, `avgReplies`, `avgWes`, `topPosts`, `color` (assigned from brand palette)
-- [ ] Clusters sorted by `postCount` descending (largest topic first)
-- [ ] `getTopicPerformanceComparison(clusters)` returns sorted bar-chart data for topic × metric comparison
-- [ ] `getAudienceTopicFit(clusters, demographics)` returns cross-reference of which demographics engage with which topics (when demographic data is available)
-- [ ] Handles edge cases: posts with no `topic_tag`, fewer than 3 posts per cluster (merged into "Other"), single-topic accounts
-- [ ] Pure functions, no side effects, no API calls — all computation is synchronous
-- [ ] Unit tests covering clustering, metric aggregation, and edge cases
+- [x] `lib/topic-model.ts` created with exported function `buildTopicModel(posts: PostWithMetrics[]): TopicModelData`
+- [x] `TopicModelData` type includes: `clusters: TopicCluster[]` with `name`, `postCount`, `avgEngagement`, `avgViews`, `avgReplies`, `avgWes`, `topPosts`, `color` (assigned from brand palette)
+- [x] Clusters sorted by `postCount` descending (largest topic first)
+- [x] `getTopicPerformanceComparison(clusters)` returns sorted bar-chart data for topic × metric comparison
+- [x] `getAudienceTopicFit(clusters, demographics)` returns cross-reference of which demographics engage with which topics (when demographic data is available)
+- [x] Handles edge cases: posts with no `topic_tag`, fewer than 3 posts per cluster (merged into "Other"), single-topic accounts
+- [x] Pure functions, no side effects, no API calls — all computation is synchronous
+- [x] Unit tests covering clustering, metric aggregation, and edge cases
 
 ## Implementation Notes
 - Key file: Create `src/lib/topic-model.ts`
