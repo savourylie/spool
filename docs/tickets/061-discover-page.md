@@ -1,7 +1,7 @@
 # [TICKET-061] Discover Page Assembly
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #049 ✅, #059 ✅, #060 ✅
@@ -10,17 +10,17 @@
 Build the Discover page at `/dashboard/create` as the landing page for the Create section. This page assembles topic suggestions, Grok trending, YouTube inspiration, and quick-action entry points (Quick Scan + Quick Compose) into a cohesive "What Next" view. The page surfaces content opportunities from multiple sources and provides quick paths to the full Scanner and Composer.
 
 ## Acceptance Criteria
-- [ ] `/dashboard/create` renders the Discover page
-- [ ] Page title: "Discover" with subtitle "Find inspiration and create your next post."
-- [ ] Top row (2-column): `TopicSuggestions` (standalone card, extracted from Composer) + `GrokTrending`
-- [ ] Middle section (full width): `YouTubeInspiration` with 3-card grid
-- [ ] Bottom row (2-column): `QuickScan` + `QuickCompose`
-- [ ] `QuickScan`: textarea with placeholder + quality gauge + "Open full scanner →" link to `/dashboard/create/scanner`
-- [ ] `QuickCompose`: topic input + "Generate" button + "Open full composer →" link to `/dashboard/create/compose`
-- [ ] `TopicSuggestions` extracted as standalone card (currently embedded in Composer right panel) — shows near/medium/far topics with "Compose" buttons
-- [ ] All "Compose" buttons pre-fill the topic via `?topic=` query param
-- [ ] Server-side data fetching for topic suggestions (reuse existing `topicSuggestions()` from `lib/topic-suggestions.ts`)
-- [ ] `GrokTrending` and `YouTubeInspiration` fetch client-side on mount
+- [x] `/dashboard/create` renders the Discover page
+- [x] Page title: "Discover" with subtitle "Find inspiration and create your next post."
+- [x] Top row (2-column): `TopicSuggestions` (standalone card, extracted from Composer) + `GrokTrending`
+- [x] Middle section (full width): `YouTubeInspiration` with 3-card grid
+- [x] Bottom row (2-column): `QuickScan` + `QuickCompose`
+- [x] `QuickScan`: textarea with placeholder + quality gauge + "Open full scanner →" link to `/dashboard/create/scanner`
+- [x] `QuickCompose`: topic input + "Generate" button + "Open full composer →" link to `/dashboard/create/compose`
+- [x] `TopicSuggestions` extracted as standalone card (currently embedded in Composer right panel) — shows near/medium/far topics with "Compose" buttons
+- [x] All "Compose" buttons pre-fill the topic via `?topic=` query param
+- [x] Server-side data fetching for topic suggestions (reuse existing `topicSuggestions()` from `lib/topic-suggestions.ts`)
+- [x] `GrokTrending` and `YouTubeInspiration` fetch client-side on mount
 
 ## Design Reference
 - **Mockup**: Pencil file — Screen 6 "Create - Discover"
