@@ -69,6 +69,7 @@ export function QuickScan() {
           onChange={handleChange}
           rows={3}
           placeholder="Paste a draft to quick-check quality..."
+          aria-label="Draft text to quick-scan"
           className="w-full resize-y rounded-[var(--radius-md)] border-2 border-[#CBD5E1] bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:shadow-[4px_4px_0_var(--accent)] focus:outline-none"
         />
         {hasText && (

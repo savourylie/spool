@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -18,6 +19,8 @@ import {
   getPostsTotalPages,
 } from "@/lib/posts-pagination";
 import { getVelocityMapForRecentPosts } from "@/lib/velocity-scoring";
+
+export const metadata: Metadata = { title: "Performance — Spool" };
 
 const VALID_MEDIA_TYPES = ["TEXT", "IMAGE", "VIDEO", "CAROUSEL"] as const;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;

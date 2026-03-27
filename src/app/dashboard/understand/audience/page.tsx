@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -36,6 +37,8 @@ import {
   MIN_SNAPSHOTS_FOR_ANALYSIS,
   type EngagementWindow,
 } from "@/lib/audience-fit";
+
+export const metadata: Metadata = { title: "Audience — Spool" };
 
 // ---------------------------------------------------------------------------
 // Score label maps (mirror component-level configs)

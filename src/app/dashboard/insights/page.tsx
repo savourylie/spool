@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -16,6 +17,8 @@ import {
   isImportingBackfillStatus,
 } from "@/lib/backfill-job";
 import { getMostRecentBackfillJob } from "@/lib/backfill-recovery";
+
+export const metadata: Metadata = { title: "Topics & Patterns — Spool" };
 
 const MIN_POSTS_FOR_INSIGHTS = 5;
 

@@ -43,6 +43,7 @@ export function QuickCompose() {
           if (e.key === "Enter") handleGenerate();
         }}
         placeholder="Enter a topic to generate drafts..."
+        aria-label="Topic for draft generation"
         className="w-full rounded-[var(--radius-md)] border-2 border-[#CBD5E1] bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:shadow-[4px_4px_0_var(--accent)] focus:outline-none"
       />
 

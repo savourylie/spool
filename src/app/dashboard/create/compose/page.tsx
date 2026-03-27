@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine";
@@ -17,6 +18,8 @@ import {
   StickerCardIcon,
 } from "@/components/ui/card";
 import { ComposeClient } from "@/components/dashboard/compose-client";
+
+export const metadata: Metadata = { title: "AI Composer — Spool" };
 
 export default async function CreateComposePage({
   searchParams,

@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { DiscoverClient } from "@/components/dashboard/discover-client";
+
+export const metadata: Metadata = { title: "Discover — Spool" };
 
 export default async function CreatePage() {
   const cookieStore = await cookies();

@@ -32,15 +32,12 @@ export function WhatToPostCard({
   className?: string;
 }) {
   const [topics, setTopics] = useState<TopicSuggestion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!isImporting);
   const [isInsufficient, setIsInsufficient] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isImporting) {
-      setIsLoading(false);
-      return;
-    }
+    if (isImporting) return;
 
     const controller = new AbortController();
 

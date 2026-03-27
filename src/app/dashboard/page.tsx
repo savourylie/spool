@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -26,6 +27,8 @@ import {
 } from "@/components/dashboard/best-post-card";
 import { ReselectionAlert } from "@/components/dashboard/reselection-alert";
 import { ViralRecoveryCard } from "@/components/dashboard/viral-recovery-card";
+
+export const metadata: Metadata = { title: "Today — Spool" };
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();

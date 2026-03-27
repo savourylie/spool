@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { House } from "@phosphor-icons/react";

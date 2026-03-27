@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
@@ -17,6 +18,8 @@ import {
   QualityScanner,
   type ScannerPost,
 } from "@/components/dashboard/quality-scanner";
+
+export const metadata: Metadata = { title: "Content Scanner — Spool" };
 
 export default async function CreateScannerPage({
   searchParams,
