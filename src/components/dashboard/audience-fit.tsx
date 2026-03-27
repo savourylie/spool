@@ -244,12 +244,14 @@ interface AudienceFitProps {
   demographicsHistory: DemographicHistoryRow[];
   postMetrics: PostMetricRow[];
   isImporting?: boolean;
+  bare?: boolean;
 }
 
 export function AudienceFit({
   demographicsHistory,
   postMetrics,
   isImporting = false,
+  bare = false,
 }: AudienceFitProps) {
   const emptyStateCopy = getAudienceFitEmptyStateCopy(isImporting);
 
@@ -334,6 +336,15 @@ export function AudienceFit({
     alignment && alignment.score < 70 && recommendations.length > 0;
 
   if (computeError) {
+    const errorContent = (
+      <ErrorState
+        description="We couldn't compute your audience fit score right now."
+        className="border-0 shadow-none hover:rotate-0 hover:scale-100"
+      />
+    );
+
+    if (bare) return errorContent;
+
     return (
       <StickerCard className="hover:rotate-0 hover:scale-100">
         <StickerCardIcon color="secondary">
@@ -345,15 +356,113 @@ export function AudienceFit({
             Whether your followers match your content
           </StickerCardDescription>
         </StickerCardHeader>
-        <StickerCardContent>
-          <ErrorState
-            description="We couldn't compute your audience fit score right now."
-            className="border-0 shadow-none hover:rotate-0 hover:scale-100"
-          />
-        </StickerCardContent>
+        <StickerCardContent>{errorContent}</StickerCardContent>
       </StickerCard>
     );
   }
+
+  const content = isEmpty ? (
+    <EmptyState
+      icon={<UsersFour weight="bold" className="size-7" />}
+      iconColor="secondary"
+      title={emptyStateCopy.title}
+      description={emptyStateCopy.description}
+    />
+  ) : (
+    <>
+      {/* Score display */}
+      <div className="mb-4 flex items-baseline gap-3">
+        <span className="font-heading text-5xl font-bold">
+          {alignment?.score ?? 0}
+        </span>
+        <span
+          className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold leading-none ${config.bg} ${config.text}`}
+        >
+          {config.label}
+        </span>
+      </div>
+
+      {/* Engagement rate comparison */}
+      {alignment && (
+        <p className="mb-4 text-sm text-muted-foreground">
+          Engagement rate:{" "}
+          {alignment.preViralEngagementRate.toFixed(1)}% (earlier) →{" "}
+          {alignment.postViralEngagementRate.toFixed(1)}% (recent)
+        </p>
+      )}
+
+      {/* Shift summary */}
+      {shiftAnalysis && (
+        <p className="mb-4 text-sm text-muted-foreground">
+          {shiftAnalysis.summary}
+        </p>
+      )}
+
+      {/* Demographic shift timeline */}
+      {timelineData.length > 1 && trackedSeries.length > 0 && (
+        <ChartContainer
+          config={chartConfig}
+          className="h-[200px] w-full"
+          role="img"
+          aria-label={`Demographic shift timeline: alignment score is ${alignment?.score ?? 0} out of 100`}
+        >
+          <LineChart
+            data={timelineData}
+            margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+          >
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <XAxis
+              dataKey="dateLabel"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
+            <YAxis
+              domain={[0, 100]}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              width={35}
+              tickFormatter={(v) => `${v}%`}
+            />
+            <ChartTooltip
+              content={<ChartTooltipContent />}
+            />
+            {trackedSeries.map((series) => (
+              <Line
+                key={series.seriesKey}
+                type="monotone"
+                dataKey={series.seriesKey}
+                stroke={`var(--color-${series.seriesKey})`}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 3 }}
+              />
+            ))}
+          </LineChart>
+        </ChartContainer>
+      )}
+
+      {/* Recommendations */}
+      {showRecommendations && (
+        <div className="mt-4 space-y-3">
+          {recommendations.map((rec) => (
+            <div
+              key={rec.title}
+              className="rounded-[var(--radius-sm)] border-2 border-tertiary/30 bg-tertiary/10 px-4 py-3"
+            >
+              <p className="text-sm font-medium">{rec.title}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {rec.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+
+  if (bare) return content;
 
   return (
     <StickerCard className="hover:rotate-0 hover:scale-100">
@@ -366,108 +475,7 @@ export function AudienceFit({
           Whether your followers match your content
         </StickerCardDescription>
       </StickerCardHeader>
-      <StickerCardContent>
-        {isEmpty ? (
-          <EmptyState
-            icon={<UsersFour weight="bold" className="size-7" />}
-            iconColor="secondary"
-            title={emptyStateCopy.title}
-            description={emptyStateCopy.description}
-          />
-        ) : (
-          <>
-            {/* Score display */}
-            <div className="mb-4 flex items-baseline gap-3">
-              <span className="font-heading text-5xl font-bold">
-                {alignment?.score ?? 0}
-              </span>
-              <span
-                className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold leading-none ${config.bg} ${config.text}`}
-              >
-                {config.label}
-              </span>
-            </div>
-
-            {/* Engagement rate comparison */}
-            {alignment && (
-              <p className="mb-4 text-sm text-muted-foreground">
-                Engagement rate:{" "}
-                {alignment.preViralEngagementRate.toFixed(1)}% (earlier) →{" "}
-                {alignment.postViralEngagementRate.toFixed(1)}% (recent)
-              </p>
-            )}
-
-            {/* Shift summary */}
-            {shiftAnalysis && (
-              <p className="mb-4 text-sm text-muted-foreground">
-                {shiftAnalysis.summary}
-              </p>
-            )}
-
-            {/* Demographic shift timeline */}
-            {timelineData.length > 1 && trackedSeries.length > 0 && (
-              <ChartContainer
-                config={chartConfig}
-                className="h-[200px] w-full"
-                role="img"
-                aria-label={`Demographic shift timeline: alignment score is ${alignment?.score ?? 0} out of 100`}
-              >
-                <LineChart
-                  data={timelineData}
-                  margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
-                >
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="dateLabel"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    width={35}
-                    tickFormatter={(v) => `${v}%`}
-                  />
-                  <ChartTooltip
-                    content={<ChartTooltipContent />}
-                  />
-                  {trackedSeries.map((series) => (
-                    <Line
-                      key={series.seriesKey}
-                      type="monotone"
-                      dataKey={series.seriesKey}
-                      stroke={`var(--color-${series.seriesKey})`}
-                      strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 3 }}
-                    />
-                  ))}
-                </LineChart>
-              </ChartContainer>
-            )}
-
-            {/* Recommendations */}
-            {showRecommendations && (
-              <div className="mt-4 space-y-3">
-                {recommendations.map((rec) => (
-                  <div
-                    key={rec.title}
-                    className="rounded-[var(--radius-sm)] border-2 border-tertiary/30 bg-tertiary/10 px-4 py-3"
-                  >
-                    <p className="text-sm font-medium">{rec.title}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {rec.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </StickerCardContent>
+      <StickerCardContent>{content}</StickerCardContent>
     </StickerCard>
   );
 }
