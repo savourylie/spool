@@ -1,7 +1,7 @@
 # [TICKET-055] Understand Audience Page
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #049 ✅
@@ -10,14 +10,14 @@
 Build the Understand Audience page at `/dashboard/understand/audience`. This relocates `FollowerChart` and `DemographicsCharts` from the old `/dashboard/audience` route into a 2-column top section, with `SemanticFocus` and `AudienceFit` remaining as collapsible sections below (they will also appear on the Insights page — shared components). The collapsible sections show a summary metric in the header when collapsed.
 
 ## Acceptance Criteria
-- [ ] `/dashboard/understand/audience` renders the audience page
-- [ ] Top section: 2-column grid with `FollowerChart` (left) + `DemographicsCharts` (right)
-- [ ] Below: `SemanticFocus` in a collapsible card (collapsed by default, summary score visible in header)
-- [ ] Below: `AudienceFit` in a collapsible card (collapsed by default, summary score visible in header)
-- [ ] Collapsible animation using Framer Motion `AnimatePresence` + height animation
-- [ ] Collapse/expand triggered by clicking the card header (keyboard accessible)
-- [ ] Server-side data fetching mirrors existing `/dashboard/audience/page.tsx`
-- [ ] All existing component functionality preserved
+- [x] `/dashboard/understand/audience` renders the audience page
+- [x] Top section: 2-column grid with `FollowerChart` (left) + `DemographicsCharts` (right)
+- [x] Below: `SemanticFocus` in a collapsible card (collapsed by default, summary score visible in header)
+- [x] Below: `AudienceFit` in a collapsible card (collapsed by default, summary score visible in header)
+- [x] Collapsible animation using Framer Motion `AnimatePresence` + height animation
+- [x] Collapse/expand triggered by clicking the card header (keyboard accessible)
+- [x] Server-side data fetching mirrors existing `/dashboard/audience/page.tsx`
+- [x] All existing component functionality preserved
 
 ## Implementation Notes
 - Key file: `src/app/dashboard/understand/audience/page.tsx` (new)
