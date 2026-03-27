@@ -1,7 +1,7 @@
 # [TICKET-060] YouTube Suggestions Integration
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: None
@@ -10,18 +10,18 @@
 Create the YouTube video suggestions feature for surfacing content inspiration. This includes a new API route `/api/youtube-suggestions` that accepts user topics and returns relevant YouTube videos, plus a `YouTubeInspiration` client component that displays video cards with thumbnails, metadata, and "Use as inspiration" CTAs that link to the composer.
 
 ## Acceptance Criteria
-- [ ] API route `src/app/api/youtube-suggestions/route.ts` created
-- [ ] Route accepts POST with `{ topics: string[] }` and returns `{ videos: YouTubeVideo[] }`
-- [ ] Each `YouTubeVideo` includes: `title`, `channelName`, `viewCount`, `thumbnailUrl`, `videoUrl`, `matchedTopic`, `publishedAt`
-- [ ] API returns 4-6 relevant videos sorted by relevance and recency
-- [ ] API handles errors gracefully (empty array on failure)
-- [ ] `YouTubeInspiration` component at `src/components/dashboard/youtube-inspiration.tsx`
-- [ ] Component shows a horizontal grid of 3 video cards
-- [ ] Each card shows: dark thumbnail placeholder (or actual thumbnail if URL available), title (2 lines max), channel name + view count, "Matches: {topic}" in topic color
-- [ ] "Use as inspiration" action links to `/dashboard/create/compose?topic={encoded_title}`
-- [ ] Loading state with skeleton cards
-- [ ] Error state with retry
-- [ ] Empty state when no relevant videos found
+- [x] API route `src/app/api/youtube-suggestions/route.ts` created
+- [x] Route accepts POST with `{ topics: string[] }` and returns `{ videos: YouTubeVideo[] }`
+- [x] Each `YouTubeVideo` includes: `title`, `channelName`, `viewCount`, `thumbnailUrl`, `videoUrl`, `matchedTopic`, `publishedAt`
+- [x] API returns 4-6 relevant videos sorted by relevance and recency
+- [x] API handles errors gracefully (empty array on failure)
+- [x] `YouTubeInspiration` component at `src/components/dashboard/youtube-inspiration.tsx`
+- [x] Component shows a horizontal grid of 3 video cards
+- [x] Each card shows: dark thumbnail placeholder (or actual thumbnail if URL available), title (2 lines max), channel name + view count, "Matches: {topic}" in topic color
+- [x] "Use as inspiration" action links to `/dashboard/create/compose?topic={encoded_title}`
+- [x] Loading state with skeleton cards
+- [x] Error state with retry
+- [x] Empty state when no relevant videos found
 
 ## Implementation Notes
 - Key files: `src/app/api/youtube-suggestions/route.ts`, `src/components/dashboard/youtube-inspiration.tsx`
