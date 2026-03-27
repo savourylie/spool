@@ -1,7 +1,7 @@
 # [TICKET-062] Scanner & Compose Migration + Cross-flows
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #049 ✅
@@ -10,15 +10,15 @@
 Migrate the Scanner and Composer pages to their new routes under `/dashboard/create/` and add cross-flow CTAs that connect the creation workflow. Scanner gets a "Generate a better version" button that opens the Composer with the analyzed topic. Composer accepts a `?topic=` query parameter to pre-populate the topic field from external navigation (Discover page, Scanner, post detail rows).
 
 ## Acceptance Criteria
-- [ ] `/dashboard/create/scanner` renders the full `QualityScanner` (migrated from `/dashboard/scanner`)
-- [ ] `/dashboard/create/compose` renders the full `Composer` (migrated from `/dashboard/compose`)
-- [ ] Scanner: after analysis completes, show "Generate a better version →" button that navigates to `/dashboard/create/compose?topic={summary}`
-- [ ] Composer: reads `?topic=` from URL search params and pre-populates the topic textarea on mount
-- [ ] Pre-populated topic is editable (not locked)
-- [ ] Post detail expanded rows: add "Scan this post →" CTA that navigates to `/dashboard/create/scanner` with post text pre-filled
-- [ ] Old routes `/dashboard/scanner` and `/dashboard/compose` redirect to new locations (from #050)
-- [ ] All existing Scanner and Composer functionality preserved (streaming, quality analysis, draft generation, etc.)
-- [ ] Composer timezone fix: use browser timezone instead of UTC for `computeBestTimes()` (addresses SD-1 from UX audit)
+- [x] `/dashboard/create/scanner` renders the full `QualityScanner` (migrated from `/dashboard/scanner`)
+- [x] `/dashboard/create/compose` renders the full `Composer` (migrated from `/dashboard/compose`)
+- [x] Scanner: after analysis completes, show "Generate a better version →" button that navigates to `/dashboard/create/compose?topic={summary}`
+- [x] Composer: reads `?topic=` from URL search params and pre-populates the topic textarea on mount
+- [x] Pre-populated topic is editable (not locked)
+- [x] Post detail expanded rows: add "Scan this post →" CTA that navigates to `/dashboard/create/scanner` with post text pre-filled
+- [x] Old routes `/dashboard/scanner` and `/dashboard/compose` redirect to new locations (from #050)
+- [x] All existing Scanner and Composer functionality preserved (streaming, quality analysis, draft generation, etc.)
+- [x] Composer timezone fix: use browser timezone instead of UTC for `computeBestTimes()` (addresses SD-1 from UX audit)
 
 ## Implementation Notes
 - Key files: `src/app/dashboard/create/scanner/page.tsx` (new, copies from old scanner), `src/app/dashboard/create/compose/page.tsx` (new, copies from old compose)
