@@ -8,6 +8,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import type { APIError } from "@anthropic-ai/sdk";
+import type { ILLMClient } from "@/lib/llm-provider";
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -153,17 +154,22 @@ function parseRetryAfter(error: APIError): number | undefined {
 
 // ── Client ───────────────────────────────────────────────────────────
 
-export class LLMClient {
+export class LLMClient implements ILLMClient {
   private client: Anthropic;
+  private defaultModel: string;
 
-  constructor(apiKey?: string) {
+  constructor(apiKey?: string, options?: { baseURL?: string; defaultModel?: string }) {
     const key = apiKey ?? process.env.LLM_API_KEY;
     if (!key) {
       throw new LLMAuthError(
         "LLM_API_KEY is not set. Provide it via environment variable or constructor argument.",
       );
     }
-    this.client = new Anthropic({ apiKey: key });
+    this.client = new Anthropic({
+      apiKey: key,
+      ...(options?.baseURL ? { baseURL: options.baseURL } : {}),
+    });
+    this.defaultModel = options?.defaultModel || DEFAULT_MODEL;
   }
 
   /**
@@ -173,7 +179,7 @@ export class LLMClient {
     const {
       systemPrompt,
       messages,
-      model = DEFAULT_MODEL,
+      model = this.defaultModel,
       maxTokens = DEFAULT_MAX_TOKENS,
       timeout = DEFAULT_GENERATE_TIMEOUT_MS,
     } = options;
@@ -202,52 +208,66 @@ export class LLMClient {
   }
 
   /**
-   * Generate a streaming completion. Returns a ReadableStream of text chunks
-   * suitable for SSE delivery to the client via `new Response(stream)`.
+   * Generate a streaming completion as an async iterable of raw text chunks.
+   * Use this when you need custom SSE framing (e.g. the compose route).
    */
-  generateStream(options: LLMStreamOptions): ReadableStream<Uint8Array> {
+  async *generateStreamIterator(options: LLMStreamOptions): AsyncIterable<string> {
     const {
       systemPrompt,
       messages,
-      model = DEFAULT_MODEL,
+      model = this.defaultModel,
       maxTokens = DEFAULT_MAX_TOKENS,
       timeout = DEFAULT_STREAM_TIMEOUT_MS,
     } = options;
 
-    const client = this.client;
+    try {
+      const stream = this.client.messages.stream(
+        {
+          model,
+          max_tokens: maxTokens,
+          ...(systemPrompt ? { system: systemPrompt } : {}),
+          messages: messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        },
+        { timeout },
+      );
+
+      for await (const event of stream) {
+        if (
+          event.type === "content_block_delta" &&
+          event.delta.type === "text_delta"
+        ) {
+          yield event.delta.text;
+        }
+      }
+    } catch (error) {
+      throw mapSDKError(error);
+    }
+  }
+
+  /**
+   * Generate a streaming completion. Returns a ReadableStream of text chunks
+   * suitable for SSE delivery to the client via `new Response(stream)`.
+   */
+  generateStream(options: LLMStreamOptions): ReadableStream<Uint8Array> {
+    const iterator = this.generateStreamIterator(options);
     const encoder = new TextEncoder();
 
     return new ReadableStream<Uint8Array>({
       async start(controller) {
         try {
-          const stream = client.messages.stream(
-            {
-              model,
-              max_tokens: maxTokens,
-              ...(systemPrompt ? { system: systemPrompt } : {}),
-              messages: messages.map((m) => ({
-                role: m.role,
-                content: m.content,
-              })),
-            },
-            { timeout },
-          );
-
-          for await (const event of stream) {
-            if (
-              event.type === "content_block_delta" &&
-              event.delta.type === "text_delta"
-            ) {
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify(event.delta.text)}\n\n`),
-              );
-            }
+          for await (const text of iterator) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify(text)}\n\n`),
+            );
           }
 
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
         } catch (error) {
-          const mapped = mapSDKError(error);
+          const mapped = error instanceof LLMError ? error : mapSDKError(error);
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({ error: mapped.message })}\n\n`,

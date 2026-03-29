@@ -13,7 +13,7 @@ import {
   type TopicPost,
   type TopicCluster,
 } from "@/lib/topic-classification";
-import { LLMClient } from "@/lib/llm-client";
+import type { ILLMClient } from "@/lib/llm-provider";
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -135,7 +135,7 @@ export function parseTopicSuggestions(raw: string): TopicSuggestion[] {
 
 export async function generateTopicSuggestions(
   posts: TopicPost[],
-  llm: LLMClient,
+  llm: ILLMClient,
 ): Promise<TopicSuggestionsResult> {
   const clusters = extractTopics(posts, 5);
 

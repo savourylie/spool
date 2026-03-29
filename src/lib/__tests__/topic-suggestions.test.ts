@@ -8,7 +8,7 @@ import {
   type TopicSuggestion,
 } from "@/lib/topic-suggestions";
 import type { TopicCluster, TopicPost } from "@/lib/topic-classification";
-import type { LLMClient } from "@/lib/llm-client";
+import type { ILLMClient } from "@/lib/llm-provider";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -219,7 +219,7 @@ describe("parseTopicSuggestions", () => {
 
 describe("generateTopicSuggestions", () => {
   it("returns empty result for empty posts", async () => {
-    const mockLlm = { generate: vi.fn() } as unknown as LLMClient;
+    const mockLlm = { generate: vi.fn() } as unknown as ILLMClient;
     const result = await generateTopicSuggestions([], mockLlm);
     expect(result.suggestions).toHaveLength(0);
     expect(result.coreTopics).toHaveLength(0);
@@ -227,7 +227,7 @@ describe("generateTopicSuggestions", () => {
   });
 
   it("returns empty result for posts with null text", async () => {
-    const mockLlm = { generate: vi.fn() } as unknown as LLMClient;
+    const mockLlm = { generate: vi.fn() } as unknown as ILLMClient;
     const posts = [makePost(null), makePost(null)];
     const result = await generateTopicSuggestions(posts, mockLlm);
     expect(result.suggestions).toHaveLength(0);
@@ -237,7 +237,7 @@ describe("generateTopicSuggestions", () => {
   it("calls LLM and returns parsed suggestions for valid posts", async () => {
     const mockLlm = {
       generate: vi.fn().mockResolvedValue(JSON.stringify(VALID_SUGGESTIONS)),
-    } as unknown as LLMClient;
+    } as unknown as ILLMClient;
 
     // Create enough varied posts to produce topic clusters
     const posts = [
@@ -260,7 +260,7 @@ describe("generateTopicSuggestions", () => {
   it("propagates LLM errors", async () => {
     const mockLlm = {
       generate: vi.fn().mockRejectedValue(new Error("LLM unavailable")),
-    } as unknown as LLMClient;
+    } as unknown as ILLMClient;
 
     const posts = [
       makePost("Marketing strategy for startups and growth hacking"),

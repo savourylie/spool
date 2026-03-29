@@ -10,6 +10,7 @@ import { Compass } from "@phosphor-icons/react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { PencilLine } from "@phosphor-icons/react";
 import { SignOut } from "@phosphor-icons/react";
+import { Gear } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -172,7 +173,22 @@ export function DashboardSidebar({ username }: { username: string }) {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-[var(--sidebar-border)] px-5 py-4">
+        <div className="border-t border-[var(--sidebar-border)] px-5 py-4 space-y-2">
+          <Link
+            href="/dashboard/settings"
+            className={cn(
+              "flex items-center gap-2 text-[13px] font-medium transition-colors",
+              pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/")
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Gear
+              weight={pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/") ? "fill" : "regular"}
+              className="size-[18px]"
+            />
+            Settings
+          </Link>
           <form action="/api/auth/sign-out" method="POST">
             <button
               type="submit"
@@ -215,8 +231,27 @@ export function DashboardSidebar({ username }: { username: string }) {
           ))}
         </nav>
 
-        {/* Sign out */}
-        <div className="border-t border-[var(--sidebar-border)] py-4">
+        {/* Footer */}
+        <div className="border-t border-[var(--sidebar-border)] py-4 flex flex-col items-center gap-1">
+          <Link
+            href="/dashboard/settings"
+            title="Settings"
+            aria-label="Settings"
+            className={cn(
+              "group relative flex items-center justify-center rounded-lg p-2.5 transition-colors",
+              pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/")
+                ? "bg-[var(--sidebar-accent)] text-primary"
+                : "text-muted-foreground hover:bg-[var(--sidebar-accent)]/50",
+            )}
+          >
+            <Gear
+              weight={pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/") ? "fill" : "regular"}
+              className="size-5"
+            />
+            <span className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-[var(--radius-sm)] border-2 border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground opacity-0 shadow-[var(--shadow-default)] transition-opacity group-hover:opacity-100">
+              Settings
+            </span>
+          </Link>
           <form action="/api/auth/sign-out" method="POST">
             <button
               type="submit"

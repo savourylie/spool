@@ -408,6 +408,10 @@ export type Database = {
           access_token: string
           created_at: string | null
           id: string
+          llm_api_key_encrypted: string | null
+          llm_base_url: string | null
+          llm_model: string | null
+          llm_provider: string | null
           threads_user_id: string
           token_expires_at: string
           username: string | null
@@ -416,6 +420,10 @@ export type Database = {
           access_token: string
           created_at?: string | null
           id?: string
+          llm_api_key_encrypted?: string | null
+          llm_base_url?: string | null
+          llm_model?: string | null
+          llm_provider?: string | null
           threads_user_id: string
           token_expires_at: string
           username?: string | null
@@ -424,6 +432,10 @@ export type Database = {
           access_token?: string
           created_at?: string | null
           id?: string
+          llm_api_key_encrypted?: string | null
+          llm_base_url?: string | null
+          llm_model?: string | null
+          llm_provider?: string | null
           threads_user_id?: string
           token_expires_at?: string
           username?: string | null

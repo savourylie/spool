@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { getSession } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
-import { LLMClient, LLMAuthError } from "@/lib/llm-client";
+import { LLMAuthError } from "@/lib/llm-client";
+import { resolveLLMClient } from "@/lib/llm-resolver";
 import {
   generateTopicSuggestions,
   MIN_POSTS_FOR_SUGGESTIONS,
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   // ── Generate suggestions via LLM ──────────────────────────────
   try {
-    const llm = new LLMClient();
+    const llm = await resolveLLMClient(userId);
     const result = await generateTopicSuggestions(posts, llm);
     return NextResponse.json(result);
   } catch (error) {

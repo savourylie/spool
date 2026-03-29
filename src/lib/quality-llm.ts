@@ -8,7 +8,7 @@
  * Depends on: llm-client (TICKET-037), quality-heuristics types (TICKET-038).
  */
 
-import { LLMClient } from "@/lib/llm-client";
+import type { ILLMClient } from "@/lib/llm-provider";
 import {
   parseAndValidateResponse,
   type UserContext,
@@ -117,8 +117,8 @@ export function buildScannerPrompt(
 export async function analyzeWithLLM(
   text: string,
   userContext: UserContext,
+  llm: ILLMClient,
 ): Promise<LLMAnalysisResult> {
-  const llm = new LLMClient();
   const { systemPrompt, userMessage } = buildScannerPrompt(text, userContext);
 
   const raw = await llm.generate({
@@ -137,8 +137,8 @@ export async function analyzeWithLLM(
 export function analyzeWithLLMStream(
   text: string,
   userContext: UserContext,
+  llm: ILLMClient,
 ): ReadableStream<Uint8Array> {
-  const llm = new LLMClient();
   const { systemPrompt, userMessage } = buildScannerPrompt(text, userContext);
 
   return llm.generateStream({

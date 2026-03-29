@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
 import { LLMAuthError } from "@/lib/llm-client";
+import { resolveLLMClient } from "@/lib/llm-resolver";
 import { analyzeWithLLMStream, type UserContext } from "@/lib/quality-llm";
 
 const MAX_TEXT_LENGTH = 2000;
@@ -72,7 +73,8 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   // ── Stream LLM analysis ────────────────────────────────────────
   try {
-    const stream = analyzeWithLLMStream(text, userContext);
+    const llm = await resolveLLMClient(userId);
+    const stream = analyzeWithLLMStream(text, userContext, llm);
     return new Response(stream, {
       headers: {
         "Content-Type": "text/event-stream",

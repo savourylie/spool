@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { getSession } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
-import { LLMClient, LLMAuthError } from "@/lib/llm-client";
+import { LLMAuthError } from "@/lib/llm-client";
+import { resolveLLMClient } from "@/lib/llm-resolver";
 import {
   buildPredictionRefinementPrompt,
   parsePredictionRefinement,
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   // ── Call LLM ───────────────────────────────────────────────────
   try {
-    const llm = new LLMClient();
+    const llm = await resolveLLMClient(userId);
     const { systemPrompt, userMessage } = buildPredictionRefinementPrompt(
       text,
       range,

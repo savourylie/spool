@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 
 import { getSession } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
+import { resolveLLMClient } from "@/lib/llm-resolver";
 import {
   buildComposerPrompt,
   parseComposerResponse,
@@ -12,7 +12,6 @@ import {
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
 
 const MAX_TOPIC_LENGTH = 500;
-const MODEL = "claude-sonnet-4-6";
 const MAX_TOKENS = 2048;
 const STREAM_TIMEOUT_MS = 60_000;
 
@@ -50,15 +49,6 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   const style =
     typeof body.style === "string" ? body.style.trim() || undefined : undefined;
-
-  // ── Check LLM API key ─────────────────────────────────────────
-  const apiKey = process.env.LLM_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "LLM service unavailable" },
-      { status: 503 },
-    );
-  }
 
   // ── Fetch user context ─────────────────────────────────────────
   const supabase = createAdminClient();
@@ -196,7 +186,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   });
 
   // ── Stream LLM response with custom SSE events ─────────────────
-  const anthropic = new Anthropic({ apiKey });
+  const llm = await resolveLLMClient(userId);
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
@@ -208,29 +198,18 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
 
       try {
-        const sdkStream = anthropic.messages.stream(
-          {
-            model: MODEL,
-            max_tokens: MAX_TOKENS,
-            system: systemPrompt,
-            messages: [{ role: "user", content: userMessage }],
-          },
-          { timeout: STREAM_TIMEOUT_MS },
-        );
+        const textStream = llm.generateStreamIterator({
+          systemPrompt,
+          messages: [{ role: "user", content: userMessage }],
+          maxTokens: MAX_TOKENS,
+          timeout: STREAM_TIMEOUT_MS,
+        });
 
         let accumulated = "";
         let currentDraft = -1;
         let delimiterCount = 0;
 
-        for await (const event of sdkStream) {
-          if (
-            event.type !== "content_block_delta" ||
-            event.delta.type !== "text_delta"
-          ) {
-            continue;
-          }
-
-          const text = event.delta.text;
+        for await (const text of textStream) {
           accumulated += text;
 
           // Detect new draft sections by counting --- delimiters
