@@ -1,10 +1,10 @@
 # [TICKET-073] Post Predictions Persistence
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #066
+- Requires: #066 ✅
 
 ## Description
 Today `engagement-prediction.ts` computes Conservative / Baseline / Optimistic ranges at call time and the result is ephemeral. Persist the prediction at draft save time so we can later compare against actuals. Also wire a "Mark as published" action in Composer + a text-fuzzy-match fallback in `backfill-job.ts` so that when a new post appears, we can link it back to the draft that predicted it. This is the foundation for the prediction-vs-actual review loop (#074–#076).
