@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { ErrorState } from "@/components/ui/error-state";
+import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 import { PostFilters } from "@/components/dashboard/post-filters";
 import { FormatAnalysis } from "@/components/dashboard/format-analysis";
@@ -158,7 +159,10 @@ export default async function UnderstandPage({
   // ── Render ─────────────────────────────────────────────────────────
   return (
     <div className="py-8">
-      <h1 className="font-heading text-3xl font-bold">Performance</h1>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 className="font-heading text-3xl font-bold">Performance</h1>
+        <ConfidenceBadge sample={totalCount} />
+      </div>
       <p className="mt-2 text-muted-foreground">
         Understand how your content performs across formats and timing.
       </p>

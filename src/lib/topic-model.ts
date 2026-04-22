@@ -71,6 +71,7 @@ export interface TopicModelData {
 export interface TopicPerformanceBar {
   name: string;
   color: string;
+  postCount: number;
   avgViews: number;
   avgEngagement: number;
   avgReplies: number;
@@ -218,6 +219,7 @@ export function getTopicPerformanceComparison(
     .map((c) => ({
       name: c.name,
       color: c.color,
+      postCount: c.postCount,
       avgViews: c.avgViews,
       avgEngagement: c.avgEngagement,
       avgReplies: c.avgReplies,

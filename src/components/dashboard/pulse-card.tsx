@@ -6,6 +6,7 @@ import { TrendDown } from "@phosphor-icons/react/dist/ssr/TrendDown";
 import { Minus } from "@phosphor-icons/react/dist/ssr/Minus";
 import type { Icon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import { getPulseEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import { cn } from "@/lib/utils";
 import type { VelocityTrend } from "@/lib/today-hub-helpers";
@@ -79,9 +80,12 @@ export function PulseCard({
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <Pulse weight="bold" className="size-5 text-primary" />
-        <h3 className="font-heading text-base font-bold">Pulse (7d)</h3>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Pulse weight="bold" className="size-5 text-primary" />
+          <h3 className="font-heading text-base font-bold">Pulse (7d)</h3>
+        </div>
+        {!isLoading && <ConfidenceBadge sample={postCount} compact />}
       </div>
 
       {/* Loading skeleton */}

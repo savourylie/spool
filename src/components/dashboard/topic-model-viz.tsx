@@ -5,6 +5,7 @@ import { TreeStructure, X, Eye, ChatCircle, TrendUp } from "@phosphor-icons/reac
 import { Treemap, ResponsiveContainer } from "recharts";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import {
   StickerCard,
   StickerCardHeader,
@@ -121,14 +122,15 @@ function TopicDetailPanel({
 }) {
   return (
     <div className="mt-4 rounded-[var(--radius-md)] border-2 border-foreground bg-muted/50 p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span
             className="inline-block size-3 rounded-full"
             style={{ backgroundColor: cluster.color }}
             aria-hidden="true"
           />
           <h4 className="font-heading text-base font-bold">{cluster.name}</h4>
+          <ConfidenceBadge sample={cluster.postCount} />
         </div>
         <button
           type="button"

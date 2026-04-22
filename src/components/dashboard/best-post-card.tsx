@@ -2,6 +2,7 @@
 
 import { Star } from "@phosphor-icons/react/dist/ssr/Star";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import { getBestPostEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import { formatNumber } from "@/lib/engagement-prediction";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,8 @@ export interface BestPostData {
 
 interface BestPostCardProps {
   post: BestPostData | null;
+  /** Number of posts in the 7-day window — backs the confidence badge. */
+  sampleSize?: number;
   isLoading?: boolean;
   isImporting?: boolean;
   className?: string;
@@ -30,6 +33,7 @@ interface BestPostCardProps {
 
 export function BestPostCard({
   post,
+  sampleSize,
   isLoading = false,
   isImporting = false,
   className,
@@ -44,9 +48,14 @@ export function BestPostCard({
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <Star weight="fill" className="size-5 text-tertiary" />
-        <h3 className="font-heading text-base font-bold">Best Post (7d)</h3>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Star weight="fill" className="size-5 text-tertiary" />
+          <h3 className="font-heading text-base font-bold">Best Post (7d)</h3>
+        </div>
+        {sampleSize !== undefined && !isLoading && (
+          <ConfidenceBadge sample={sampleSize} compact />
+        )}
       </div>
 
       {/* Loading skeleton */}

@@ -173,6 +173,7 @@ export default async function DashboardPage() {
         />
         <BestPostCard
           post={bestPostData}
+          sampleSize={recentPosts.length}
           isImporting={isImporting}
         />
       </div>

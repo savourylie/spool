@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { ErrorState } from "@/components/ui/error-state";
+import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import {
   FollowerChart,
@@ -231,7 +232,10 @@ export default async function UnderstandAudiencePage() {
   // ── Render ─────────────────────────────────────────────────────────
   return (
     <div className="py-8">
-      <h1 className="font-heading text-3xl font-bold">Audience</h1>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 className="font-heading text-3xl font-bold">Audience</h1>
+        <ConfidenceBadge sample={focusPosts.length} />
+      </div>
       <p className="mt-2 text-muted-foreground">
         Understand who follows you and how well your content fits your audience.
       </p>

@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { ChartBar } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import {
   StickerCard,
   StickerCardHeader,
@@ -81,8 +82,11 @@ export function TopicPerformance({ clusters, isLoading }: TopicPerformanceProps)
 
               return (
                 <div key={bar.name} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{bar.name}</span>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{bar.name}</span>
+                      <ConfidenceBadge sample={bar.postCount} compact />
+                    </div>
                     <span className="text-muted-foreground">
                       {bar.avgEngagement.toFixed(2)}% avg eng
                     </span>

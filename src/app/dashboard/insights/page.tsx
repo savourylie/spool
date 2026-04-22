@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import { TopicModelViz } from "@/components/dashboard/topic-model-viz";
 import { TopicPerformance } from "@/components/dashboard/topic-performance";
 import { SemanticFocus } from "@/components/dashboard/semantic-focus";
@@ -94,7 +95,10 @@ export default async function InsightsPage() {
   // ── Render ──────────────────────────────────────────────────────────
   return (
     <div className="py-8">
-      <h1 className="font-heading text-3xl font-bold">Topics &amp; Patterns</h1>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 className="font-heading text-3xl font-bold">Topics &amp; Patterns</h1>
+        <ConfidenceBadge sample={topicModel.totalPosts} />
+      </div>
       <p className="mt-2 text-muted-foreground">
         Discover content themes and how they perform with your audience.
       </p>
