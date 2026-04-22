@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #065, #067
+- Requires: #065 ✅, #067
 
 ## Description
 Replace the Scanner's `{issues[], rewrites[], shareability, tone}` output with a structured four-axis diagnostic matching AK's `/analyze`: Style Matching, Psychology Triggers, Algorithm Alignment, AI-Tone Detection. Each axis returns `findings[]` with rule references and neighbor-post citations. Remove automatic rewrites — the Scanner becomes diagnostic; rewriting lives in the Composer (explicit CTA in #078). Keep the old output shape behind a feature flag during migration.

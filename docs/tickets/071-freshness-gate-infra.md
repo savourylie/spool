@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #065, #067
+- Requires: #065 ✅, #067
 
 ## Description
 Build the pre-draft gate that stops the Composer from generating on dead topics or topics the user just covered. Combines an external freshness signal (reuses existing `/api/grok` from #059) with a self-repetition check (semantic cluster match against the user's recent posts in the last 7/14/30 days). Emits a Green / Yellow / Red verdict and writes every check to an audit log. Wire the gate into the Composer pre-draft flow as a banner with a "proceed anyway" escape hatch.

@@ -1,10 +1,10 @@
 # [TICKET-067] Prompt Loader Refactor + Anthropic Caching
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #065
+- Requires: #065 ✅
 
 ## Description
 Refactor `quality-llm.ts` and `composer-prompt.ts` to load their stable knowledge prefixes from `src/lib/prompts/*.md` instead of hard-coded string constants. Wire Anthropic prompt-caching `cache_control: { type: "ephemeral" }` breakpoints at the boundary between the knowledge prefix (stable) and the user-variable suffix (post text, topic, context). The knowledge files are large and rarely change — perfect cache candidates. This is a prerequisite for every downstream feature that adds more knowledge (brand voice, analyze, concept library).
