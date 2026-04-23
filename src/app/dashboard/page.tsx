@@ -27,6 +27,9 @@ import {
 } from "@/components/dashboard/best-post-card";
 import { ReselectionAlert } from "@/components/dashboard/reselection-alert";
 import { ViralRecoveryCard } from "@/components/dashboard/viral-recovery-card";
+import { FreshnessLogCard } from "@/components/dashboard/freshness-log-card";
+import { getTodayHubTopicsBundle } from "@/lib/today-hub-freshness";
+import { getFreshnessLogCounts } from "@/lib/freshness-log";
 
 export const metadata: Metadata = { title: "Today — Spool" };
 
@@ -80,6 +83,12 @@ export default async function DashboardPage() {
   const username = userResult.data?.username ?? "there";
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const now = new Date();
+
+  // ── Freshness surfaces (depend on backfillJob → second stage) ──────
+  const [topicsBundle, freshnessLogCounts] = await Promise.all([
+    getTodayHubTopicsBundle(userId, backfillJob),
+    getFreshnessLogCounts(userId, now),
+  ]);
 
   // ── WhenToPostCard data ────────────────────────────────────────────
   const bestSlot = posts.length > 0 ? computeNextBestSlot(posts, timezone) : null;
@@ -156,7 +165,18 @@ export default async function DashboardPage() {
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <WhatToPostCard isImporting={isImporting} />
+        <WhatToPostCard
+          topics={topicsBundle.filteredTopics}
+          freshness={topicsBundle.freshness}
+          reframes={topicsBundle.reframes}
+          allFilteredOut={
+            topicsBundle.allCount > 0 &&
+            topicsBundle.filteredTopics.length === 0
+          }
+          insufficient={topicsBundle.insufficient}
+          isImporting={isImporting}
+          rateLimited={topicsBundle.rateLimited}
+        />
         <WhenToPostCard
           bestSlot={bestSlot}
           heatmapData={heatmapData}
@@ -176,6 +196,10 @@ export default async function DashboardPage() {
           sampleSize={recentPosts.length}
           isImporting={isImporting}
         />
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <FreshnessLogCard counts={freshnessLogCounts} />
       </div>
 
       {(reselectedPosts.length > 0 || recoveryState) && (
