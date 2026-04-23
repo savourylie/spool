@@ -1,10 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  APPROX_CHARS_PER_TOKEN,
   MIN_POSTS_FOR_SUGGESTIONS,
   SUGGESTION_COUNT,
+  TOPIC_SUGGESTIONS_TIMEOUT_MS,
   buildTopicSuggestionsPrompt,
+  buildFallbackTopicSuggestions,
+  estimateGeneratedTokens,
   parseTopicSuggestions,
   generateTopicSuggestions,
+  streamTopicSuggestions,
   type TopicSuggestion,
 } from "@/lib/topic-suggestions";
 import type { TopicCluster, TopicPost } from "@/lib/topic-classification";
@@ -24,6 +29,12 @@ function makeCluster(
   score: number,
 ): TopicCluster {
   return { topic, keywords, score };
+}
+
+async function* streamChunks(chunks: string[]): AsyncIterable<string> {
+  for (const chunk of chunks) {
+    yield chunk;
+  }
 }
 
 const VALID_SUGGESTIONS: TopicSuggestion[] = [
@@ -58,6 +69,10 @@ describe("constants", () => {
 
   it("SUGGESTION_COUNT is 8", () => {
     expect(SUGGESTION_COUNT).toBe(8);
+  });
+
+  it("APPROX_CHARS_PER_TOKEN is 4", () => {
+    expect(APPROX_CHARS_PER_TOKEN).toBe(4);
   });
 });
 
@@ -137,6 +152,18 @@ describe("parseTopicSuggestions", () => {
     expect(result).toHaveLength(3);
   });
 
+  it("extracts the first JSON array from surrounding prose", () => {
+    const wrapped =
+      "Here are your suggestions:\n" +
+      JSON.stringify(VALID_SUGGESTIONS) +
+      "\nThese should work well.";
+
+    const result = parseTopicSuggestions(wrapped);
+
+    expect(result).toHaveLength(3);
+    expect(result[1].name).toBe("Remote Work Culture");
+  });
+
   it("filters out items with missing name", () => {
     const input = [
       { relevanceScore: 80, semanticDistance: "near", rationale: "No name" },
@@ -211,11 +238,59 @@ describe("parseTopicSuggestions", () => {
     const result = parseTopicSuggestions(JSON.stringify(input));
     expect(result[0].relevanceScore).toBe(74);
   });
+
+  it("dedupes repeated suggestions by name", () => {
+    const input = [
+      VALID_SUGGESTIONS[0],
+      { ...VALID_SUGGESTIONS[0], rationale: "Duplicate entry" },
+      VALID_SUGGESTIONS[1],
+    ];
+
+    const result = parseTopicSuggestions(JSON.stringify(input));
+
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe("AI Ethics Debates");
+    expect(result[1].name).toBe("Remote Work Culture");
+  });
+});
+
+describe("estimateGeneratedTokens", () => {
+  it("returns 0 for blank text", () => {
+    expect(estimateGeneratedTokens("")).toBe(0);
+    expect(estimateGeneratedTokens("   ")).toBe(0);
+  });
+
+  it("estimates tokens from character length", () => {
+    expect(estimateGeneratedTokens("1234")).toBe(1);
+    expect(estimateGeneratedTokens("12345")).toBe(2);
+    expect(estimateGeneratedTokens("12345678")).toBe(2);
+  });
 });
 
 // ---------------------------------------------------------------------------
 // generateTopicSuggestions
 // ---------------------------------------------------------------------------
+
+describe("buildFallbackTopicSuggestions", () => {
+  it("returns deterministic suggestions from extracted topic clusters", () => {
+    const posts = [
+      makePost("Marketing strategy for startups and growth hacking"),
+      makePost("Marketing brand building and growth metrics"),
+      makePost("Marketing funnel optimization and brand strategy"),
+      makePost("Growth marketing strategy for digital brands"),
+      makePost("Design systems and figma components"),
+      makePost("Design principles for modern figma interfaces"),
+      makePost("User interface design with figma prototyping"),
+    ];
+
+    const result = buildFallbackTopicSuggestions(posts);
+
+    expect(result.coreTopics.length).toBeGreaterThan(0);
+    expect(result.suggestions.length).toBeGreaterThan(0);
+    expect(result.suggestions[0].name).toBeTruthy();
+    expect(result.suggestions[0].rationale).toContain("Recurring theme");
+  });
+});
 
 describe("generateTopicSuggestions", () => {
   it("returns empty result for empty posts", async () => {
@@ -252,9 +327,35 @@ describe("generateTopicSuggestions", () => {
 
     const result = await generateTopicSuggestions(posts, mockLlm);
     expect(mockLlm.generate).toHaveBeenCalledTimes(1);
+    expect(mockLlm.generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        timeout: TOPIC_SUGGESTIONS_TIMEOUT_MS,
+      }),
+    );
     expect(result.suggestions).toHaveLength(3);
     expect(result.coreTopics.length).toBeGreaterThan(0);
     expect(result.suggestions[0].name).toBe("AI Ethics Debates");
+  });
+
+  it("falls back when the model returns an empty suggestion list", async () => {
+    const mockLlm = {
+      generate: vi.fn().mockResolvedValue("[]"),
+    } as unknown as ILLMClient;
+
+    const posts = [
+      makePost("Marketing strategy for startups and growth hacking"),
+      makePost("Marketing brand building and growth metrics"),
+      makePost("Marketing funnel optimization and brand strategy"),
+      makePost("Growth marketing strategy for digital brands"),
+      makePost("Design systems and figma components"),
+      makePost("Design principles for modern figma interfaces"),
+      makePost("User interface design with figma prototyping"),
+    ];
+
+    const result = await generateTopicSuggestions(posts, mockLlm);
+
+    expect(result.suggestions.length).toBeGreaterThan(0);
+    expect(result.suggestions[0].rationale).toMatch(/Recurring theme|Related keyword/);
   });
 
   it("propagates LLM errors", async () => {
@@ -272,5 +373,62 @@ describe("generateTopicSuggestions", () => {
     await expect(generateTopicSuggestions(posts, mockLlm)).rejects.toThrow(
       "LLM unavailable",
     );
+  });
+});
+
+describe("streamTopicSuggestions", () => {
+  it("streams progress updates and returns parsed suggestions", async () => {
+    const serialized = JSON.stringify(VALID_SUGGESTIONS);
+    const mockLlm = {
+      generateStreamIterator: vi.fn().mockReturnValue(
+        streamChunks([serialized.slice(0, 24), serialized.slice(24)]),
+      ),
+    } as unknown as ILLMClient;
+
+    const posts = [
+      makePost("Marketing strategy for startups and growth hacking"),
+      makePost("Marketing brand building and growth metrics"),
+      makePost("Marketing funnel optimization and brand strategy"),
+      makePost("Growth marketing strategy for digital brands"),
+      makePost("Design systems and figma components"),
+      makePost("Design principles for modern figma interfaces"),
+      makePost("User interface design with figma prototyping"),
+    ];
+
+    const progress: number[] = [];
+    const result = await streamTopicSuggestions(posts, mockLlm, ({ generatedTokens }) => {
+      progress.push(generatedTokens);
+    });
+
+    expect(mockLlm.generateStreamIterator).toHaveBeenCalledWith(
+      expect.objectContaining({
+        timeout: TOPIC_SUGGESTIONS_TIMEOUT_MS,
+      }),
+    );
+    expect(progress.length).toBeGreaterThan(0);
+    expect(progress[progress.length - 1]).toBeGreaterThan(0);
+    expect(result.suggestions).toHaveLength(3);
+    expect(result.suggestions[0].name).toBe("AI Ethics Debates");
+  });
+
+  it("falls back when the streamed model output is empty", async () => {
+    const mockLlm = {
+      generateStreamIterator: vi.fn().mockReturnValue(streamChunks(["[]"])),
+    } as unknown as ILLMClient;
+
+    const posts = [
+      makePost("Marketing strategy for startups and growth hacking"),
+      makePost("Marketing brand building and growth metrics"),
+      makePost("Marketing funnel optimization and brand strategy"),
+      makePost("Growth marketing strategy for digital brands"),
+      makePost("Design systems and figma components"),
+      makePost("Design principles for modern figma interfaces"),
+      makePost("User interface design with figma prototyping"),
+    ];
+
+    const result = await streamTopicSuggestions(posts, mockLlm);
+
+    expect(result.suggestions.length).toBeGreaterThan(0);
+    expect(result.suggestions[0].rationale).toMatch(/Recurring theme|Related keyword/);
   });
 });

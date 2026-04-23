@@ -42,13 +42,20 @@ export function TopicSuggestions({ onSelectTopic }: TopicSuggestionsProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isInsufficient, setIsInsufficient] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatedTokens, setGeneratedTokens] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function fetchSuggestions() {
+      setSuggestions([]);
+      setError(null);
+      setIsInsufficient(false);
+      setGeneratedTokens(0);
+      setIsLoading(true);
+
       try {
-        const res = await fetch("/api/topics", {
+        const res = await fetch("/api/topics?stream=1", {
           method: "POST",
           signal: controller.signal,
         });
@@ -59,15 +66,65 @@ export function TopicSuggestions({ onSelectTopic }: TopicSuggestionsProps) {
           return;
         }
 
-        const data = await res.json();
+        const reader = res.body?.getReader();
+        if (!reader) throw new Error("No response stream");
 
-        if (data.insufficient) {
-          setIsInsufficient(true);
-          setIsLoading(false);
-          return;
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const messages = buffer.split("\n\n");
+          buffer = messages.pop() ?? "";
+
+          for (const msg of messages) {
+            const trimmed = msg.trim();
+            if (!trimmed) continue;
+
+            if (trimmed === "data: [DONE]") {
+              setIsLoading(false);
+              return;
+            }
+
+            const eventMatch = trimmed.match(/^event:\s*(\w+)/m);
+            const dataMatch = trimmed.match(/^data:\s*(.+)$/m);
+
+            if (!eventMatch || !dataMatch) {
+              continue;
+            }
+
+            let data: Record<string, unknown>;
+            try {
+              data = JSON.parse(dataMatch[1]);
+            } catch {
+              continue;
+            }
+
+            switch (eventMatch[1]) {
+              case "progress":
+                setGeneratedTokens(
+                  Math.max(0, Number(data.generatedTokens) || 0),
+                );
+                break;
+              case "result":
+                if (data.insufficient) {
+                  setIsInsufficient(true);
+                  setSuggestions([]);
+                } else {
+                  setSuggestions((data.suggestions as TopicSuggestion[]) ?? []);
+                }
+                break;
+              case "error":
+                setError("Failed to load suggestions");
+                setIsLoading(false);
+                return;
+            }
+          }
         }
 
-        setSuggestions(data.suggestions ?? []);
         setIsLoading(false);
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
@@ -95,14 +152,21 @@ export function TopicSuggestions({ onSelectTopic }: TopicSuggestionsProps) {
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex items-center gap-2 py-3">
+        <div className="flex items-start gap-2 py-3">
           <SpinnerGap
             weight="bold"
             className="size-4 animate-spin text-muted-foreground"
           />
-          <p className="text-xs text-muted-foreground">
-            Analyzing your topics&hellip;
-          </p>
+          <div className="space-y-0.5">
+            <p className="text-xs text-muted-foreground">
+              Analyzing your topics&hellip;
+            </p>
+            <p className="text-[10px] font-medium tabular-nums text-muted-foreground">
+              {generatedTokens > 0
+                ? `~${generatedTokens} tokens generated`
+                : "Waiting for first tokens..."}
+            </p>
+          </div>
         </div>
       )}
 
