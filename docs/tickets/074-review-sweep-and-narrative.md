@@ -1,10 +1,10 @@
 # [TICKET-074] Review Sweep + Narrative Generator
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #067 ✅, #073
+- Requires: #067 ✅, #073 ✅
 
 ## Description
 Add a scheduled endpoint that iterates `post_predictions` rows where `review_state = 'pending'`, `post_id is not null`, and `predicted_at < now() - interval '24 hours'`; pulls the post's windowed actual metrics; compares against the predicted bands; generates a short narrative explaining the deviation; marks the row `reviewed`. Narrative drives the Reviews page (#075) and Today Hub card (#076) by turning cold numbers into the kind of "why did this beat/miss baseline" story a creator gets from a thoughtful editor.
