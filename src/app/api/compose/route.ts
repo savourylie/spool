@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getSession } from "@/lib/session";
@@ -11,10 +12,23 @@ import {
 } from "@/lib/composer-prompt";
 import { getActiveVoiceProfile } from "@/lib/brand-voice";
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
+import {
+  checkTopicFreshness,
+  RateLimitError,
+  SURPRISE_ME_SENTINEL,
+  type FreshnessResult,
+} from "@/lib/freshness-gate";
 
 const MAX_TOPIC_LENGTH = 500;
 const MAX_TOKENS = 2048;
 const STREAM_TIMEOUT_MS = 60_000;
+
+// Payload shape emitted as the first SSE event. UI renders a banner from this
+// and may buffer subsequent draft events until the user acknowledges.
+type FreshnessEventPayload =
+  | FreshnessResult
+  | { runId: string; rateLimited: true }
+  | null;
 
 export async function POST(request: NextRequest): Promise<Response> {
   // ── Auth ────────────────────────────────────────────────────────
@@ -50,6 +64,46 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   const style =
     typeof body.style === "string" ? body.style.trim() || undefined : undefined;
+
+  // ── Freshness gate (TICKET-071) ────────────────────────────────
+  // Advisory pre-draft check. Never blocks — always proceed to draft. The
+  // gate's verdict + sources ride as the first SSE event so the client can
+  // render the banner before drafts stream in.
+  const runId = randomUUID();
+  let freshnessEvent: FreshnessEventPayload = null;
+  if (topic.startsWith(SURPRISE_ME_SENTINEL)) {
+    // Sentinel from "Generate ideas for me" — gate has no signal on the
+    // literal placeholder string, so we skip it and emit a symmetric event.
+    freshnessEvent = {
+      runId,
+      verdict: "green",
+      externalSignal: {
+        saturation: "green",
+        topRelevance: null,
+        trendCount: 0,
+        unavailable: true,
+        reason: "sentinel",
+      },
+      selfRepetitionRisk: {
+        severity: "none",
+        matchedCluster: null,
+        matchedTag: null,
+        counts: { d7: 0, d14: 0, d30: 0 },
+      },
+      sources: [],
+    };
+  } else {
+    try {
+      freshnessEvent = await checkTopicFreshness(topic, userId, runId);
+    } catch (err) {
+      if (err instanceof RateLimitError) {
+        freshnessEvent = { runId, rateLimited: true };
+      } else {
+        console.error("Freshness gate failed:", err);
+        freshnessEvent = null;
+      }
+    }
+  }
 
   // ── Fetch user context ─────────────────────────────────────────
   const supabase = createAdminClient();
@@ -208,6 +262,10 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
 
       try {
+        // First event: freshness verdict (TICKET-071). Always emit — UI
+        // tolerates null (gate errored) and { rateLimited: true } shapes.
+        emitSSE("freshness", freshnessEvent);
+
         const textStream = llm.generateStreamIterator({
           systemPrompt,
           messages: [{ role: "user", content: userMessage }],

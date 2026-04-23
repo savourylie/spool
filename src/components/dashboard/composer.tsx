@@ -20,6 +20,11 @@ import { QualityGauge } from "@/components/dashboard/quality-gauge";
 import { PredictionWidget } from "@/components/dashboard/prediction-widget";
 import { DraftCard, type DraftState } from "@/components/dashboard/draft-card";
 import { TopicSuggestions } from "@/components/dashboard/topic-suggestions";
+import {
+  FreshnessBanner,
+  isRateLimited,
+  type FreshnessPayload,
+} from "@/components/dashboard/freshness-banner";
 import { getComposerEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import {
   analyzeHeuristics,
@@ -60,12 +65,15 @@ interface ComposerState {
   errorMessage: string | null;
   activeDraftIndex: number | null;
   regeneratingIndex: number | null;
+  // TICKET-071: pre-draft freshness verdict. Yellow/red verdicts buffer
+  // incoming draft events until the user clicks "Compose anyway" so the
+  // button is meaningful, not cosmetic.
+  freshness: FreshnessPayload;
+  freshnessAcknowledged: boolean;
+  bufferedDraftEvents: BufferableAction[];
 }
 
-type ComposerAction =
-  | { type: "SET_TOPIC"; topic: string }
-  | { type: "SET_STYLE"; style: string }
-  | { type: "START_GENERATION"; regeneratingIndex?: number }
+type BufferableAction =
   | { type: "DRAFT_START"; index: number; shareTrigger: string | null }
   | { type: "DRAFT_TEXT"; index: number; text: string }
   | {
@@ -74,7 +82,13 @@ type ComposerAction =
       draftId: string | null;
       content: string;
       shareTrigger: string;
-    }
+    };
+
+type ComposerAction =
+  | { type: "SET_TOPIC"; topic: string }
+  | { type: "SET_STYLE"; style: string }
+  | { type: "START_GENERATION"; regeneratingIndex?: number }
+  | BufferableAction
   | { type: "GENERATION_COMPLETE" }
   | { type: "GENERATION_ERROR"; message: string }
   | { type: "STOP_GENERATION" }
@@ -87,7 +101,20 @@ type ComposerAction =
     }
   | { type: "TOGGLE_EDIT"; index: number }
   | { type: "UPDATE_EDIT_TEXT"; index: number; text: string }
+  | { type: "FRESHNESS_RECEIVED"; freshness: FreshnessPayload }
+  | { type: "FRESHNESS_ACKNOWLEDGE" }
   | { type: "RESET" };
+
+function shouldBufferFor(state: ComposerState): boolean {
+  // Buffer draft events only when the gate returned a yellow/red verdict
+  // that the user has not acknowledged. Green verdicts, null, rate-limited,
+  // and single-draft regeneration all flow straight through.
+  if (state.freshnessAcknowledged) return false;
+  if (state.freshness === null) return false;
+  if (isRateLimited(state.freshness)) return false;
+  if (state.freshness.verdict === "green") return false;
+  return true;
+}
 
 function makeDraft(index: number): DraftState {
   return {
@@ -112,6 +139,9 @@ const initialState: ComposerState = {
   errorMessage: null,
   activeDraftIndex: null,
   regeneratingIndex: null,
+  freshness: null,
+  freshnessAcknowledged: false,
+  bufferedDraftEvents: [],
 };
 
 function composerReducer(
@@ -128,7 +158,9 @@ function composerReducer(
     case "START_GENERATION": {
       const regenIdx = action.regeneratingIndex ?? null;
       if (regenIdx !== null) {
-        // Single-draft regeneration — mark that draft as streaming, keep others
+        // Single-draft regeneration — mark that draft as streaming, keep others.
+        // Regeneration auto-acknowledges the gate: the user already chose to
+        // regenerate despite any earlier warning.
         const drafts = state.drafts.map((d) =>
           d.index === regenIdx
             ? {
@@ -143,9 +175,13 @@ function composerReducer(
           drafts,
           errorMessage: null,
           regeneratingIndex: regenIdx,
+          freshness: null,
+          freshnessAcknowledged: true,
+          bufferedDraftEvents: [],
         };
       }
-      // Full generation — clear all drafts
+      // Full generation — clear all drafts. Reset freshness so the new
+      // verdict gates rendering.
       return {
         ...state,
         status: "generating",
@@ -153,10 +189,47 @@ function composerReducer(
         errorMessage: null,
         activeDraftIndex: null,
         regeneratingIndex: null,
+        freshness: null,
+        freshnessAcknowledged: false,
+        bufferedDraftEvents: [],
       };
     }
 
+    case "FRESHNESS_RECEIVED": {
+      // Auto-ack for green verdicts, rate-limited responses, and null
+      // (gate errored) so drafts render without user interaction.
+      const autoAck =
+        action.freshness === null ||
+        isRateLimited(action.freshness) ||
+        action.freshness.verdict === "green";
+      return {
+        ...state,
+        freshness: action.freshness,
+        freshnessAcknowledged: autoAck,
+      };
+    }
+
+    case "FRESHNESS_ACKNOWLEDGE": {
+      // Flush any buffered draft events through the reducer now that the
+      // user has acknowledged the warning.
+      let next: ComposerState = {
+        ...state,
+        freshnessAcknowledged: true,
+        bufferedDraftEvents: [],
+      };
+      for (const event of state.bufferedDraftEvents) {
+        next = composerReducer(next, event);
+      }
+      return next;
+    }
+
     case "DRAFT_START": {
+      if (shouldBufferFor(state)) {
+        return {
+          ...state,
+          bufferedDraftEvents: [...state.bufferedDraftEvents, action],
+        };
+      }
       // During single-draft regen, only accept events for the targeted index
       if (
         state.regeneratingIndex !== null &&
@@ -193,6 +266,12 @@ function composerReducer(
     }
 
     case "DRAFT_TEXT": {
+      if (shouldBufferFor(state)) {
+        return {
+          ...state,
+          bufferedDraftEvents: [...state.bufferedDraftEvents, action],
+        };
+      }
       if (
         state.regeneratingIndex !== null &&
         action.index !== state.regeneratingIndex
@@ -211,6 +290,12 @@ function composerReducer(
     }
 
     case "DRAFT_END": {
+      if (shouldBufferFor(state)) {
+        return {
+          ...state,
+          bufferedDraftEvents: [...state.bufferedDraftEvents, action],
+        };
+      }
       if (
         state.regeneratingIndex !== null &&
         action.index !== state.regeneratingIndex
@@ -317,7 +402,11 @@ function composerReducer(
     }
 
     case "RESET":
-      return { ...initialState, topic: state.topic, style: state.style };
+      return {
+        ...initialState,
+        topic: state.topic,
+        style: state.style,
+      };
 
     default:
       return state;
@@ -413,43 +502,52 @@ export function Composer({
 
             if (eventMatch && dataMatch) {
               const eventName = eventMatch[1];
-              let data: Record<string, unknown>;
+              let data: unknown;
               try {
                 data = JSON.parse(dataMatch[1]);
               } catch {
                 continue;
               }
 
+              if (eventName === "freshness") {
+                dispatch({
+                  type: "FRESHNESS_RECEIVED",
+                  freshness: data as FreshnessPayload,
+                });
+                continue;
+              }
+
+              const record = data as Record<string, unknown>;
               switch (eventName) {
                 case "draft_start":
                   dispatch({
                     type: "DRAFT_START",
-                    index: data.index as number,
-                    shareTrigger: (data.shareTrigger as string) ?? null,
+                    index: record.index as number,
+                    shareTrigger: (record.shareTrigger as string) ?? null,
                   });
                   break;
                 case "draft_text":
                   dispatch({
                     type: "DRAFT_TEXT",
-                    index: data.index as number,
-                    text: data.text as string,
+                    index: record.index as number,
+                    text: record.text as string,
                   });
                   break;
                 case "draft_end":
                   dispatch({
                     type: "DRAFT_END",
-                    index: data.index as number,
-                    draftId: (data.draftId as string) ?? null,
-                    content: (data.content as string) ?? "",
-                    shareTrigger: (data.shareTrigger as string) ?? "",
+                    index: record.index as number,
+                    draftId: (record.draftId as string) ?? null,
+                    content: (record.content as string) ?? "",
+                    shareTrigger: (record.shareTrigger as string) ?? "",
                   });
                   break;
                 case "error":
                   dispatch({
                     type: "GENERATION_ERROR",
                     message:
-                      (data.message as string) ??
-                      (data.error as string) ??
+                      (record.message as string) ??
+                      (record.error as string) ??
                       "Composition failed",
                   });
                   return;
@@ -656,6 +754,12 @@ export function Composer({
 
       {/* ── Center Panel: Drafts ──────────────────────────────── */}
       <div className="space-y-4">
+        <FreshnessBanner
+          freshness={state.freshness}
+          acknowledged={state.freshnessAcknowledged}
+          onAcknowledge={() => dispatch({ type: "FRESHNESS_ACKNOWLEDGE" })}
+        />
+
         {state.status === "idle" && !hasDrafts && (
           <EmptyState
             icon={<PencilLine weight="bold" className="size-7" />}

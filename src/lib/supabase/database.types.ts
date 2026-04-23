@@ -306,6 +306,50 @@ export type Database = {
           },
         ]
       }
+      freshness_checks: {
+        Row: {
+          created_at: string
+          external_signal: Json | null
+          id: string
+          run_id: string
+          self_repetition_risk: Json | null
+          sources: Json | null
+          topic: string
+          user_id: string
+          verdict: string
+        }
+        Insert: {
+          created_at?: string
+          external_signal?: Json | null
+          id?: string
+          run_id: string
+          self_repetition_risk?: Json | null
+          sources?: Json | null
+          topic: string
+          user_id: string
+          verdict: string
+        }
+        Update: {
+          created_at?: string
+          external_signal?: Json | null
+          id?: string
+          run_id?: string
+          self_repetition_risk?: Json | null
+          sources?: Json | null
+          topic?: string
+          user_id?: string
+          verdict?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freshness_checks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_metrics: {
         Row: {
           fetched_at: string | null
