@@ -4,7 +4,7 @@
 `blocked`
 
 ## Dependencies
-- Requires: #065 ✅, #066 ✅, #067 ✅, #068 ✅, #069, #070, #071, #072, #073, #074, #075, #076, #077, #078, #079, #080, #081
+- Requires: #065 ✅, #066 ✅, #067 ✅, #068 ✅, #069 ✅, #070, #071, #072, #073, #074, #075, #076, #077, #078, #079, #080, #081
 
 ## Description
 Comprehensive manual QA across the v3 consultant-layer rollout. Verify cross-feature flows end-to-end, confidence badges cover every analytics view, prompt-cache hit rate hits the Phase-1 target, and no regressions exist in v2 surfaces. This is the final gate before declaring v3 shipped.

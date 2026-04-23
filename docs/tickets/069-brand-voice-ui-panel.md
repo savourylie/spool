@@ -1,7 +1,7 @@
 # [TICKET-069] Brand Voice UI Panel
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #066 ✅, #068 ✅
@@ -10,13 +10,13 @@
 Ship the user-facing Brand Voice page at `/dashboard/understand/voice`. Displays the 11-dimension profile as an accordion with 2–3 real post excerpts per dimension, a confidence badge, and a "Refresh voice" button that invokes `/api/brand-voice/refresh`. This is the surface where the user answers "does this look like me?" and is the visible proof that the Composer's output (once wired in #070) is actually on-voice.
 
 ## Acceptance Criteria
-- [ ] New route `/dashboard/understand/voice/page.tsx` fetches the user's profile via server component and renders the panel.
-- [ ] New component `src/components/dashboard/brand-voice-panel.tsx` renders an accordion with one section per dimension. Each section shows: the pattern summary, 2–3 blockquoted excerpts, and a link to the source post.
-- [ ] Page header shows `<ConfidenceBadge />` reflecting `source_post_count` from the profile row.
-- [ ] When `confidence_tier === "directional"` (under 10 posts), a banner above the accordion reads "This profile is directional — we need 10+ posts to drive composition. The Composer won't use this profile yet." and the button label becomes "Refresh (directional)".
-- [ ] "Refresh voice" button calls `POST /api/brand-voice/refresh` with optimistic UI; shows streaming progress or a spinner; disables while in-flight.
-- [ ] Empty state (no profile yet): renders a hero-style card with "Extract your brand voice" CTA that runs the refresh endpoint.
-- [ ] Sidebar link added for `/dashboard/understand/voice` under Understand section.
+- [x] New route `/dashboard/understand/voice/page.tsx` fetches the user's profile via server component and renders the panel.
+- [x] New component `src/components/dashboard/brand-voice-panel.tsx` renders an accordion with one section per dimension. Each section shows: the pattern summary, 2–3 blockquoted excerpts, and a link to the source post.
+- [x] Page header shows `<ConfidenceBadge />` reflecting `source_post_count` from the profile row.
+- [x] When `confidence_tier === "directional"` (under 10 posts), a banner above the accordion reads "This profile is directional — we need 10+ posts to drive composition. The Composer won't use this profile yet." and the button label becomes "Refresh (directional)".
+- [x] "Refresh voice" button calls `POST /api/brand-voice/refresh` with optimistic UI; shows streaming progress or a spinner; disables while in-flight.
+- [x] Empty state (no profile yet): renders a hero-style card with "Extract your brand voice" CTA that runs the refresh endpoint.
+- [x] Sidebar link added for `/dashboard/understand/voice` under Understand section.
 
 ## Design Reference
 - **Components**: shadcn `Accordion`, `Badge`, `Button`, `Card`.
