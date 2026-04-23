@@ -4,7 +4,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Article } from "@phosphor-icons/react/dist/ssr/Article";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
+import { SpinnerGap } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -63,6 +65,9 @@ export function QualityScanner({ posts, predictionPosts, initialText }: QualityS
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [llmRefinement, setLlmRefinement] = useState<LLMRefinement | null>(null);
   const [isRefining, setIsRefining] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -191,9 +196,15 @@ export function QualityScanner({ posts, predictionPosts, initialText }: QualityS
       setPrediction(null);
       setLlmRefinement(null);
       setIsRefining(false);
+      setIsPublishing(false);
+      setIsPublished(false);
+      setPublishError(null);
       abortRef.current?.abort();
       return;
     }
+
+    setIsPublished(false);
+    setPublishError(null);
 
     debounceRef.current = setTimeout(() => {
       // Abort previous in-flight requests and create a fresh controller
@@ -286,6 +297,45 @@ export function QualityScanner({ posts, predictionPosts, initialText }: QualityS
   const handleApplyRewrite = (rewriteText: string) => {
     setText(rewriteText);
   };
+
+  const handleMarkPublished = useCallback(async () => {
+    const trimmed = text.trim();
+    if (!trimmed || prediction?.status !== "ok") {
+      return;
+    }
+
+    setIsPublishing(true);
+    setPublishError(null);
+
+    try {
+      const response = await fetch("/api/scanner/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: trimmed,
+          range: prediction.range,
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(
+          body.error ?? `Failed to mark text as published (${response.status})`,
+        );
+      }
+
+      setIsPublished(true);
+    } catch (error) {
+      setPublishError(
+        error instanceof Error
+          ? error.message
+          : "Failed to mark text as published",
+      );
+      setIsPublished(false);
+    } finally {
+      setIsPublishing(false);
+    }
+  }, [prediction, text]);
 
   // ── Render ─────────────────────────────────────────────────────
 
@@ -417,21 +467,52 @@ export function QualityScanner({ posts, predictionPosts, initialText }: QualityS
             onApply={handleApplyRewrite}
           />
 
-          {/* Cross-flow CTA: Scanner → Composer */}
-          {llmResult && !llmLoading && (
-            <div className="flex justify-center">
-              <Link
-                href={`/dashboard/create/compose?topic=${encodeURIComponent(
-                  text.trim().split(/(?<=[.!?])\s/)[0]?.slice(0, 120) || text.trim().slice(0, 120)
-                )}`}
-              >
-                <Button variant="candy" size="sm">
-                  Generate a better version
-                  <ArrowRight weight="bold" className="size-4" />
+          <div className="space-y-2">
+            <div className="flex flex-wrap justify-center gap-3">
+              {prediction?.status === "ok" && (
+                <Button
+                  variant={isPublished ? "ghost" : "outline"}
+                  size="sm"
+                  onClick={handleMarkPublished}
+                  disabled={isPublishing}
+                >
+                  {isPublishing ? (
+                    <SpinnerGap
+                      weight="bold"
+                      className="size-4 animate-spin"
+                    />
+                  ) : isPublished ? (
+                    <Check weight="bold" className="size-4" />
+                  ) : null}
+                  {isPublishing
+                    ? "Saving..."
+                    : isPublished
+                      ? "Published"
+                      : "Mark as published"}
                 </Button>
-              </Link>
+              )}
+
+              {/* Cross-flow CTA: Scanner → Composer */}
+              {llmResult && !llmLoading && (
+                <Link
+                  href={`/dashboard/create/compose?topic=${encodeURIComponent(
+                    text.trim().split(/(?<=[.!?])\s/)[0]?.slice(0, 120) || text.trim().slice(0, 120)
+                  )}`}
+                >
+                  <Button variant="candy" size="sm">
+                    Generate a better version
+                    <ArrowRight weight="bold" className="size-4" />
+                  </Button>
+                </Link>
+              )}
             </div>
-          )}
+
+            {publishError && (
+              <p className="text-center text-xs text-destructive">
+                {publishError}
+              </p>
+            )}
+          </div>
         </div>
       ) : (
         <EmptyState

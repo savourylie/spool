@@ -2,6 +2,7 @@
 
 import { SpinnerGap } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 
+import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import {
   formatNumber,
   type PredictionResult,
@@ -14,6 +15,7 @@ interface PredictionWidgetProps {
   prediction: PredictionResult;
   llmRefinement?: LLMRefinement | null;
   isRefining?: boolean;
+  showConfidenceBadge?: boolean;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -85,6 +87,7 @@ export function PredictionWidget({
   prediction,
   llmRefinement,
   isRefining,
+  showConfidenceBadge = false,
 }: PredictionWidgetProps) {
   if (prediction.status === "insufficient_data") {
     return (
@@ -110,15 +113,22 @@ export function PredictionWidget({
       <RangeBar p25={range.p25} p50={range.p50} p75={range.p75} />
 
       {/* Confidence + match count */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span
           className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase leading-none ${CONFIDENCE_STYLES[range.confidence]}`}
         >
           {range.confidence}
         </span>
-        <span className="text-[10px] text-muted-foreground">
-          Based on {range.matchedCount} similar posts
-        </span>
+        {showConfidenceBadge ? (
+          <ConfidenceBadge
+            sample={range.matchedCount}
+            className="px-2 py-0.5 text-[10px]"
+          />
+        ) : (
+          <span className="text-[10px] text-muted-foreground">
+            Based on {range.matchedCount} similar posts
+          </span>
+        )}
       </div>
 
       {/* LLM refinement */}

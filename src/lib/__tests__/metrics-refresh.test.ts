@@ -40,6 +40,11 @@ let mockRecentPostsResult: { data: unknown; error: unknown } = {
 };
 
 let mockPostUpsertData: { id: string } | null = { id: "post-uuid-1" };
+let mockAllPostsResult: { data: unknown; error: unknown } = {
+  data: [],
+  error: null,
+};
+const mockLinkPredictionToPost = vi.hoisted(() => vi.fn());
 
 // --- Supabase mock ---
 
@@ -63,16 +68,31 @@ function createMockFrom(table: string) {
 
   if (table === "posts") {
     return {
-      select: () => ({
-        eq: () => ({
-          order: () => ({
-            limit: () => ({
-              maybeSingle: () => Promise.resolve(mockLatestPostResult),
+      select: (fields: string) => {
+        if (fields === "published_at") {
+          return {
+            eq: () => ({
+              order: () => ({
+                limit: () => ({
+                  maybeSingle: () => Promise.resolve(mockLatestPostResult),
+                }),
+              }),
             }),
+          };
+        }
+
+        if (fields === "id, text_full") {
+          return {
+            eq: () => Promise.resolve(mockAllPostsResult),
+          };
+        }
+
+        return {
+          eq: () => ({
+            gte: () => Promise.resolve(mockRecentPostsResult),
           }),
-          gte: () => Promise.resolve(mockRecentPostsResult),
-        }),
-      }),
+        };
+      },
       upsert: (...args: unknown[]) => {
         trackCall(table, "upsert", ...args);
         return {
@@ -82,6 +102,12 @@ function createMockFrom(table: string) {
           }),
         };
       },
+      update: (...args: unknown[]) => {
+        trackCall(table, "update", ...args);
+        return {
+          eq: () => Promise.resolve({ error: null }),
+        };
+      },
     };
   }
 
@@ -89,6 +115,15 @@ function createMockFrom(table: string) {
     return {
       insert: (...args: unknown[]) => {
         trackCall(table, "insert", ...args);
+        return Promise.resolve({ error: null });
+      },
+    };
+  }
+
+  if (table === "post_replies") {
+    return {
+      upsert: (...args: unknown[]) => {
+        trackCall(table, "upsert", ...args);
         return Promise.resolve({ error: null });
       },
     };
@@ -110,18 +145,29 @@ vi.mock("@/lib/supabase/server", () => ({
 
 const mockGetUserPosts = vi.fn();
 const mockGetPostInsights = vi.fn();
+const mockGetPostReplies = vi.fn();
 
 vi.mock("@/lib/threads-api", () => ({
   ThreadsAPI: vi.fn().mockImplementation(function () {
     return {
       getUserPosts: mockGetUserPosts,
       getPostInsights: mockGetPostInsights,
+      getPostReplies: mockGetPostReplies,
     };
   }),
 }));
 
 vi.mock("@/lib/crypto", () => ({
   decrypt: vi.fn().mockReturnValue("decrypted-token"),
+}));
+
+vi.mock("@/lib/post-review", () => ({
+  linkPredictionToPost: mockLinkPredictionToPost,
+}));
+
+vi.mock("@/lib/topic-classification", () => ({
+  extractTopics: vi.fn().mockReturnValue([]),
+  classifyPostTopic: vi.fn().mockReturnValue(null),
 }));
 
 // --- Helpers ---
@@ -167,6 +213,11 @@ describe("refreshMetrics", () => {
     };
 
     mockPostUpsertData = { id: "post-uuid-1" };
+    mockAllPostsResult = {
+      data: [],
+      error: null,
+    };
+    mockLinkPredictionToPost.mockResolvedValue(null);
 
     mockUsersListResult = {
       data: [{ id: "user-uuid" }],
@@ -192,6 +243,7 @@ describe("refreshMetrics", () => {
       quotes: 2,
       shares: 6,
     });
+    mockGetPostReplies.mockResolvedValue([]);
   });
 
   it("upserts new posts and appends metrics for them", async () => {
@@ -220,6 +272,11 @@ describe("refreshMetrics", () => {
         likes: 20,
       }),
     );
+    expect(mockLinkPredictionToPost).toHaveBeenCalledWith({
+      userId: "user-uuid",
+      postId: "post-uuid-1",
+      postText: "New post",
+    });
   });
 
   it("only updates metrics for recent posts when no new posts exist", async () => {
@@ -273,7 +330,11 @@ describe("refreshMetrics", () => {
 
     const result = await refreshMetrics("user-uuid");
 
-    expect(result).toEqual({ newPosts: 0, updatedMetrics: 0 });
+    expect(result).toEqual({
+      newPosts: 0,
+      updatedMetrics: 0,
+      repliesStored: 0,
+    });
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining("token expired"),
     );
@@ -340,6 +401,19 @@ describe("refreshMetrics", () => {
     expect(result.newPosts).toBe(1);
     expect(result.updatedMetrics).toBe(1);
   });
+
+  it("continues when prediction linkback finds no match", async () => {
+    mockLinkPredictionToPost.mockResolvedValueOnce(null);
+
+    const result = await refreshMetrics("user-uuid");
+
+    expect(result.newPosts).toBe(1);
+    expect(mockLinkPredictionToPost).toHaveBeenCalledWith({
+      userId: "user-uuid",
+      postId: "post-uuid-1",
+      postText: "New post",
+    });
+  });
 });
 
 describe("refreshAllUsers", () => {
@@ -367,6 +441,11 @@ describe("refreshAllUsers", () => {
     };
 
     mockPostUpsertData = { id: "post-uuid-1" };
+    mockAllPostsResult = {
+      data: [],
+      error: null,
+    };
+    mockLinkPredictionToPost.mockResolvedValue(null);
 
     mockUsersListResult = {
       data: [{ id: "user-uuid" }],
@@ -374,6 +453,7 @@ describe("refreshAllUsers", () => {
     };
 
     mockGetUserPosts.mockResolvedValue([]);
+    mockGetPostReplies.mockResolvedValue([]);
     mockGetPostInsights.mockResolvedValue({
       views: 100,
       likes: 10,

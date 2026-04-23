@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { ThreadsAPI } from "@/lib/threads-api";
 import { decrypt } from "@/lib/crypto";
+import { linkPredictionToPost } from "@/lib/post-review";
 import { normalizeThreadsMediaType } from "@/lib/post-media-type";
 import { extractTopics, classifyPostTopic } from "@/lib/topic-classification";
 
@@ -77,6 +78,20 @@ export async function refreshMetrics(
         quotes: insights.quotes,
         shares: insights.shares,
       });
+      if (post.text?.trim()) {
+        try {
+          await linkPredictionToPost({
+            userId,
+            postId: insertedPost.id,
+            postText: post.text,
+          });
+        } catch (predictionLinkError) {
+          console.error(
+            `Failed to link prediction for post ${insertedPost.id}:`,
+            predictionLinkError,
+          );
+        }
+      }
       newPosts++;
     }
   }

@@ -3,6 +3,7 @@ import type { Json } from "@/lib/supabase/database.types";
 import { ThreadsAPI } from "@/lib/threads-api";
 import type { ThreadsPost } from "@/lib/threads-api.types";
 import { decrypt } from "@/lib/crypto";
+import { linkPredictionToPost } from "@/lib/post-review";
 import { ThreadsAPIError } from "@/lib/threads";
 import { normalizeThreadsMediaType } from "@/lib/post-media-type";
 import { extractTopics, classifyPostTopic } from "@/lib/topic-classification";
@@ -429,6 +430,7 @@ export async function runBackfill(userId: string, jobId: string) {
       });
 
       let postId = existingPostId;
+      const shouldAttemptPredictionLink = !postId;
 
       if (!postId) {
         await checkpoint({
@@ -483,6 +485,22 @@ export async function runBackfill(userId: string, jobId: string) {
 
       if (metricsError) {
         throw metricsError;
+      }
+
+      if (shouldAttemptPredictionLink && post.text?.trim()) {
+        try {
+          await linkPredictionToPost({
+            userId,
+            postId,
+            postText: post.text,
+          });
+        } catch (predictionLinkError) {
+          console.error("Failed to link post prediction during backfill:", {
+            userId,
+            postId,
+            error: predictionLinkError,
+          });
+        }
       }
 
       processed += 1;

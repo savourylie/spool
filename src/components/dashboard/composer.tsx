@@ -72,6 +72,7 @@ type ComposerAction =
       type: "DRAFT_END";
       index: number;
       draftId: string | null;
+      predictionId: string | null;
       content: string;
       shareTrigger: string;
     }
@@ -87,6 +88,9 @@ type ComposerAction =
     }
   | { type: "TOGGLE_EDIT"; index: number }
   | { type: "UPDATE_EDIT_TEXT"; index: number; text: string }
+  | { type: "START_PUBLISH"; index: number }
+  | { type: "PUBLISH_SUCCESS"; index: number }
+  | { type: "PUBLISH_ERROR"; index: number; message: string }
   | { type: "RESET" };
 
 function makeDraft(index: number): DraftState {
@@ -95,12 +99,16 @@ function makeDraft(index: number): DraftState {
     text: "",
     shareTrigger: null,
     draftId: null,
+    predictionId: null,
     isStreaming: false,
     isComplete: false,
     qualityScore: null,
     qualityIssues: [],
     isEditing: false,
     editText: "",
+    isPublishing: false,
+    isPublished: false,
+    publishError: null,
   };
 }
 
@@ -227,10 +235,14 @@ function composerReducer(
           ? {
               ...d,
               draftId: action.draftId,
+              predictionId: action.predictionId,
               isStreaming: false,
               isComplete: true,
               text: action.content || d.text,
               shareTrigger: action.shareTrigger || d.shareTrigger,
+              isPublishing: false,
+              isPublished: false,
+              publishError: null,
             }
           : d,
       );
@@ -293,17 +305,25 @@ function composerReducer(
     case "TOGGLE_EDIT": {
       const drafts = state.drafts.map((d) =>
         d.index === action.index
-          ? {
-              ...d,
-              isEditing: !d.isEditing,
-              // Entering edit mode: initialize editText from text
-              // Exiting edit mode: persist editText back to text
-              editText: !d.isEditing ? d.text : d.editText,
-              text: d.isEditing ? d.editText : d.text,
-              // Reset quality so it re-analyzes after edit
-              qualityScore: d.isEditing ? null : d.qualityScore,
-              qualityIssues: d.isEditing ? [] : d.qualityIssues,
-            }
+          ? (() => {
+              const leavingEditMode = d.isEditing;
+              const nextText = leavingEditMode ? d.editText : d.text;
+              const textChanged = leavingEditMode && d.editText !== d.text;
+
+              return {
+                ...d,
+                isEditing: !d.isEditing,
+                // Entering edit mode: initialize editText from text
+                // Exiting edit mode: persist editText back to text
+                editText: !d.isEditing ? d.text : d.editText,
+                text: nextText,
+                // Reset quality so it re-analyzes after edit
+                qualityScore: d.isEditing ? null : d.qualityScore,
+                qualityIssues: d.isEditing ? [] : d.qualityIssues,
+                isPublished: textChanged ? false : d.isPublished,
+                publishError: textChanged ? null : d.publishError,
+              };
+            })()
           : d,
       );
       return { ...state, drafts };
@@ -312,6 +332,38 @@ function composerReducer(
     case "UPDATE_EDIT_TEXT": {
       const drafts = state.drafts.map((d) =>
         d.index === action.index ? { ...d, editText: action.text } : d,
+      );
+      return { ...state, drafts };
+    }
+
+    case "START_PUBLISH": {
+      const drafts = state.drafts.map((d) =>
+        d.index === action.index
+          ? { ...d, isPublishing: true, publishError: null }
+          : d,
+      );
+      return { ...state, drafts };
+    }
+
+    case "PUBLISH_SUCCESS": {
+      const drafts = state.drafts.map((d) =>
+        d.index === action.index
+          ? { ...d, isPublishing: false, isPublished: true, publishError: null }
+          : d,
+      );
+      return { ...state, drafts };
+    }
+
+    case "PUBLISH_ERROR": {
+      const drafts = state.drafts.map((d) =>
+        d.index === action.index
+          ? {
+              ...d,
+              isPublishing: false,
+              isPublished: false,
+              publishError: action.message,
+            }
+          : d,
       );
       return { ...state, drafts };
     }
@@ -363,12 +415,24 @@ export function Composer({
       dispatch({ type: "START_GENERATION", regeneratingIndex });
 
       try {
+        const now = new Date();
+        const predictionContext = bestTimes[0]
+          ? {
+              dayOfWeek: bestTimes[0].day,
+              hourOfDay: bestTimes[0].hour,
+            }
+          : {
+              dayOfWeek: now.getDay(),
+              hourOfDay: now.getHours(),
+            };
+
         const response = await fetch("/api/compose", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             topic: state.topic,
             style: state.style || undefined,
+            predictionContext,
           }),
           signal: controller.signal,
         });
@@ -440,6 +504,7 @@ export function Composer({
                     type: "DRAFT_END",
                     index: data.index as number,
                     draftId: (data.draftId as string) ?? null,
+                    predictionId: (data.predictionId as string) ?? null,
                     content: (data.content as string) ?? "",
                     shareTrigger: (data.shareTrigger as string) ?? "",
                   });
@@ -474,7 +539,7 @@ export function Composer({
         });
       }
     },
-    [state.topic, state.style],
+    [bestTimes, state.topic, state.style],
   );
 
   // ── Auto quality analysis ──────────────────────────────────────
@@ -565,6 +630,47 @@ export function Composer({
   const handleSelectTopic = useCallback((topicName: string) => {
     dispatch({ type: "SET_TOPIC", topic: topicName });
   }, []);
+
+  const handleMarkPublished = useCallback(
+    async (index: number, draftText: string) => {
+      const draft = state.drafts.find((item) => item.index === index);
+      if (!draft?.predictionId) {
+        return;
+      }
+
+      dispatch({ type: "START_PUBLISH", index });
+
+      try {
+        const response = await fetch("/api/compose/publish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            predictionId: draft.predictionId,
+            draftText,
+          }),
+        });
+
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(
+            body.error ?? `Failed to mark draft as published (${response.status})`,
+          );
+        }
+
+        dispatch({ type: "PUBLISH_SUCCESS", index });
+      } catch (error) {
+        dispatch({
+          type: "PUBLISH_ERROR",
+          index,
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to mark draft as published",
+        });
+      }
+    },
+    [state.drafts],
+  );
 
   // ── Render ─────────────────────────────────────────────────────
 
@@ -712,6 +818,9 @@ export function Composer({
                 text,
               })
             }
+            onMarkPublished={(draftText) =>
+              handleMarkPublished(draft.index, draftText)
+            }
           />
         ))}
 
@@ -744,7 +853,12 @@ export function Composer({
             </div>
 
             {/* Prediction */}
-            {prediction && <PredictionWidget prediction={prediction} />}
+            {prediction && (
+              <PredictionWidget
+                prediction={prediction}
+                showConfidenceBadge
+              />
+            )}
           </>
         )}
 
