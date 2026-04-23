@@ -9,6 +9,7 @@ import {
   type ComposerUserContext,
   type ComposerTopPost,
 } from "@/lib/composer-prompt";
+import { getActiveVoiceProfile } from "@/lib/brand-voice";
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
 
 const MAX_TOPIC_LENGTH = 500;
@@ -53,43 +54,51 @@ export async function POST(request: NextRequest): Promise<Response> {
   // ── Fetch user context ─────────────────────────────────────────
   const supabase = createAdminClient();
 
-  const [metricsResult, postsResult, demographicsResult, tagsResult, statsResult] =
-    await Promise.all([
-      // Top posts with metrics (for WES ranking)
-      supabase.rpc("get_posts_with_metrics", {
-        p_user_id: userId,
-        p_sort_column: "views",
-        p_sort_order: "desc",
-        p_limit: 50,
-        p_offset: 0,
-      }),
-      // Full text for top posts (RPC only returns text_preview)
-      supabase
-        .from("posts")
-        .select("id, text_full")
-        .eq("user_id", userId)
-        .not("text_full", "is", null),
-      // Audience demographics
-      supabase
-        .from("demographics")
-        .select("dimension, key, value")
-        .eq("user_id", userId),
-      // Recent topic tags
-      supabase
-        .from("posts")
-        .select("topic_tag")
-        .eq("user_id", userId)
-        .not("topic_tag", "is", null)
-        .order("published_at", { ascending: false })
-        .limit(30),
-      // Latest follower count + last post timestamp
-      supabase
-        .from("daily_stats")
-        .select("followers_count")
-        .eq("user_id", userId)
-        .order("date", { ascending: false })
-        .limit(1),
-    ]);
+  const [
+    metricsResult,
+    postsResult,
+    demographicsResult,
+    tagsResult,
+    statsResult,
+    brandVoice,
+  ] = await Promise.all([
+    // Top posts with metrics (for WES ranking)
+    supabase.rpc("get_posts_with_metrics", {
+      p_user_id: userId,
+      p_sort_column: "views",
+      p_sort_order: "desc",
+      p_limit: 50,
+      p_offset: 0,
+    }),
+    // Full text for top posts (RPC only returns text_preview)
+    supabase
+      .from("posts")
+      .select("id, text_full")
+      .eq("user_id", userId)
+      .not("text_full", "is", null),
+    // Audience demographics
+    supabase
+      .from("demographics")
+      .select("dimension, key, value")
+      .eq("user_id", userId),
+    // Recent topic tags
+    supabase
+      .from("posts")
+      .select("topic_tag")
+      .eq("user_id", userId)
+      .not("topic_tag", "is", null)
+      .order("published_at", { ascending: false })
+      .limit(30),
+    // Latest follower count + last post timestamp
+    supabase
+      .from("daily_stats")
+      .select("followers_count")
+      .eq("user_id", userId)
+      .order("date", { ascending: false })
+      .limit(1),
+    // Brand voice profile (TICKET-070 — driver when usable+)
+    getActiveVoiceProfile(userId),
+  ]);
 
   // Build text lookup for full post text
   const textLookup = new Map(
@@ -176,6 +185,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     },
     followerCount:
       (statsResult.data ?? [])[0]?.followers_count ?? 0,
+    brandVoice,
   };
 
   // ── Build prompt ───────────────────────────────────────────────

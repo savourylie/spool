@@ -7,6 +7,7 @@
  */
 
 import type { QualityIssue, IssueCategory, IssueSeverity } from "@/lib/quality-heuristics";
+import type { BrandVoiceRecord } from "@/lib/brand-voice-types";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -15,6 +16,9 @@ export interface UserContext {
   recentPosts: Array<{ text: string; publishedAt: string }>;
   /** Distinct topic tags from user's posts */
   topicTags: string[];
+  /** Brand voice profile (TICKET-070). Observer-only — Scanner flags drift
+   *  but never rewrites toward this. See `src/lib/prompts/brand-voice-usage.md`. */
+  brandVoice?: BrandVoiceRecord | null;
 }
 
 export interface SuggestedRewrite {
@@ -45,6 +49,7 @@ const VALID_LLM_CATEGORIES: Set<IssueCategory> = new Set([
   "coherence",
   "similarity",
   "shareability",
+  "voice-drift",
 ]);
 
 const VALID_SEVERITIES: Set<IssueSeverity> = new Set(["high", "medium", "low"]);

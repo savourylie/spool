@@ -7,11 +7,21 @@
  *
  * Pure module — no database calls. DB fetching happens in the route handler.
  *
- * Depends on: llm-client (TICKET-037), prompt loader (TICKET-067).
+ * Brand voice discipline (TICKET-070): Composer is the DRIVER — drafts
+ * must match the creator's profile patterns. Gated by confidence tier.
+ * See `src/lib/prompts/brand-voice-usage.md` for the full driver-vs-observer
+ * contract and why Scanner must NOT mirror this pattern.
+ *
+ * Depends on: llm-client (TICKET-037), prompt loader (TICKET-067),
+ * brand voice extraction (TICKET-068).
  */
 
 import type { SystemBlock } from "@/lib/llm-client";
 import { loadPrompt } from "@/lib/prompts/loader";
+import {
+  BRAND_VOICE_DIMENSIONS,
+  type BrandVoiceRecord,
+} from "@/lib/brand-voice-types";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -36,6 +46,10 @@ export interface ComposerUserContext {
     recommendedWaitHours: number;
   };
   followerCount: number;
+  /** Brand voice profile (TICKET-070). Injected as driver when confidence
+   *  tier is usable-or-higher and source corpus is non-empty. See
+   *  `src/lib/prompts/brand-voice-usage.md`. */
+  brandVoice?: BrandVoiceRecord | null;
 }
 
 export interface ComposerInput {
@@ -188,13 +202,62 @@ export function buildComposerPrompt(input: ComposerInput): {
     userMessage += `\nStyle: ${style}`;
   }
 
+  // Brand voice block (TICKET-070): injected as driver when the profile is
+  // trustworthy. Below "usable" tier or with an empty-corpus stub, fall back
+  // to the top-10-posts anchor alone.
+  const brandVoice = userContext.brandVoice;
+  const useBrandVoice =
+    !!brandVoice &&
+    brandVoice.sourcePostCount > 0 &&
+    brandVoice.confidenceTier !== "directional";
+
+  const blocks: SystemBlock[] = [
+    { text: knowledgePrefix, cacheable: true },
+    { text: creatorProfile },
+  ];
+
+  if (useBrandVoice && brandVoice) {
+    blocks.push({ text: buildBrandVoiceDriverBlock(brandVoice) });
+  }
+
   return {
-    systemPrompt: [
-      { text: knowledgePrefix, cacheable: true },
-      { text: creatorProfile },
-    ],
+    systemPrompt: blocks,
     userMessage,
   };
+}
+
+// ── Brand Voice Driver Block (TICKET-070) ────────────────────────────
+
+/**
+ * Build the Composer's brand-voice injection block. Each of the 11
+ * dimensions is rendered as pattern + up to 2 evidence excerpts. The
+ * block title tells the LLM to treat these as composition constraints
+ * ("compose to match"), matching the DRIVER discipline documented in
+ * `src/lib/prompts/brand-voice-usage.md`.
+ */
+function buildBrandVoiceDriverBlock(record: BrandVoiceRecord): string {
+  const dimensionLines: string[] = [];
+
+  for (const dim of BRAND_VOICE_DIMENSIONS) {
+    const entry = record.profile[dim];
+    if (!entry) continue;
+    const excerpts = entry.evidence.slice(0, 2);
+    const excerptLines = excerpts.map((e) => `  - "${e.excerpt}"`).join("\n");
+
+    dimensionLines.push(
+      `### ${dim}\nPattern: ${entry.pattern}${
+        excerptLines ? `\nExamples:\n${excerptLines}` : ""
+      }`,
+    );
+  }
+
+  return [
+    "## User's brand voice (compose to match)",
+    "",
+    `These 11 dimensions describe the creator's established voice (extracted from ${record.sourcePostCount} posts, confidence: ${record.confidenceTier}). Match these patterns in every draft — sentence structure, rhythm, humor, analogies, taboo phrases. The evidence examples are diagnostic — do NOT copy them verbatim.`,
+    "",
+    dimensionLines.join("\n\n"),
+  ].join("\n");
 }
 
 // ── Response Parser ──────────────────────────────────────────────────

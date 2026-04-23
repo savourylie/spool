@@ -11,7 +11,10 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { resolveLLMClient } from "@/lib/llm-resolver";
 import { loadPrompt } from "@/lib/prompts/loader";
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
-import { getConfidenceTier, type ConfidenceTier } from "@/lib/data-confidence";
+import {
+  getConfidenceTier,
+  type ConfidenceTier,
+} from "@/lib/data-confidence";
 import type { SystemBlock } from "@/lib/llm-client";
 import type { Json } from "@/lib/supabase/database.types";
 import {
@@ -326,4 +329,65 @@ async function upsertProfile(
   }
 
   return updatedAt;
+}
+
+// ── Active profile fetch (TICKET-070) ────────────────────────────────
+
+const VALID_TIERS: ReadonlySet<ConfidenceTier> = new Set([
+  "directional",
+  "weak",
+  "usable",
+  "strong",
+  "deep",
+]);
+
+/**
+ * Fetch the creator's active brand voice profile. Returns `null` when no
+ * row exists or when the stored JSON fails validation. Gating (confidence
+ * tier, stub detection) is left to the caller so Composer and Scanner can
+ * apply their asymmetric rules — see `src/lib/prompts/brand-voice-usage.md`.
+ */
+export async function getActiveVoiceProfile(
+  userId: string,
+): Promise<BrandVoiceRecord | null> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("brand_voice_profiles")
+    .select("profile, source_post_count, confidence_tier, updated_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      `[brand-voice] Failed to load profile for user ${userId}: ${error.message}`,
+    );
+    return null;
+  }
+  if (!data) return null;
+
+  let profile: BrandVoiceProfile;
+  try {
+    profile = parseAndValidateBrandVoiceJson(JSON.stringify(data.profile));
+  } catch (err) {
+    console.error(
+      `[brand-voice] Stored profile for user ${userId} failed validation:`,
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
+
+  const rawTier = data.confidence_tier as string;
+  const confidenceTier: ConfidenceTier = VALID_TIERS.has(
+    rawTier as ConfidenceTier,
+  )
+    ? (rawTier as ConfidenceTier)
+    : "directional";
+
+  return {
+    profile,
+    sourcePostCount: data.source_post_count,
+    confidenceTier,
+    updatedAt: data.updated_at,
+  };
 }

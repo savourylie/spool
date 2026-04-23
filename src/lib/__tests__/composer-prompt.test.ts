@@ -5,6 +5,11 @@ import {
   type ComposerUserContext,
 } from "../composer-prompt";
 import { flattenSystemBlocks } from "../llm-client";
+import {
+  BRAND_VOICE_DIMENSIONS,
+  type BrandVoiceProfile,
+  type BrandVoiceRecord,
+} from "../brand-voice-types";
 
 // ── Fixtures ──────────────────────────────────────────────────────────
 
@@ -51,6 +56,43 @@ const FULL_CONTEXT: ComposerUserContext = {
     recommendedWaitHours: 22.5,
   },
   followerCount: 5200,
+};
+
+// ── Brand Voice Fixtures (TICKET-070) ─────────────────────────────────
+
+function buildProfile(): BrandVoiceProfile {
+  const profile = {} as BrandVoiceProfile;
+  for (const [i, dim] of BRAND_VOICE_DIMENSIONS.entries()) {
+    profile[dim] = {
+      pattern: `Pattern for ${dim} dimension number ${i}.`,
+      evidence: [
+        { postId: `post-${i}-a`, excerpt: `Example excerpt A for ${dim}` },
+        { postId: `post-${i}-b`, excerpt: `Example excerpt B for ${dim}` },
+      ],
+    };
+  }
+  return profile;
+}
+
+const STUB_BRAND_VOICE: BrandVoiceRecord = {
+  profile: buildProfile(),
+  sourcePostCount: 0,
+  confidenceTier: "directional",
+  updatedAt: "2026-04-23T00:00:00Z",
+};
+
+const DIRECTIONAL_BRAND_VOICE: BrandVoiceRecord = {
+  profile: buildProfile(),
+  sourcePostCount: 3,
+  confidenceTier: "directional",
+  updatedAt: "2026-04-23T00:00:00Z",
+};
+
+const USABLE_BRAND_VOICE: BrandVoiceRecord = {
+  profile: buildProfile(),
+  sourcePostCount: 12,
+  confidenceTier: "usable",
+  updatedAt: "2026-04-23T00:00:00Z",
 };
 
 const VALID_RESPONSE = `[TRIGGER: voice-of-the-reader]
@@ -189,6 +231,58 @@ describe("buildComposerPrompt", () => {
     );
     expect(variableBlock).toBeDefined();
     expect(variableBlock?.cacheable).toBeFalsy();
+  });
+
+  // ── Brand Voice Gating (TICKET-070) ──────────────────────────────────
+
+  it("does NOT inject brand voice when brandVoice is absent", () => {
+    const { systemPrompt } = buildComposerPrompt({
+      topic: "focus time",
+      userContext: FULL_CONTEXT,
+    });
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).not.toContain("User's brand voice");
+  });
+
+  it("does NOT inject brand voice when confidence tier is directional", () => {
+    const { systemPrompt } = buildComposerPrompt({
+      topic: "focus time",
+      userContext: { ...FULL_CONTEXT, brandVoice: DIRECTIONAL_BRAND_VOICE },
+    });
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).not.toContain("User's brand voice");
+  });
+
+  it("does NOT inject brand voice for the empty-corpus stub profile", () => {
+    const { systemPrompt } = buildComposerPrompt({
+      topic: "focus time",
+      userContext: { ...FULL_CONTEXT, brandVoice: STUB_BRAND_VOICE },
+    });
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).not.toContain("User's brand voice");
+  });
+
+  it("injects brand voice when tier is usable and corpus is non-empty", () => {
+    const { systemPrompt } = buildComposerPrompt({
+      topic: "focus time",
+      userContext: { ...FULL_CONTEXT, brandVoice: USABLE_BRAND_VOICE },
+    });
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("User's brand voice (compose to match)");
+    expect(joined).toContain("Pattern for sentence_structure");
+    expect(joined).toContain("Example excerpt A for humor");
+  });
+
+  it("injects the brand voice block as an uncached SystemBlock", () => {
+    const { systemPrompt } = buildComposerPrompt({
+      topic: "focus time",
+      userContext: { ...FULL_CONTEXT, brandVoice: USABLE_BRAND_VOICE },
+    });
+    const brandVoiceBlock = systemPrompt.find((b) =>
+      b.text.includes("User's brand voice (compose to match)"),
+    );
+    expect(brandVoiceBlock).toBeDefined();
+    expect(brandVoiceBlock?.cacheable).toBeFalsy();
   });
 });
 

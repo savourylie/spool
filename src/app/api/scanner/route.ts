@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { LLMAuthError } from "@/lib/llm-client";
 import { resolveLLMClient } from "@/lib/llm-resolver";
 import { analyzeWithLLMStream, type UserContext } from "@/lib/quality-llm";
+import { getActiveVoiceProfile } from "@/lib/brand-voice";
 
 const MAX_TEXT_LENGTH = 2000;
 
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   // ── Fetch user context ─────────────────────────────────────────
   const supabase = createAdminClient();
-  const [postsResult, tagsResult] = await Promise.all([
+  const [postsResult, tagsResult, brandVoice] = await Promise.all([
     supabase
       .from("posts")
       .select("text_full, published_at")
@@ -55,6 +56,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       .select("topic_tag")
       .eq("user_id", userId)
       .not("topic_tag", "is", null),
+    // Brand voice profile (TICKET-070 — observer, any tier)
+    getActiveVoiceProfile(userId),
   ]);
 
   const userContext: UserContext = {
@@ -69,6 +72,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           .filter((t): t is string => t != null),
       ),
     ],
+    brandVoice,
   };
 
   // ── Stream LLM analysis ────────────────────────────────────────

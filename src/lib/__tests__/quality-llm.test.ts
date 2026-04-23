@@ -5,6 +5,11 @@ import {
   type UserContext,
 } from "../quality-llm";
 import { flattenSystemBlocks } from "../llm-client";
+import {
+  BRAND_VOICE_DIMENSIONS,
+  type BrandVoiceProfile,
+  type BrandVoiceRecord,
+} from "../brand-voice-types";
 
 // ── Fixtures ──────────────────────────────────────────────────────────
 
@@ -19,6 +24,36 @@ const FULL_CONTEXT: UserContext = {
     { text: "Hot take: most productivity advice is recycled.", publishedAt: "2026-03-18T08:00:00Z" },
   ],
   topicTags: ["tech", "productivity", "AI"],
+};
+
+// ── Brand Voice Fixtures (TICKET-070) ─────────────────────────────────
+
+function buildProfile(): BrandVoiceProfile {
+  const profile = {} as BrandVoiceProfile;
+  for (const [i, dim] of BRAND_VOICE_DIMENSIONS.entries()) {
+    profile[dim] = {
+      pattern: `Pattern for ${dim} dimension number ${i}.`,
+      evidence: [
+        { postId: `post-${i}-a`, excerpt: `Example excerpt A for ${dim}` },
+        { postId: `post-${i}-b`, excerpt: `Example excerpt B for ${dim}` },
+      ],
+    };
+  }
+  return profile;
+}
+
+const STUB_BRAND_VOICE: BrandVoiceRecord = {
+  profile: buildProfile(),
+  sourcePostCount: 0,
+  confidenceTier: "directional",
+  updatedAt: "2026-04-23T00:00:00Z",
+};
+
+const USABLE_BRAND_VOICE: BrandVoiceRecord = {
+  profile: buildProfile(),
+  sourcePostCount: 12,
+  confidenceTier: "usable",
+  updatedAt: "2026-04-23T00:00:00Z",
 };
 
 const VALID_RESPONSE = JSON.stringify({
@@ -94,6 +129,45 @@ describe("buildScannerPrompt", () => {
     );
     expect(variableBlock).toBeDefined();
     expect(variableBlock?.cacheable).toBeFalsy();
+  });
+
+  // ── Brand Voice Observer (TICKET-070) ────────────────────────────────
+
+  it("does NOT inject observer block when brandVoice is absent", () => {
+    const { systemPrompt } = buildScannerPrompt("My draft post", FULL_CONTEXT);
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).not.toContain("User's established voice");
+  });
+
+  it("does NOT inject observer block for the empty-corpus stub profile", () => {
+    const { systemPrompt } = buildScannerPrompt("My draft post", {
+      ...FULL_CONTEXT,
+      brandVoice: STUB_BRAND_VOICE,
+    });
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).not.toContain("User's established voice");
+  });
+
+  it("injects the observer block with 'flag drift only' phrasing when profile is non-stub", () => {
+    const { systemPrompt } = buildScannerPrompt("My draft post", {
+      ...FULL_CONTEXT,
+      brandVoice: USABLE_BRAND_VOICE,
+    });
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("User's established voice (flag drift only — do not rewrite toward this)");
+    expect(joined).toContain("Pattern for sentence_structure");
+  });
+
+  it("injects the observer block as an uncached SystemBlock", () => {
+    const { systemPrompt } = buildScannerPrompt("My draft post", {
+      ...FULL_CONTEXT,
+      brandVoice: USABLE_BRAND_VOICE,
+    });
+    const observerBlock = systemPrompt.find((b) =>
+      b.text.includes("User's established voice (flag drift only"),
+    );
+    expect(observerBlock).toBeDefined();
+    expect(observerBlock?.cacheable).toBeFalsy();
   });
 });
 
@@ -232,5 +306,26 @@ describe("parseAndValidateResponse", () => {
     });
     const result = parseAndValidateResponse(bad);
     expect(result.issues).toEqual([]);
+  });
+
+  it("accepts voice-drift as a valid LLM category (TICKET-070)", () => {
+    const withDrift = JSON.stringify({
+      issues: [
+        {
+          id: "voice-drift-sentence-length",
+          severity: "medium",
+          category: "voice-drift",
+          description: "Draft uses 40-word sentences; established pattern is short fragments.",
+          suggestion: "Break into shorter sentences.",
+        },
+      ],
+      rewrites: [],
+      shareability: { score: 50, topTrigger: "none", reasoning: "" },
+      tone: "OK",
+    });
+    const result = parseAndValidateResponse(withDrift);
+    expect(result.issues).toHaveLength(1);
+    expect(result.issues[0].category).toBe("voice-drift");
+    expect(result.issues[0].id).toBe("voice-drift-sentence-length");
   });
 });

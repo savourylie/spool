@@ -38,7 +38,9 @@ export type IssueCategory =
   | "tone"
   | "coherence"
   | "similarity"
-  | "shareability";
+  | "shareability"
+  // Brand voice drift (TICKET-070)
+  | "voice-drift";
 
 export interface QualityIssue {
   id: string;
