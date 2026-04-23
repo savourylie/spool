@@ -1,7 +1,7 @@
 # [TICKET-071] Freshness Gate Infrastructure
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #065 ✅, #067 ✅
@@ -10,12 +10,12 @@
 Build the pre-draft gate that stops the Composer from generating on dead topics or topics the user just covered. Combines an external freshness signal (reuses existing `/api/grok` from #059) with a self-repetition check (semantic cluster match against the user's recent posts in the last 7/14/30 days). Emits a Green / Yellow / Red verdict and writes every check to an audit log. Wire the gate into the Composer pre-draft flow as a banner with a "proceed anyway" escape hatch.
 
 ## Acceptance Criteria
-- [ ] Supabase migration creates `freshness_checks` table with: `run_id uuid`, `user_id uuid`, `topic text`, `verdict text check (verdict in ('green','yellow','red'))`, `external_signal jsonb`, `self_repetition_risk jsonb`, `sources jsonb`, `created_at timestamptz default now()`.
-- [ ] `src/lib/freshness-gate.ts` exports `checkTopicFreshness(topic: string, userId: string): Promise<FreshnessResult>` returning `{ verdict, externalSignal, selfRepetitionRisk, sources, runId }`.
-- [ ] External-signal path calls the existing `/api/grok` internal route (or its library) and classifies saturation into `green`/`yellow`/`red` per the S14 rule from `src/lib/prompts/algorithm.md`.
-- [ ] Self-repetition path: semantic cluster match against the user's posts from last 7 / 14 / 30 days using `src/lib/topic-model.ts` clusters; risk is `high` if the topic hits a cluster with ≥2 posts in 7 days, `medium` for 14 days, `low` for 30 days, `none` otherwise.
-- [ ] Every call writes a row to `freshness_checks` with full verdict, signals, and sources.
-- [ ] Composer flow: the `/api/compose` endpoint runs the gate before the LLM draft; response includes a `freshness` payload; Composer UI shows a banner with the verdict, source citations, and a "Compose anyway" button.
+- [x] Supabase migration creates `freshness_checks` table with: `run_id uuid`, `user_id uuid`, `topic text`, `verdict text check (verdict in ('green','yellow','red'))`, `external_signal jsonb`, `self_repetition_risk jsonb`, `sources jsonb`, `created_at timestamptz default now()`.
+- [x] `src/lib/freshness-gate.ts` exports `checkTopicFreshness(topic: string, userId: string): Promise<FreshnessResult>` returning `{ verdict, externalSignal, selfRepetitionRisk, sources, runId }`.
+- [x] External-signal path calls the existing `/api/grok` internal route (or its library) and classifies saturation into `green`/`yellow`/`red` per the S14 rule from `src/lib/prompts/algorithm.md`.
+- [x] Self-repetition path: semantic cluster match against the user's posts from last 7 / 14 / 30 days using `src/lib/topic-model.ts` clusters; risk is `high` if the topic hits a cluster with ≥2 posts in 7 days, `medium` for 14 days, `low` for 30 days, `none` otherwise.
+- [x] Every call writes a row to `freshness_checks` with full verdict, signals, and sources.
+- [x] Composer flow: the `/api/compose` endpoint runs the gate before the LLM draft; response includes a `freshness` payload; Composer UI shows a banner with the verdict, source citations, and a "Compose anyway" button.
 
 ## Implementation Notes
 - `run_id` lets a single UI interaction group multiple checks (e.g., if the user types 3 topics); use it as a foreign key from any future review surfaces.

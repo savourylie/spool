@@ -1,10 +1,10 @@
 # [TICKET-072] Today Hub Freshness Filter + Audit Surface
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #071
+- Requires: #071 ✅
 
 ## Description
 Pipe Today Hub's "What to post" candidates through the freshness gate so only Green and reframed-Yellow suggestions surface. Add a lightweight health surface — a small "Freshness log health" card — that visualizes recent gate verdicts to help the user see drift patterns. The health card ships as a stub here and fills in once the `/dashboard/understand/reviews` page lands in #075; until then it shows a preview of last-7-days verdict distribution.
