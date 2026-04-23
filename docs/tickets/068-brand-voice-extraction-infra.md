@@ -1,10 +1,10 @@
 # [TICKET-068] Brand Voice Extraction Infrastructure
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #067
+- Requires: #067 ✅
 
 ## Description
 Build the backend that extracts a qualitative brand voice profile across 11 dimensions (sentence structure, tone switching, emotional expression, knowledge presentation, fan-vs-critic reply tone, analogies, humor, self-reference, taboo phrases, paragraph rhythm, comment-reply characteristics). This is the foundation for F1 — the Composer will use it as a primary voice driver, and the Scanner will use it as an observer to flag drift. The profile is extracted on demand from the user's posts + comment replies, persisted as JSONB in Supabase, and refreshed when the user clicks a button or the post count crosses a threshold.

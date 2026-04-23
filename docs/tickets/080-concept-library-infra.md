@@ -1,10 +1,10 @@
 # [TICKET-080] Concept Library Infrastructure
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #065 ✅, #067
+- Requires: #065 ✅, #067 ✅
 
 ## Description
 Build the classifier that extracts concepts and analogies from every post, the `concept_ledger` table to persist them, and the incremental update path that catches new posts as they arrive via backfill. This is the foundation for the "have I explained this before?" surface (#081). The ledger tracks `{concept, analogy, post_id, seen_at}` rows plus a computed reuse risk aggregate (green / yellow / red) per concept.
