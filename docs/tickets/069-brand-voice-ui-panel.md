@@ -1,10 +1,10 @@
 # [TICKET-069] Brand Voice UI Panel
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #066 ✅, #068
+- Requires: #066 ✅, #068 ✅
 
 ## Description
 Ship the user-facing Brand Voice page at `/dashboard/understand/voice`. Displays the 11-dimension profile as an accordion with 2–3 real post excerpts per dimension, a confidence badge, and a "Refresh voice" button that invokes `/api/brand-voice/refresh`. This is the surface where the user answers "does this look like me?" and is the visible proof that the Composer's output (once wired in #070) is actually on-voice.

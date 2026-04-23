@@ -1,10 +1,10 @@
 # [TICKET-070] Brand Voice Composer + Scanner Wiring
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #068
+- Requires: #068 ✅
 
 ## Description
 Wire the brand voice profile into the Composer as the primary voice driver and into the Scanner as an observer. This codifies the AK discipline: the profile **drives composition** only in Composer; Scanner uses it as reference to flag drift but never pulls text toward it. Prevents feedback-loop homogenization. Also publish a short discipline doc so future LLM-integrators don't accidentally invert the pattern.
