@@ -2,10 +2,12 @@ import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
 const DASHBOARD_FILES = [
+  "../page.tsx",
   "../layout.tsx",
-  "../posts/page.tsx",
-  "../timing/page.tsx",
-  "../audience/page.tsx",
+  "../create/compose/page.tsx",
+  "../insights/page.tsx",
+  "../understand/page.tsx",
+  "../understand/audience/page.tsx",
 ] as const;
 
 describe("dashboard latest backfill source", () => {

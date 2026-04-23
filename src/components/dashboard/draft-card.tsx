@@ -5,6 +5,7 @@ import { ClipboardText } from "@phosphor-icons/react/dist/ssr/ClipboardText";
 import { ArrowsClockwise } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise";
 import { Pencil } from "@phosphor-icons/react/dist/ssr/Pencil";
 import { Check } from "@phosphor-icons/react/dist/ssr/Check";
+import { SpinnerGap } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 
 import { cn } from "@/lib/utils";
 import { StickerCard, StickerCardContent } from "@/components/ui/card";
@@ -18,12 +19,16 @@ export interface DraftState {
   text: string;
   shareTrigger: string | null;
   draftId: string | null;
+  predictionId: string | null;
   isStreaming: boolean;
   isComplete: boolean;
   qualityScore: number | null;
   qualityIssues: QualityIssue[];
   isEditing: boolean;
   editText: string;
+  isPublishing: boolean;
+  isPublished: boolean;
+  publishError: string | null;
 }
 
 interface DraftCardProps {
@@ -33,6 +38,7 @@ interface DraftCardProps {
   onRegenerate: () => void;
   onToggleEdit: () => void;
   onEditTextChange: (text: string) => void;
+  onMarkPublished: (draftText: string) => void;
 }
 
 // ── Share-trigger styles ─────────────────────────────────────────────
@@ -114,6 +120,7 @@ export function DraftCard({
   onRegenerate,
   onToggleEdit,
   onEditTextChange,
+  onMarkPublished,
 }: DraftCardProps) {
   const [copied, setCopied] = useState(false);
 
@@ -220,6 +227,35 @@ export function DraftCard({
               <Pencil weight="bold" className="size-4" />
               {draft.isEditing ? "Done" : "Edit"}
             </Button>
+
+            {draft.predictionId && (
+              <Button
+                variant={draft.isPublished ? "ghost" : "outline"}
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMarkPublished(displayText);
+                }}
+                disabled={draft.isStreaming || draft.isPublishing}
+              >
+                {draft.isPublishing ? (
+                  <SpinnerGap weight="bold" className="size-4 animate-spin" />
+                ) : draft.isPublished ? (
+                  <Check weight="bold" className="size-4" />
+                ) : null}
+                {draft.isPublishing
+                  ? "Saving..."
+                  : draft.isPublished
+                    ? "Published"
+                    : "Mark as published"}
+              </Button>
+            )}
+
+            {draft.publishError && (
+              <p className="w-full text-xs text-destructive">
+                {draft.publishError}
+              </p>
+            )}
           </div>
         )}
       </StickerCardContent>

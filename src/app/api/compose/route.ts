@@ -11,6 +11,11 @@ import {
   type ComposerTopPost,
 } from "@/lib/composer-prompt";
 import { getActiveVoiceProfile } from "@/lib/brand-voice";
+import {
+  predictEngagement,
+  type HistoricalPost,
+} from "@/lib/engagement-prediction";
+import { snapshotPrediction } from "@/lib/post-review";
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
 import {
   checkTopicFreshness,
@@ -30,6 +35,33 @@ type FreshnessEventPayload =
   | { runId: string; rateLimited: true }
   | null;
 
+interface PredictionContext {
+  dayOfWeek: number;
+  hourOfDay: number;
+}
+
+function parsePredictionContext(value: unknown): PredictionContext | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const dayOfWeek = Number((value as { dayOfWeek?: number }).dayOfWeek);
+  const hourOfDay = Number((value as { hourOfDay?: number }).hourOfDay);
+
+  if (
+    !Number.isInteger(dayOfWeek) ||
+    dayOfWeek < 0 ||
+    dayOfWeek > 6 ||
+    !Number.isInteger(hourOfDay) ||
+    hourOfDay < 0 ||
+    hourOfDay > 23
+  ) {
+    return null;
+  }
+
+  return { dayOfWeek, hourOfDay };
+}
+
 export async function POST(request: NextRequest): Promise<Response> {
   // ── Auth ────────────────────────────────────────────────────────
   const userId = getSession(request);
@@ -38,7 +70,11 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
 
   // ── Parse & validate body ──────────────────────────────────────
-  let body: { topic?: string; style?: string };
+  let body: {
+    topic?: string;
+    style?: string;
+    predictionContext?: PredictionContext;
+  };
   try {
     body = await request.json();
   } catch {
@@ -64,6 +100,11 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   const style =
     typeof body.style === "string" ? body.style.trim() || undefined : undefined;
+  const predictionContext =
+    parsePredictionContext(body.predictionContext) ?? {
+      dayOfWeek: new Date().getDay(),
+      hourOfDay: new Date().getHours(),
+    };
 
   // ── Freshness gate (TICKET-071) ────────────────────────────────
   // Advisory pre-draft check. Never blocks — always proceed to draft. The
@@ -186,6 +227,13 @@ export async function POST(request: NextRequest): Promise<Response> {
     quotes: Number(row.quotes),
     shares: Number(row.shares),
     wes: row.wes,
+  }));
+  const historicalPredictionPosts: HistoricalPost[] = metricsRows.map((row) => ({
+    views: Number(row.views),
+    media_type: row.media_type,
+    text_length: (row.text_preview ?? "").length,
+    published_at: row.published_at,
+    topic_tag: null,
   }));
 
   // Deduplicate topic tags
@@ -342,9 +390,40 @@ export async function POST(request: NextRequest): Promise<Response> {
           } else {
             const savedIds = (savedDrafts ?? []).map((d) => d.id);
             for (let i = 0; i < drafts.length; i++) {
+              let predictionId: string | null = null;
+              const prediction = predictEngagement(historicalPredictionPosts, {
+                mediaType: "TEXT",
+                textLength: drafts[i].content.length,
+                dayOfWeek: predictionContext.dayOfWeek,
+                hourOfDay: predictionContext.hourOfDay,
+              });
+
+              if (prediction.status === "ok") {
+                try {
+                  predictionId = await snapshotPrediction({
+                    userId,
+                    draftText: drafts[i].content,
+                    ranges: prediction.range,
+                    driverFactors: {
+                      source: "composer",
+                      topic,
+                      style: style ?? null,
+                      shareTrigger: drafts[i].shareTrigger,
+                      predictionContext: {
+                        dayOfWeek: predictionContext.dayOfWeek,
+                        hourOfDay: predictionContext.hourOfDay,
+                      },
+                    },
+                  });
+                } catch (predictionError) {
+                  console.error("Failed to snapshot prediction:", predictionError);
+                }
+              }
+
               emitSSE("draft_end", {
                 index: i,
                 draftId: savedIds[i] ?? null,
+                predictionId,
                 shareTrigger: drafts[i].shareTrigger,
                 content: drafts[i].content,
               });

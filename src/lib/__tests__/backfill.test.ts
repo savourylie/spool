@@ -21,6 +21,7 @@ let mockPostUpsertError: unknown = null;
 let mockExistingPostsData: Array<{ id: string; threads_media_id: string }> = [];
 let mockExistingMetricsData: Array<{ post_id: string }> = [];
 let mockPostMetricsSelectBatches: Array<Array<{ post_id: string }>> | null = null;
+const mockLinkPredictionToPost = vi.hoisted(() => vi.fn());
 
 function createMockFrom(table: string) {
   if (table === "users") {
@@ -153,6 +154,15 @@ vi.mock("@/lib/crypto", () => ({
   decrypt: vi.fn().mockReturnValue("decrypted-token"),
 }));
 
+vi.mock("@/lib/post-review", () => ({
+  linkPredictionToPost: mockLinkPredictionToPost,
+}));
+
+vi.mock("@/lib/topic-classification", () => ({
+  extractTopics: vi.fn().mockReturnValue([]),
+  classifyPostTopic: vi.fn().mockReturnValue(null),
+}));
+
 function getUpdateCalls() {
   return calls
     .filter((call) => call.table === "backfill_jobs" && call.op === "update")
@@ -206,6 +216,7 @@ describe("runBackfill", () => {
     mockExistingPostsData = [];
     mockExistingMetricsData = [];
     mockPostMetricsSelectBatches = null;
+    mockLinkPredictionToPost.mockResolvedValue(null);
 
     mockGetUserPosts.mockResolvedValue([
       {
@@ -279,6 +290,11 @@ describe("runBackfill", () => {
         media_type: "TEXT",
       }),
     ]);
+    expect(mockLinkPredictionToPost).toHaveBeenCalledWith({
+      userId: "user-uuid",
+      postId: "post-uuid-1",
+      postText: "Hello world",
+    });
 
     expect(events).toEqual(
       expect.arrayContaining([
@@ -317,6 +333,15 @@ describe("runBackfill", () => {
     );
 
     expect(mockGetFollowerDemographics).toHaveBeenCalledTimes(3);
+  });
+
+  it("skips prediction linkback when the post already exists", async () => {
+    mockExistingPostsData = [{ id: "existing-post-uuid", threads_media_id: "media-1" }];
+    mockExistingMetricsData = [];
+
+    await runBackfill("user-uuid", "job-uuid");
+
+    expect(mockLinkPredictionToPost).not.toHaveBeenCalled();
   });
 
   it("records failing post context and structured error details", async () => {

@@ -394,6 +394,63 @@ export type Database = {
           },
         ]
       }
+      post_predictions: {
+        Row: {
+          actual_windowed_metrics: Json | null
+          draft_text: string | null
+          draft_text_hash: string
+          driver_factors: Json
+          id: string
+          post_id: string | null
+          predicted_at: string
+          ranges: Json
+          review_state: string
+          reviewed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_windowed_metrics?: Json | null
+          draft_text?: string | null
+          draft_text_hash: string
+          driver_factors?: Json
+          id?: string
+          post_id?: string | null
+          predicted_at?: string
+          ranges: Json
+          review_state?: string
+          reviewed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_windowed_metrics?: Json | null
+          draft_text?: string | null
+          draft_text_hash?: string
+          driver_factors?: Json
+          id?: string
+          post_id?: string | null
+          predicted_at?: string
+          ranges?: Json
+          review_state?: string
+          reviewed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_predictions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_predictions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_replies: {
         Row: {
           fetched_at: string | null
