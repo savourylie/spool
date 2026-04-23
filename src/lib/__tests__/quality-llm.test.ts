@@ -4,6 +4,7 @@ import {
   parseAndValidateResponse,
   type UserContext,
 } from "../quality-llm";
+import { flattenSystemBlocks } from "../llm-client";
 
 // ── Fixtures ──────────────────────────────────────────────────────────
 
@@ -49,24 +50,26 @@ const VALID_RESPONSE = JSON.stringify({
 describe("buildScannerPrompt", () => {
   it("includes recent posts in the system prompt", () => {
     const { systemPrompt } = buildScannerPrompt("My draft post", FULL_CONTEXT);
-    expect(systemPrompt).toContain("AI is changing everything in tech.");
-    expect(systemPrompt).toContain("most productivity advice is recycled.");
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("AI is changing everything in tech.");
+    expect(joined).toContain("most productivity advice is recycled.");
   });
 
   it("includes topic tags in the system prompt", () => {
     const { systemPrompt } = buildScannerPrompt("My draft post", FULL_CONTEXT);
-    expect(systemPrompt).toContain("tech, productivity, AI");
+    expect(flattenSystemBlocks(systemPrompt)).toContain("tech, productivity, AI");
   });
 
   it("handles empty recent posts gracefully", () => {
     const { systemPrompt } = buildScannerPrompt("My draft post", EMPTY_CONTEXT);
-    expect(systemPrompt).toContain("No recent posts available.");
-    expect(systemPrompt).not.toContain("undefined");
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("No recent posts available.");
+    expect(joined).not.toContain("undefined");
   });
 
   it("handles empty topic tags gracefully", () => {
     const { systemPrompt } = buildScannerPrompt("My draft post", EMPTY_CONTEXT);
-    expect(systemPrompt).toContain("No established topics yet.");
+    expect(flattenSystemBlocks(systemPrompt)).toContain("No established topics yet.");
   });
 
   it("includes the draft text in the user message", () => {
@@ -76,8 +79,21 @@ describe("buildScannerPrompt", () => {
 
   it("numbers recent posts with dates", () => {
     const { systemPrompt } = buildScannerPrompt("Draft", FULL_CONTEXT);
-    expect(systemPrompt).toContain("1. [2026-03-20T10:00:00Z]");
-    expect(systemPrompt).toContain("2. [2026-03-18T08:00:00Z]");
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("1. [2026-03-20T10:00:00Z]");
+    expect(joined).toContain("2. [2026-03-18T08:00:00Z]");
+  });
+
+  it("marks the knowledge prefix as cacheable and the user suffix as uncached", () => {
+    const { systemPrompt } = buildScannerPrompt("My draft post", FULL_CONTEXT);
+    expect(systemPrompt.length).toBeGreaterThanOrEqual(2);
+    expect(systemPrompt[0].cacheable).toBe(true);
+    // The block containing per-user data must not be cacheable
+    const variableBlock = systemPrompt.find((b) =>
+      b.text.includes("AI is changing everything in tech."),
+    );
+    expect(variableBlock).toBeDefined();
+    expect(variableBlock?.cacheable).toBeFalsy();
   });
 });
 

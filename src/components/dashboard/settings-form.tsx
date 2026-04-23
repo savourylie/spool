@@ -49,6 +49,10 @@ export function SettingsForm({
     "idle" | "saving" | "success" | "error"
   >("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [testStatus, setTestStatus] = useState<
+    "idle" | "testing" | "success" | "error"
+  >("idle");
+  const [testMessage, setTestMessage] = useState("");
 
   const needsKey = provider !== null;
   const isDirty =
@@ -95,6 +99,53 @@ export function SettingsForm({
     } catch {
       setStatus("error");
       setErrorMessage("Network error. Please try again.");
+    }
+  }
+
+  async function handleTest() {
+    setTestStatus("testing");
+    setTestMessage("");
+    setStatus("idle");
+    setErrorMessage("");
+
+    try {
+      const body: Record<string, unknown> = { provider, baseUrl, model };
+      if (needsKey && apiKey) {
+        body.apiKey = apiKey;
+      }
+
+      const res = await fetch("/api/settings/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        setTestStatus("success");
+        const reply = data.response ? ` — reply: "${data.response}"` : "";
+        setTestMessage(`Connection OK${reply}`);
+        return;
+      }
+
+      setTestStatus("error");
+      const prefix =
+        data.errorType === "auth"
+          ? "Auth failed"
+          : data.errorType === "rate_limit"
+            ? "Rate limited"
+            : data.errorType === "timeout"
+              ? "Timed out"
+              : data.errorType === "server"
+                ? "Server error"
+                : data.errorType === "config"
+                  ? "Config"
+                  : "Failed";
+      setTestMessage(`${prefix}: ${data.error ?? "Unknown error"}`);
+    } catch {
+      setTestStatus("error");
+      setTestMessage("Network error. Please try again.");
     }
   }
 
@@ -145,6 +196,8 @@ export function SettingsForm({
                 setProvider(opt.value);
                 setStatus("idle");
                 setErrorMessage("");
+                setTestStatus("idle");
+                setTestMessage("");
                 if (opt.value === null) {
                   setIsChangingKey(false);
                   setApiKey("");
@@ -224,6 +277,8 @@ export function SettingsForm({
                   setApiKey(e.target.value);
                   setStatus("idle");
                   setErrorMessage("");
+                  setTestStatus("idle");
+                  setTestMessage("");
                 }}
               />
               <p className="text-xs text-muted-foreground">
@@ -257,6 +312,8 @@ export function SettingsForm({
               setBaseUrl(e.target.value);
               setStatus("idle");
               setErrorMessage("");
+              setTestStatus("idle");
+              setTestMessage("");
             }}
           />
           <p className="text-xs text-muted-foreground">
@@ -288,6 +345,8 @@ export function SettingsForm({
               setModel(e.target.value);
               setStatus("idle");
               setErrorMessage("");
+              setTestStatus("idle");
+              setTestMessage("");
             }}
           />
           <p className="text-xs text-muted-foreground">
@@ -315,13 +374,28 @@ export function SettingsForm({
         </div>
       )}
 
+      {/* Test result */}
+      {testStatus === "success" && (
+        <div className="flex items-start gap-2 rounded-[var(--radius-md)] border-2 border-green-500/30 bg-green-500/5 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+          <CheckCircle weight="fill" className="mt-0.5 size-4 shrink-0" />
+          <span className="break-words">{testMessage}</span>
+        </div>
+      )}
+      {testStatus === "error" && (
+        <div className="flex items-start gap-2 rounded-[var(--radius-md)] border-2 border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <Warning weight="fill" className="mt-0.5 size-4 shrink-0" />
+          <span className="break-words">{testMessage}</span>
+        </div>
+      )}
+
       {/* Actions */}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Button
           variant="candy"
           size="sm"
           disabled={
             status === "saving" ||
+            testStatus === "testing" ||
             (!isDirty && provider !== null) ||
             (provider === "anthropic" && !hasKey && !apiKey) ||
             (provider === "anthropic" && isChangingKey && !apiKey)
@@ -338,11 +412,33 @@ export function SettingsForm({
           )}
         </Button>
 
+        {needsKey && (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={
+              testStatus === "testing" ||
+              status === "saving" ||
+              (provider === "anthropic" && !hasKey && !apiKey)
+            }
+            onClick={handleTest}
+          >
+            {testStatus === "testing" ? (
+              <>
+                <CircleNotch className="size-4 animate-spin" />
+                Testing...
+              </>
+            ) : (
+              "Test Connection"
+            )}
+          </Button>
+        )}
+
         {hasKey && (
           <Button
             variant="outline"
             size="sm"
-            disabled={status === "saving"}
+            disabled={status === "saving" || testStatus === "testing"}
             onClick={handleClear}
           >
             Remove Key

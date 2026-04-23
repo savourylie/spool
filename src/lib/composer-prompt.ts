@@ -7,8 +7,11 @@
  *
  * Pure module — no database calls. DB fetching happens in the route handler.
  *
- * Depends on: llm-client (TICKET-037).
+ * Depends on: llm-client (TICKET-037), prompt loader (TICKET-067).
  */
+
+import type { SystemBlock } from "@/lib/llm-client";
+import { loadPrompt } from "@/lib/prompts/loader";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -59,31 +62,11 @@ export interface GeneratedDraft {
   shareTrigger: ShareTriggerCategory;
 }
 
-// ── System Prompt Template ───────────────────────────────────────────
+// ── Static Composer Instructions ─────────────────────────────────────
 
-const COMPOSER_SYSTEM_PROMPT = `You are an expert social media content strategist specializing in the Threads algorithm. Your job is to draft high-performing posts for a creator based on their voice, audience, and performance history.
+const COMPOSER_INSTRUCTIONS = `You are an expert social media content strategist specializing in the Threads algorithm. Your job is to draft high-performing posts for a creator based on their voice, audience, and performance history.
 
-## Creator Profile
-
-Followers: {FOLLOWER_COUNT}
-
-## Top Performing Posts (ranked by Weighted Engagement Score)
-
-These are the creator's best posts. Study their voice, tone, sentence structure, and style. Your drafts MUST sound like this creator wrote them — not like an AI.
-
-{TOP_POSTS}
-
-## Audience Demographics
-
-{DEMOGRAPHICS}
-
-## Content Pillars (Usual Topics)
-
-{TOPIC_TAGS}
-
-## Posting Cadence
-
-{CADENCE}
+Use the algorithm and psychology references above when judging which hook, structure, and share-trigger will perform best. Never violate the red lines (R1–R12).
 
 ## Share-Trigger Categories
 
@@ -105,7 +88,7 @@ Start each draft with a metadata line in this exact format:
 
 Where \`<category>\` is one of: voice-of-the-reader, time-saving-compilation, counterintuitive-data, conversation-framework
 
-Then write the post content. Keep each draft under 500 characters (Threads limit). Write in the creator's authentic voice based on their top posts above. Do NOT use hashtags unless the creator's top posts use them.
+Then write the post content. Keep each draft under 500 characters (Threads limit). Write in the creator's authentic voice based on their top posts. Do NOT use hashtags unless the creator's top posts use them.
 
 Example format:
 \`\`\`
@@ -125,8 +108,15 @@ Post content here...
 
 // ── Prompt Builder ───────────────────────────────────────────────────
 
+/**
+ * Build the composer system prompt as an array of SystemBlocks. The stable
+ * knowledge prefix (algorithm + psychology + static instructions) is marked
+ * `cacheable: true` so Anthropic prompt caching can reuse it. The creator
+ * profile — top posts, demographics, topic tags, cadence — is per-user and
+ * kept uncached.
+ */
 export function buildComposerPrompt(input: ComposerInput): {
-  systemPrompt: string;
+  systemPrompt: SystemBlock[];
   userMessage: string;
 } {
   const { topic, style, userContext } = input;
@@ -161,21 +151,50 @@ export function buildComposerPrompt(input: ComposerInput): {
     ? `Last post: ${userContext.cadence.lastPostAt}\nAverage gap: ${userContext.cadence.avgGapHours.toFixed(1)} hours\nRecommended wait: ${userContext.cadence.recommendedWaitHours.toFixed(1)} hours`
     : "No posting history available.";
 
-  const systemPrompt = COMPOSER_SYSTEM_PROMPT.replace(
-    "{FOLLOWER_COUNT}",
-    userContext.followerCount.toLocaleString(),
-  )
-    .replace("{TOP_POSTS}", topPostsBlock)
-    .replace("{DEMOGRAPHICS}", demographicsBlock)
-    .replace("{TOPIC_TAGS}", topicTagsBlock)
-    .replace("{CADENCE}", cadenceBlock);
+  // Stable prefix: algorithm + psychology knowledge + composer instructions.
+  const knowledgePrefix = [
+    loadPrompt("algorithm"),
+    loadPrompt("psychology"),
+    COMPOSER_INSTRUCTIONS,
+  ].join("\n\n");
+
+  // User-variable suffix: creator profile.
+  const creatorProfile = [
+    "## Creator Profile",
+    "",
+    `Followers: ${userContext.followerCount.toLocaleString()}`,
+    "",
+    "## Top Performing Posts (ranked by Weighted Engagement Score)",
+    "",
+    "These are the creator's best posts. Study their voice, tone, sentence structure, and style. Your drafts MUST sound like this creator wrote them — not like an AI.",
+    "",
+    topPostsBlock,
+    "",
+    "## Audience Demographics",
+    "",
+    demographicsBlock,
+    "",
+    "## Content Pillars (Usual Topics)",
+    "",
+    topicTagsBlock,
+    "",
+    "## Posting Cadence",
+    "",
+    cadenceBlock,
+  ].join("\n");
 
   let userMessage = `Topic: ${topic}`;
   if (style) {
     userMessage += `\nStyle: ${style}`;
   }
 
-  return { systemPrompt, userMessage };
+  return {
+    systemPrompt: [
+      { text: knowledgePrefix, cacheable: true },
+      { text: creatorProfile },
+    ],
+    userMessage,
+  };
 }
 
 // ── Response Parser ──────────────────────────────────────────────────

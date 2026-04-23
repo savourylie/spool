@@ -10,14 +10,35 @@ import type { APIError } from "openai";
 
 import type { ILLMClient } from "@/lib/llm-provider";
 import { PROVIDER_DEFAULTS } from "@/lib/llm-provider";
-import type { LLMGenerateOptions, LLMStreamOptions } from "@/lib/llm-client";
+import type {
+  LLMGenerateOptions,
+  LLMStreamOptions,
+  SystemBlock,
+} from "@/lib/llm-client";
 import {
   LLMError,
   LLMAuthError,
   LLMRateLimitError,
   LLMServerError,
   LLMTimeoutError,
+  flattenSystemBlocks,
 } from "@/lib/llm-client";
+
+/**
+ * OpenAI has no prompt-cache breakpoint primitive, so structured system
+ * blocks are joined into a single string. The cache_control markers are
+ * silently dropped.
+ */
+function resolveSystemPrompt(
+  systemPrompt: string | SystemBlock[] | undefined,
+): string | undefined {
+  if (systemPrompt === undefined) return undefined;
+  if (typeof systemPrompt === "string") {
+    return systemPrompt.length > 0 ? systemPrompt : undefined;
+  }
+  if (systemPrompt.length === 0) return undefined;
+  return flattenSystemBlocks(systemPrompt);
+}
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -96,13 +117,14 @@ export class OpenAILLMClient implements ILLMClient {
     } = options;
 
     try {
+      const resolvedSystem = resolveSystemPrompt(systemPrompt);
       const response = await this.client.chat.completions.create(
         {
           model,
           max_tokens: maxTokens,
           messages: [
-            ...(systemPrompt
-              ? [{ role: "system" as const, content: systemPrompt }]
+            ...(resolvedSystem
+              ? [{ role: "system" as const, content: resolvedSystem }]
               : []),
             ...messages.map((m) => ({
               role: m.role as "user" | "assistant",
@@ -131,14 +153,15 @@ export class OpenAILLMClient implements ILLMClient {
     } = options;
 
     try {
+      const resolvedSystem = resolveSystemPrompt(systemPrompt);
       const stream = await this.client.chat.completions.create(
         {
           model,
           max_tokens: maxTokens,
           stream: true,
           messages: [
-            ...(systemPrompt
-              ? [{ role: "system" as const, content: systemPrompt }]
+            ...(resolvedSystem
+              ? [{ role: "system" as const, content: resolvedSystem }]
               : []),
             ...messages.map((m) => ({
               role: m.role as "user" | "assistant",

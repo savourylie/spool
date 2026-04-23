@@ -10,6 +10,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { APIError } from "@anthropic-ai/sdk";
 import type { ILLMClient } from "@/lib/llm-provider";
 
+type AnthropicSystemParam = NonNullable<
+  Anthropic.Messages.MessageCreateParams["system"]
+>;
+
 // ── Constants ────────────────────────────────────────────────────────
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -24,9 +28,21 @@ export interface LLMMessage {
   content: string;
 }
 
+/**
+ * A segment of the system prompt. When an array is passed as `systemPrompt`,
+ * the Anthropic client renders it as structured content blocks and places a
+ * `cache_control: { type: "ephemeral" }` breakpoint after any block marked
+ * `cacheable: true`. OpenAI (and other providers without prompt caching)
+ * collapse the array into a single joined string.
+ */
+export interface SystemBlock {
+  text: string;
+  cacheable?: boolean;
+}
+
 export interface LLMGenerateOptions {
-  /** System prompt providing context and instructions */
-  systemPrompt?: string;
+  /** System prompt — plain string, or structured blocks for cache breakpoints */
+  systemPrompt?: string | SystemBlock[];
   /** Conversation messages */
   messages: LLMMessage[];
   /** Model override (default: claude-sonnet-4-6) */
@@ -38,8 +54,8 @@ export interface LLMGenerateOptions {
 }
 
 export interface LLMStreamOptions {
-  /** System prompt providing context and instructions */
-  systemPrompt?: string;
+  /** System prompt — plain string, or structured blocks for cache breakpoints */
+  systemPrompt?: string | SystemBlock[];
   /** Conversation messages */
   messages: LLMMessage[];
   /** Model override (default: claude-sonnet-4-6) */
@@ -48,6 +64,14 @@ export interface LLMStreamOptions {
   maxTokens?: number;
   /** Request timeout in milliseconds (default: 60s) */
   timeout?: number;
+}
+
+/**
+ * Flatten a SystemBlock[] into a single joined string for providers that
+ * don't support structured system content (e.g. OpenAI).
+ */
+export function flattenSystemBlocks(blocks: SystemBlock[]): string {
+  return blocks.map((b) => b.text).join("\n\n");
 }
 
 // ── Error Classes ────────────────────────────────────────────────────
@@ -152,6 +176,44 @@ function parseRetryAfter(error: APIError): number | undefined {
   return Number.isFinite(seconds) ? seconds : undefined;
 }
 
+/**
+ * Convert the generic systemPrompt field into the Anthropic `system` parameter.
+ * - undefined → undefined (no system prompt)
+ * - string    → pass through as-is
+ * - blocks    → array of TextBlockParam, with cache_control on any cacheable block
+ */
+function buildAnthropicSystem(
+  systemPrompt: string | SystemBlock[] | undefined,
+): AnthropicSystemParam | undefined {
+  if (systemPrompt === undefined) return undefined;
+  if (typeof systemPrompt === "string") {
+    return systemPrompt.length > 0 ? systemPrompt : undefined;
+  }
+  if (systemPrompt.length === 0) return undefined;
+  return systemPrompt.map((block) => ({
+    type: "text" as const,
+    text: block.text,
+    ...(block.cacheable ? { cache_control: { type: "ephemeral" as const } } : {}),
+  }));
+}
+
+interface CacheUsageLog {
+  cache_creation_input_tokens: number | null;
+  cache_read_input_tokens: number | null;
+  input_tokens: number;
+  output_tokens: number;
+}
+
+/**
+ * Log Anthropic cache usage for observability. TICKET-082 will aggregate this
+ * to measure hit rate across Scanner and Composer calls.
+ */
+function logCacheUsage(kind: "generate" | "stream", usage: CacheUsageLog): void {
+  console.log(
+    `[llm-client:${kind}] cache_creation=${usage.cache_creation_input_tokens ?? 0} cache_read=${usage.cache_read_input_tokens ?? 0} input=${usage.input_tokens} output=${usage.output_tokens}`,
+  );
+}
+
 // ── Client ───────────────────────────────────────────────────────────
 
 export class LLMClient implements ILLMClient {
@@ -185,11 +247,12 @@ export class LLMClient implements ILLMClient {
     } = options;
 
     try {
+      const system = buildAnthropicSystem(systemPrompt);
       const response = await this.client.messages.create(
         {
           model,
           max_tokens: maxTokens,
-          ...(systemPrompt ? { system: systemPrompt } : {}),
+          ...(system !== undefined ? { system } : {}),
           messages: messages.map((m) => ({
             role: m.role,
             content: m.content,
@@ -197,6 +260,13 @@ export class LLMClient implements ILLMClient {
         },
         { timeout },
       );
+
+      logCacheUsage("generate", {
+        cache_creation_input_tokens: response.usage.cache_creation_input_tokens,
+        cache_read_input_tokens: response.usage.cache_read_input_tokens,
+        input_tokens: response.usage.input_tokens,
+        output_tokens: response.usage.output_tokens,
+      });
 
       const textBlock = response.content.find(
         (block) => block.type === "text",
@@ -221,11 +291,12 @@ export class LLMClient implements ILLMClient {
     } = options;
 
     try {
+      const system = buildAnthropicSystem(systemPrompt);
       const stream = this.client.messages.stream(
         {
           model,
           max_tokens: maxTokens,
-          ...(systemPrompt ? { system: systemPrompt } : {}),
+          ...(system !== undefined ? { system } : {}),
           messages: messages.map((m) => ({
             role: m.role,
             content: m.content,
@@ -234,14 +305,34 @@ export class LLMClient implements ILLMClient {
         { timeout },
       );
 
+      let cacheCreationInputTokens: number | null = null;
+      let cacheReadInputTokens: number | null = null;
+      let inputTokens = 0;
+      let outputTokens = 0;
+
       for await (const event of stream) {
-        if (
+        if (event.type === "message_start") {
+          const usage = event.message.usage;
+          cacheCreationInputTokens = usage.cache_creation_input_tokens;
+          cacheReadInputTokens = usage.cache_read_input_tokens;
+          inputTokens = usage.input_tokens;
+          outputTokens = usage.output_tokens;
+        } else if (event.type === "message_delta") {
+          outputTokens = event.usage.output_tokens ?? outputTokens;
+        } else if (
           event.type === "content_block_delta" &&
           event.delta.type === "text_delta"
         ) {
           yield event.delta.text;
         }
       }
+
+      logCacheUsage("stream", {
+        cache_creation_input_tokens: cacheCreationInputTokens,
+        cache_read_input_tokens: cacheReadInputTokens,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+      });
     } catch (error) {
       throw mapSDKError(error);
     }

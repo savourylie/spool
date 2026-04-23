@@ -4,6 +4,7 @@ import {
   parseComposerResponse,
   type ComposerUserContext,
 } from "../composer-prompt";
+import { flattenSystemBlocks } from "../llm-client";
 
 // ── Fixtures ──────────────────────────────────────────────────────────
 
@@ -85,8 +86,9 @@ describe("buildComposerPrompt", () => {
       topic: "focus time",
       userContext: FULL_CONTEXT,
     });
-    expect(systemPrompt).toContain("saying no to meetings");
-    expect(systemPrompt).toContain("ship weekly grow 3x faster");
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("saying no to meetings");
+    expect(joined).toContain("ship weekly grow 3x faster");
   });
 
   it("includes WES scores for top posts", () => {
@@ -94,8 +96,9 @@ describe("buildComposerPrompt", () => {
       topic: "focus time",
       userContext: FULL_CONTEXT,
     });
-    expect(systemPrompt).toContain("WES: 14.2");
-    expect(systemPrompt).toContain("WES: 11.8");
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("WES: 14.2");
+    expect(joined).toContain("WES: 11.8");
   });
 
   it("includes demographics in the system prompt", () => {
@@ -103,8 +106,9 @@ describe("buildComposerPrompt", () => {
       topic: "focus time",
       userContext: FULL_CONTEXT,
     });
-    expect(systemPrompt).toContain("country: US (45%)");
-    expect(systemPrompt).toContain("gender: male (62%)");
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("country: US (45%)");
+    expect(joined).toContain("gender: male (62%)");
   });
 
   it("includes topic tags in the system prompt", () => {
@@ -112,7 +116,9 @@ describe("buildComposerPrompt", () => {
       topic: "focus time",
       userContext: FULL_CONTEXT,
     });
-    expect(systemPrompt).toContain("productivity, startups, engineering");
+    expect(flattenSystemBlocks(systemPrompt)).toContain(
+      "productivity, startups, engineering",
+    );
   });
 
   it("includes cadence information", () => {
@@ -120,8 +126,9 @@ describe("buildComposerPrompt", () => {
       topic: "focus time",
       userContext: FULL_CONTEXT,
     });
-    expect(systemPrompt).toContain("22.5 hours");
-    expect(systemPrompt).toContain("2026-03-24T14:00:00Z");
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("22.5 hours");
+    expect(joined).toContain("2026-03-24T14:00:00Z");
   });
 
   it("includes follower count", () => {
@@ -129,7 +136,7 @@ describe("buildComposerPrompt", () => {
       topic: "focus time",
       userContext: FULL_CONTEXT,
     });
-    expect(systemPrompt).toContain("5,200");
+    expect(flattenSystemBlocks(systemPrompt)).toContain("5,200");
   });
 
   it("handles empty context gracefully", () => {
@@ -137,11 +144,12 @@ describe("buildComposerPrompt", () => {
       topic: "anything",
       userContext: EMPTY_CONTEXT,
     });
-    expect(systemPrompt).toContain("No posts available yet.");
-    expect(systemPrompt).toContain("No demographic data available.");
-    expect(systemPrompt).toContain("No established topics yet.");
-    expect(systemPrompt).toContain("No posting history available.");
-    expect(systemPrompt).not.toContain("undefined");
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("No posts available yet.");
+    expect(joined).toContain("No demographic data available.");
+    expect(joined).toContain("No established topics yet.");
+    expect(joined).toContain("No posting history available.");
+    expect(joined).not.toContain("undefined");
   });
 
   it("includes the topic in the user message", () => {
@@ -167,6 +175,20 @@ describe("buildComposerPrompt", () => {
       userContext: EMPTY_CONTEXT,
     });
     expect(userMessage).not.toContain("Style:");
+  });
+
+  it("marks the knowledge prefix as cacheable and the creator profile as uncached", () => {
+    const { systemPrompt } = buildComposerPrompt({
+      topic: "focus time",
+      userContext: FULL_CONTEXT,
+    });
+    expect(systemPrompt.length).toBeGreaterThanOrEqual(2);
+    expect(systemPrompt[0].cacheable).toBe(true);
+    const variableBlock = systemPrompt.find((b) =>
+      b.text.includes("saying no to meetings"),
+    );
+    expect(variableBlock).toBeDefined();
+    expect(variableBlock?.cacheable).toBeFalsy();
   });
 });
 
