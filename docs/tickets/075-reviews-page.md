@@ -1,10 +1,10 @@
 # [TICKET-075] Reviews Page
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #066 ✅, #072 ✅, #074
+- Requires: #066 ✅, #072 ✅, #074 ✅
 
 ## Description
 Ship `/dashboard/understand/reviews` — a timeline of predictions vs actuals with cumulative stats. Each row shows the post, the original predicted ranges, the actual metrics, the band verdict, and the narrative from #074. A top-of-page summary answers "how good are my predictions?" with calibration stats ("Your predictions land in the Baseline band 62% of the time"). Also fills in the freshness-log health stub that #072 linked to.

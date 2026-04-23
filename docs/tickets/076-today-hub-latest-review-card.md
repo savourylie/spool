@@ -1,10 +1,10 @@
 # [TICKET-076] Today Hub "Latest Review" Card
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #074
+- Requires: #074 ✅
 
 ## Description
 Add a new card to Today Hub that surfaces the most recent prediction-vs-actual review: the post, the band verdict, the actual vs predicted deltas, and one key learning from the narrative. Completes the review loop — every time the user opens Today Hub, the hero reminder is "here's what your last post taught us." Includes a graceful empty state for users with no reviews yet.
