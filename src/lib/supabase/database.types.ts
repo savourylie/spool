@@ -401,6 +401,7 @@ export type Database = {
           draft_text_hash: string
           driver_factors: Json
           id: string
+          narrative: string | null
           post_id: string | null
           predicted_at: string
           ranges: Json
@@ -414,6 +415,7 @@ export type Database = {
           draft_text_hash: string
           driver_factors?: Json
           id?: string
+          narrative?: string | null
           post_id?: string | null
           predicted_at?: string
           ranges: Json
@@ -427,6 +429,7 @@ export type Database = {
           draft_text_hash?: string
           driver_factors?: Json
           id?: string
+          narrative?: string | null
           post_id?: string | null
           predicted_at?: string
           ranges?: Json
