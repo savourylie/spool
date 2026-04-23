@@ -131,6 +131,38 @@ export type Database = {
           },
         ]
       }
+      brand_voice_profiles: {
+        Row: {
+          confidence_tier: string
+          profile: Json
+          source_post_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence_tier: string
+          profile: Json
+          source_post_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence_tier?: string
+          profile?: Json
+          source_post_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_voice_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_stats: {
         Row: {
           date: string
