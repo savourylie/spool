@@ -8,6 +8,7 @@ import { ChartBar } from "@phosphor-icons/react";
 import { Lightbulb } from "@phosphor-icons/react";
 import { PencilLine } from "@phosphor-icons/react";
 import { Users } from "@phosphor-icons/react";
+import { SpeakerHigh } from "@phosphor-icons/react";
 import { Compass } from "@phosphor-icons/react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { X } from "@phosphor-icons/react";
@@ -36,6 +37,7 @@ const tabs: TabItem[] = [
     subItems: [
       { label: "Performance", href: "/dashboard/understand", icon: ChartBar },
       { label: "Audience", href: "/dashboard/understand/audience", icon: Users },
+      { label: "Voice", href: "/dashboard/understand/voice", icon: SpeakerHigh },
     ],
   },
   {
