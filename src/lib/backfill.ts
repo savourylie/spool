@@ -4,6 +4,7 @@ import { ThreadsAPI } from "@/lib/threads-api";
 import type { ThreadsPost } from "@/lib/threads-api.types";
 import { decrypt } from "@/lib/crypto";
 import { linkPredictionToPost } from "@/lib/post-review";
+import { extractConceptsForPost } from "@/lib/concept-library";
 import { ThreadsAPIError } from "@/lib/threads";
 import { normalizeThreadsMediaType } from "@/lib/post-media-type";
 import { extractTopics, classifyPostTopic } from "@/lib/topic-classification";
@@ -499,6 +500,18 @@ export async function runBackfill(userId: string, jobId: string) {
             userId,
             postId,
             error: predictionLinkError,
+          });
+        }
+      }
+
+      if (post.text?.trim()) {
+        try {
+          await extractConceptsForPost(postId);
+        } catch (conceptError) {
+          console.error("Failed to extract concepts during backfill:", {
+            userId,
+            postId,
+            error: conceptError,
           });
         }
       }

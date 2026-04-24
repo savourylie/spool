@@ -163,6 +163,51 @@ export type Database = {
           },
         ]
       }
+      concept_ledger: {
+        Row: {
+          analogy: string | null
+          concept: string
+          created_at: string
+          id: string
+          post_id: string
+          seen_at: string
+          user_id: string
+        }
+        Insert: {
+          analogy?: string | null
+          concept: string
+          created_at?: string
+          id?: string
+          post_id: string
+          seen_at: string
+          user_id: string
+        }
+        Update: {
+          analogy?: string | null
+          concept?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          seen_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concept_ledger_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "concept_ledger_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_stats: {
         Row: {
           date: string
@@ -494,6 +539,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          concept_extracted_at: string | null
           created_at: string | null
           id: string
           media_type: string
@@ -506,6 +552,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          concept_extracted_at?: string | null
           created_at?: string | null
           id?: string
           media_type: string
@@ -518,6 +565,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          concept_extracted_at?: string | null
           created_at?: string | null
           id?: string
           media_type?: string
