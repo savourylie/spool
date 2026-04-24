@@ -70,6 +70,28 @@ export default async function CreateScannerPage({
     }),
   );
 
+  const scannerV2 = process.env.SCANNER_V2_ENABLED === "true";
+
+  if (scannerV2) {
+    return (
+      <div className="py-8">
+        <h1 className="font-heading text-3xl font-bold">Content Scanner</h1>
+        <p className="mt-2 text-muted-foreground">
+          Four-axis diagnostic: style match, psychology, algorithm alignment,
+          and AI-tone detection. Scanner diagnoses; Composer rewrites.
+        </p>
+        <div className="mt-8">
+          <QualityScanner
+            posts={posts}
+            predictionPosts={predictionPosts}
+            initialText={initialText}
+            scannerV2
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <StickerCard className="pt-8 hover:rotate-0 hover:scale-100">
       <StickerCardIcon color="quaternary">

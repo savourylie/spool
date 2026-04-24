@@ -65,6 +65,9 @@ export interface NeighborPost {
   /** WES as a percentage of views. */
   wesNormalized: number;
   publishedAt: string;
+  /** External link to the post on Threads. Null when the account has no
+   *  stored permalink (e.g., older imports before the column was backfilled). */
+  permalink?: string | null;
 }
 
 export interface AxisDiagnostic {

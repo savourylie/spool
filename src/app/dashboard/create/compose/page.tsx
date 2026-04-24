@@ -24,14 +24,17 @@ export const metadata: Metadata = { title: "AI Composer — Spool" };
 export default async function CreateComposePage({
   searchParams,
 }: {
-  searchParams: Promise<{ topic?: string }>;
+  searchParams: Promise<{ topic?: string; text?: string; from?: string }>;
 }) {
   const cookieStore = await cookies();
   const session = cookieStore.get(SESSION_COOKIE_NAME);
   if (!session) redirect("/");
 
   const params = await searchParams;
-  const initialTopic = params.topic ?? "";
+  // TICKET-078: Scanner routes here with `?from=scanner&text=<encoded>`;
+  // the full draft lands in the topic textarea (which accepts arbitrary
+  // length) so the user can request rewrite variants.
+  const initialTopic = params.text ?? params.topic ?? "";
 
   const supabase = createAdminClient();
   const userId = session.value;

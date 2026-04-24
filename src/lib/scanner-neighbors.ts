@@ -39,6 +39,9 @@ export interface ScannerNeighborPost {
   reposts: number;
   quotes: number;
   shares: number;
+  /** External Threads URL. Nullable because some older posts may not have
+   *  a stored permalink. */
+  permalink?: string | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -56,6 +59,7 @@ function toNeighborPost(post: ScannerNeighborPost): NeighborPost {
     wes: computeWES(post),
     wesNormalized: computeNormalizedWES(post),
     publishedAt: post.publishedAt,
+    permalink: post.permalink ?? null,
   };
 }
 

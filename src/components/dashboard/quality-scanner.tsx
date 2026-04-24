@@ -14,6 +14,7 @@ import { QualityGauge } from "@/components/dashboard/quality-gauge";
 import { QualityIssuesList } from "@/components/dashboard/quality-issues-list";
 import { QualityRewrites } from "@/components/dashboard/quality-rewrites";
 import { PredictionWidget } from "@/components/dashboard/prediction-widget";
+import { FourAxisScanner } from "@/components/dashboard/four-axis-scanner";
 import {
   analyzeHeuristics,
   computeHeuristicScore,
@@ -45,6 +46,10 @@ interface QualityScannerProps {
   posts: ScannerPost[];
   predictionPosts: HistoricalPost[];
   initialText?: string;
+  /** When true, render the four-axis diagnostic UI (TICKET-078). Requires
+   *  the server to have `SCANNER_V2_ENABLED=true` so `/api/scanner` returns
+   *  the v2 stream shape. */
+  scannerV2?: boolean;
 }
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -54,7 +59,12 @@ const THREADS_CHAR_LIMIT = 500;
 
 // ── Component ────────────────────────────────────────────────────────
 
-export function QualityScanner({ posts, predictionPosts, initialText }: QualityScannerProps) {
+export function QualityScanner({
+  posts,
+  predictionPosts,
+  initialText,
+  scannerV2 = false,
+}: QualityScannerProps) {
   const [text, setText] = useState("");
   const [heuristicIssues, setHeuristicIssues] = useState<QualityIssue[]>([]);
   const [heuristicScore, setHeuristicScore] = useState(100);
@@ -218,8 +228,9 @@ export function QualityScanner({ posts, predictionPosts, initialText }: QualityS
       setHeuristicIssues(issues);
       setHeuristicScore(computeHeuristicScore(issues));
 
-      // 2. LLM analysis (async, streamed) — only if text is long enough
-      if (trimmed.length >= MIN_POST_LENGTH) {
+      // 2. LLM analysis (async, streamed) — v1 only. In v2, the
+      //    FourAxisScanner owns its own stream against /api/scanner.
+      if (!scannerV2 && trimmed.length >= MIN_POST_LENGTH) {
         startStream(trimmed, controller.signal);
       } else {
         setLlmResult(null);
@@ -266,7 +277,7 @@ export function QualityScanner({ posts, predictionPosts, initialText }: QualityS
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [text, startStream, predictionPosts]);
+  }, [text, startStream, predictionPosts, scannerV2]);
 
   // ── Cleanup on unmount ─────────────────────────────────────────
 
@@ -461,11 +472,17 @@ export function QualityScanner({ posts, predictionPosts, initialText }: QualityS
       {/* Results area */}
       {hasText ? (
         <div className="space-y-6">
-          <QualityIssuesList issues={allIssues} />
-          <QualityRewrites
-            rewrites={llmResult?.rewrites ?? []}
-            onApply={handleApplyRewrite}
-          />
+          {scannerV2 ? (
+            <FourAxisScanner text={text} />
+          ) : (
+            <>
+              <QualityIssuesList issues={allIssues} />
+              <QualityRewrites
+                rewrites={llmResult?.rewrites ?? []}
+                onApply={handleApplyRewrite}
+              />
+            </>
+          )}
 
           <div className="space-y-2">
             <div className="flex flex-wrap justify-center gap-3">
@@ -492,18 +509,30 @@ export function QualityScanner({ posts, predictionPosts, initialText }: QualityS
                 </Button>
               )}
 
-              {/* Cross-flow CTA: Scanner → Composer */}
-              {llmResult && !llmLoading && (
-                <Link
-                  href={`/dashboard/create/compose?topic=${encodeURIComponent(
-                    text.trim().split(/(?<=[.!?])\s/)[0]?.slice(0, 120) || text.trim().slice(0, 120)
-                  )}`}
-                >
-                  <Button variant="candy" size="sm">
-                    Generate a better version
-                    <ArrowRight weight="bold" className="size-4" />
-                  </Button>
-                </Link>
+              {scannerV2 ? (
+                text.trim().length >= MIN_POST_LENGTH && (
+                  <Link
+                    href={`/dashboard/create/compose?from=scanner&text=${encodeURIComponent(text.trim())}`}
+                  >
+                    <Button variant="candy" size="sm">
+                      Get rewrite suggestions
+                      <ArrowRight weight="bold" className="size-4" />
+                    </Button>
+                  </Link>
+                )
+              ) : (
+                llmResult && !llmLoading && (
+                  <Link
+                    href={`/dashboard/create/compose?topic=${encodeURIComponent(
+                      text.trim().split(/(?<=[.!?])\s/)[0]?.slice(0, 120) || text.trim().slice(0, 120)
+                    )}`}
+                  >
+                    <Button variant="candy" size="sm">
+                      Generate a better version
+                      <ArrowRight weight="bold" className="size-4" />
+                    </Button>
+                  </Link>
+                )
               )}
             </div>
 

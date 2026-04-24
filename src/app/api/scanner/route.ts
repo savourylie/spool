@@ -123,6 +123,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         reposts: p.reposts,
         quotes: p.quotes,
         shares: p.shares,
+        permalink: p.permalink ?? null,
       }));
       neighborCandidates = computeNeighborPosts(text, scannerPosts);
     } catch (error) {
