@@ -18,6 +18,7 @@
 
 import type { ILLMClient } from "@/lib/llm-provider";
 import type { SystemBlock } from "@/lib/llm-client";
+import { LLMError } from "@/lib/llm-client";
 import { loadPrompt } from "@/lib/prompts/loader";
 import {
   BRAND_VOICE_DIMENSIONS,
@@ -25,15 +26,25 @@ import {
 } from "@/lib/brand-voice-types";
 import {
   parseAndValidateResponse,
+  parseAndValidateResponseV2,
   type UserContext,
   type SuggestedRewrite,
   type ShareabilityAssessment,
   type LLMAnalysisResult,
+  type ScannerDiagnosticV2,
+  type NeighborPost,
 } from "@/lib/quality-scanner-shared";
 
 // Re-export shared types and parser for backward compatibility
-export { parseAndValidateResponse };
-export type { UserContext, SuggestedRewrite, ShareabilityAssessment, LLMAnalysisResult };
+export { parseAndValidateResponse, parseAndValidateResponseV2 };
+export type {
+  UserContext,
+  SuggestedRewrite,
+  ShareabilityAssessment,
+  LLMAnalysisResult,
+  ScannerDiagnosticV2,
+  NeighborPost,
+};
 
 // ── Prompt Construction ──────────────────────────────────────────────
 
@@ -214,5 +225,211 @@ export function analyzeWithLLMStream(
   return llm.generateStream({
     systemPrompt,
     messages: [{ role: "user", content: userMessage }],
+  });
+}
+
+// ── V2 Prompt + Stream (TICKET-077) ──────────────────────────────────
+
+/**
+ * Render the numbered neighbor-post reference block for the Scanner's
+ * Style Match axis. Each neighbor is rendered once with its index, a
+ * truncated preview, the normalized WES, and the publish date, so the
+ * model can cite them back as 1-based indices via `neighborCitations`.
+ */
+function buildNeighborReferenceBlock(neighbors: NeighborPost[]): string {
+  if (neighbors.length === 0) {
+    return [
+      "## Neighbor posts (top-performing posts on this topic)",
+      "",
+      "No neighbor posts available. This account does not yet have enough posts on this topic to cite references.",
+    ].join("\n");
+  }
+
+  const lines = neighbors.map((n, i) => {
+    const wesPct = n.wesNormalized.toFixed(1);
+    return `Neighbor post [${i + 1}] — WES ${wesPct}% — ${n.publishedAt}\n"${n.textPreview}"`;
+  });
+
+  return [
+    "## Neighbor posts (top-performing posts on this topic)",
+    "",
+    "Reference these by their 1-based index in the Style Match axis via `neighborCitations`.",
+    "",
+    ...lines,
+  ].join("\n");
+}
+
+/**
+ * Build the v2 system prompt + user message for the four-axis Scanner
+ * diagnostic. The cacheable knowledge prefix is
+ * algorithm + psychology + ai-detection + analyze (the four-axis
+ * instructions); the uncached suffix carries recent posts, topic tags,
+ * and numbered neighbor candidates. The brand-voice observer block is
+ * appended as a separate uncached block when a non-stub profile exists.
+ */
+export function buildScannerPromptV2(
+  text: string,
+  userContext: UserContext,
+  neighborCandidates: NeighborPost[],
+): { systemPrompt: SystemBlock[]; userMessage: string } {
+  const recentPostsBlock =
+    userContext.recentPosts.length > 0
+      ? userContext.recentPosts
+          .map((p, i) => `${i + 1}. [${p.publishedAt}] ${p.text}`)
+          .join("\n")
+      : "No recent posts available.";
+
+  const topicTagsBlock =
+    userContext.topicTags.length > 0
+      ? userContext.topicTags.join(", ")
+      : "No established topics yet.";
+
+  const knowledgePrefix = [
+    loadPrompt("algorithm"),
+    loadPrompt("psychology"),
+    loadPrompt("ai-detection"),
+    loadPrompt("analyze"),
+  ].join("\n\n");
+
+  const variableSuffix = [
+    "## User's Recent Posts (for style and coherence comparison)",
+    recentPostsBlock,
+    "",
+    "## User's Usual Topics",
+    topicTagsBlock,
+    "",
+    buildNeighborReferenceBlock(neighborCandidates),
+  ].join("\n");
+
+  const blocks: SystemBlock[] = [
+    { text: knowledgePrefix, cacheable: true },
+    { text: variableSuffix },
+  ];
+
+  const brandVoice = userContext.brandVoice;
+  if (brandVoice && brandVoice.sourcePostCount > 0) {
+    blocks.push({ text: buildBrandVoiceObserverBlock(brandVoice) });
+  }
+
+  return {
+    systemPrompt: blocks,
+    userMessage: `Analyze this draft post for a four-axis diagnostic:\n\n${text}`,
+  };
+}
+
+/**
+ * Resolve 1-based neighbor citations from the LLM output against the
+ * server-computed candidate pool. Drops out-of-range indices silently
+ * and dedupes. Strips the transient `_citations` field from every axis
+ * before returning.
+ */
+function resolveNeighborCitations(
+  diagnostic: ScannerDiagnosticV2,
+  neighborCandidates: NeighborPost[],
+): ScannerDiagnosticV2 {
+  for (const axis of [
+    diagnostic.styleMatch,
+    diagnostic.psychology,
+    diagnostic.algorithm,
+    diagnostic.aiDetection,
+  ]) {
+    const citations = axis._citations;
+    if (!citations) continue;
+    const seen = new Set<number>();
+    const resolved: NeighborPost[] = [];
+    for (const index of citations) {
+      if (seen.has(index)) continue;
+      seen.add(index);
+      const neighbor = neighborCandidates[index - 1];
+      if (neighbor) resolved.push(neighbor);
+    }
+    if (resolved.length > 0) axis.neighborPosts = resolved;
+    delete axis._citations;
+  }
+
+  // If the LLM cited no neighbors on the Style Match axis but we have
+  // candidates, still surface them so the UI can render the reference
+  // list. (The prompt encourages citations; this guards the common
+  // "summary with no citations" output.)
+  if (
+    !diagnostic.styleMatch.neighborPosts &&
+    neighborCandidates.length > 0
+  ) {
+    diagnostic.styleMatch.neighborPosts = neighborCandidates;
+  }
+
+  return diagnostic;
+}
+
+function encodeEvent(encoder: TextEncoder, payload: unknown): Uint8Array {
+  return encoder.encode(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
+/**
+ * Run the v2 LLM analysis with streaming. The wire format extends the
+ * v1 SSE envelope: text deltas stream as JSON-encoded strings, followed
+ * by one sentinel event — `{"__v2_result": <diagnostic>}` on success or
+ * `{"__v2_error": "<message>"}` on parse failure — and terminated with
+ * `data: [DONE]`. The v2 UI keys on the sentinel to get a
+ * hallucination-free neighbor-resolved diagnostic; text deltas are
+ * advisory and may be used for progressive UI.
+ */
+export function analyzeWithLLMStreamV2(
+  text: string,
+  userContext: UserContext,
+  neighborCandidates: NeighborPost[],
+  llm: ILLMClient,
+): ReadableStream<Uint8Array> {
+  const { systemPrompt, userMessage } = buildScannerPromptV2(
+    text,
+    userContext,
+    neighborCandidates,
+  );
+
+  const iterator = llm.generateStreamIterator({
+    systemPrompt,
+    messages: [{ role: "user", content: userMessage }],
+  });
+
+  const encoder = new TextEncoder();
+
+  return new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let accumulator = "";
+      try {
+        for await (const chunk of iterator) {
+          accumulator += chunk;
+          controller.enqueue(encodeEvent(encoder, chunk));
+        }
+
+        try {
+          const parsed = parseAndValidateResponseV2(accumulator);
+          const resolved = resolveNeighborCitations(parsed, neighborCandidates);
+          controller.enqueue(encodeEvent(encoder, { __v2_result: resolved }));
+        } catch (parseError) {
+          const message =
+            parseError instanceof Error ? parseError.message : String(parseError);
+          console.warn("[scanner-v2] parse failed", {
+            error: message,
+            rawPreview: accumulator.slice(0, 500),
+          });
+          controller.enqueue(
+            encodeEvent(encoder, { __v2_error: message }),
+          );
+        }
+
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      } catch (error) {
+        const message =
+          error instanceof LLMError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : String(error);
+        controller.enqueue(encodeEvent(encoder, { error: message }));
+        controller.close();
+      }
+    },
   });
 }

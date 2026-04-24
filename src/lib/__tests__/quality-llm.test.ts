@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildScannerPrompt,
+  buildScannerPromptV2,
   parseAndValidateResponse,
+  parseAndValidateResponseV2,
   type UserContext,
 } from "../quality-llm";
 import { flattenSystemBlocks } from "../llm-client";
@@ -10,6 +12,7 @@ import {
   type BrandVoiceProfile,
   type BrandVoiceRecord,
 } from "../brand-voice-types";
+import type { NeighborPost } from "../quality-scanner-shared";
 
 // ── Fixtures ──────────────────────────────────────────────────────────
 
@@ -327,5 +330,316 @@ describe("parseAndValidateResponse", () => {
     expect(result.issues).toHaveLength(1);
     expect(result.issues[0].category).toBe("voice-drift");
     expect(result.issues[0].id).toBe("voice-drift-sentence-length");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// TICKET-077 — v2 four-axis diagnostic
+// ─────────────────────────────────────────────────────────────────────
+
+const EMPTY_NEIGHBORS: NeighborPost[] = [];
+
+const THREE_NEIGHBORS: NeighborPost[] = [
+  {
+    id: "n-1",
+    textPreview: "Productivity advice is mostly recycled.",
+    wes: 120,
+    wesNormalized: 12,
+    publishedAt: "2026-03-12T10:00:00Z",
+  },
+  {
+    id: "n-2",
+    textPreview: "The best workflow is the one you actually follow.",
+    wes: 80,
+    wesNormalized: 8,
+    publishedAt: "2026-03-08T10:00:00Z",
+  },
+  {
+    id: "n-3",
+    textPreview: "Morning routines are overrated.",
+    wes: 45,
+    wesNormalized: 4.5,
+    publishedAt: "2026-03-01T10:00:00Z",
+  },
+];
+
+const VALID_V2_RESPONSE = JSON.stringify({
+  styleMatch: {
+    summary: "Draft departs from the user's usual fragment-heavy style.",
+    findings: [
+      {
+        rule: "sentence_structure",
+        severity: "flag",
+        message: "Draft uses 30-word compound sentences; pattern is short fragments.",
+        evidence: "Neighbor post [1] opens with a 6-word hook.",
+      },
+    ],
+    neighborCitations: [1, 2],
+  },
+  psychology: {
+    summary: "Hook is soft; no Information Gap.",
+    findings: [
+      {
+        severity: "info",
+        message: "Opener does not commit to Information Gap or Zeigarnik.",
+      },
+    ],
+  },
+  algorithm: {
+    summary: "One red line hit.",
+    findings: [
+      {
+        rule: "R1",
+        severity: "warn",
+        message: "Engagement bait detected.",
+        evidence: "\"like if you agree\"",
+      },
+    ],
+  },
+  aiDetection: {
+    summary: "AI-tone marker extraction coming in a follow-up release.",
+    findings: [],
+  },
+});
+
+// ── buildScannerPromptV2 ─────────────────────────────────────────────
+
+describe("buildScannerPromptV2", () => {
+  it("marks the knowledge prefix as cacheable and the variable block as uncached", () => {
+    const { systemPrompt } = buildScannerPromptV2(
+      "My draft",
+      FULL_CONTEXT,
+      EMPTY_NEIGHBORS,
+    );
+    expect(systemPrompt.length).toBeGreaterThanOrEqual(2);
+    expect(systemPrompt[0].cacheable).toBe(true);
+    expect(systemPrompt[1].cacheable).toBeFalsy();
+  });
+
+  it("includes all four knowledge files + analyze.md in the cached prefix", () => {
+    const { systemPrompt } = buildScannerPromptV2(
+      "My draft",
+      FULL_CONTEXT,
+      EMPTY_NEIGHBORS,
+    );
+    const prefix = systemPrompt[0].text;
+    // Each knowledge file has a distinctive heading; presence confirms ordering.
+    expect(prefix).toContain("Threads Algorithm Reference");
+    expect(prefix).toContain("Psychology Reference");
+    expect(prefix.toLowerCase()).toContain("ai"); // ai-detection.md header varies; keyword is sufficient
+    expect(prefix).toContain("Scanner Four-Axis Diagnostic");
+  });
+
+  it("numbers neighbor candidates in the variable suffix", () => {
+    const { systemPrompt } = buildScannerPromptV2(
+      "Draft",
+      FULL_CONTEXT,
+      THREE_NEIGHBORS,
+    );
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("Neighbor post [1]");
+    expect(joined).toContain("Neighbor post [2]");
+    expect(joined).toContain("Neighbor post [3]");
+    expect(joined).toContain("Productivity advice is mostly recycled.");
+  });
+
+  it("handles empty neighbor list gracefully", () => {
+    const { systemPrompt } = buildScannerPromptV2(
+      "Draft",
+      FULL_CONTEXT,
+      EMPTY_NEIGHBORS,
+    );
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("No neighbor posts available");
+    expect(joined).not.toContain("Neighbor post [1]");
+  });
+
+  it("includes the draft text in the user message with v2 framing", () => {
+    const { userMessage } = buildScannerPromptV2(
+      "Check out my draft!",
+      EMPTY_CONTEXT,
+      EMPTY_NEIGHBORS,
+    );
+    expect(userMessage).toContain("four-axis diagnostic");
+    expect(userMessage).toContain("Check out my draft!");
+  });
+
+  it("injects the brand-voice observer block when profile is non-stub", () => {
+    const { systemPrompt } = buildScannerPromptV2(
+      "Draft",
+      { ...FULL_CONTEXT, brandVoice: USABLE_BRAND_VOICE },
+      EMPTY_NEIGHBORS,
+    );
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain(
+      "User's established voice (flag drift only — do not rewrite toward this)",
+    );
+  });
+
+  it("omits the brand-voice observer block when profile is the empty-corpus stub", () => {
+    const { systemPrompt } = buildScannerPromptV2(
+      "Draft",
+      { ...FULL_CONTEXT, brandVoice: STUB_BRAND_VOICE },
+      EMPTY_NEIGHBORS,
+    );
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).not.toContain("User's established voice");
+  });
+
+  it("includes recent posts and topic tags in the variable suffix", () => {
+    const { systemPrompt } = buildScannerPromptV2(
+      "Draft",
+      FULL_CONTEXT,
+      EMPTY_NEIGHBORS,
+    );
+    const joined = flattenSystemBlocks(systemPrompt);
+    expect(joined).toContain("AI is changing everything in tech.");
+    expect(joined).toContain("tech, productivity, AI");
+  });
+});
+
+// ── parseAndValidateResponseV2 ───────────────────────────────────────
+
+describe("parseAndValidateResponseV2", () => {
+  it("parses a valid four-axis response", () => {
+    const result = parseAndValidateResponseV2(VALID_V2_RESPONSE);
+    expect(result.styleMatch.findings).toHaveLength(1);
+    expect(result.styleMatch.findings[0].rule).toBe("sentence_structure");
+    expect(result.algorithm.findings[0].rule).toBe("R1");
+    expect(result.algorithm.findings[0].severity).toBe("warn");
+    expect(result.psychology.summary).toContain("Hook is soft");
+    expect(result.aiDetection.findings).toEqual([]);
+  });
+
+  it("preserves neighborCitations as _citations on the axis", () => {
+    const result = parseAndValidateResponseV2(VALID_V2_RESPONSE);
+    expect(result.styleMatch._citations).toEqual([1, 2]);
+  });
+
+  it("strips markdown code fences", () => {
+    const fenced = "```json\n" + VALID_V2_RESPONSE + "\n```";
+    const result = parseAndValidateResponseV2(fenced);
+    expect(result.algorithm.findings[0].rule).toBe("R1");
+  });
+
+  it("strips code fences without language tag", () => {
+    const fenced = "```\n" + VALID_V2_RESPONSE + "\n```";
+    const result = parseAndValidateResponseV2(fenced);
+    expect(result.algorithm.findings[0].rule).toBe("R1");
+  });
+
+  it("throws when an axis is missing", () => {
+    const missingAxis = JSON.stringify({
+      styleMatch: { summary: "", findings: [] },
+      psychology: { summary: "", findings: [] },
+      algorithm: { summary: "", findings: [] },
+      // aiDetection missing
+    });
+    expect(() => parseAndValidateResponseV2(missingAxis)).toThrow(
+      /missing axis: aiDetection/,
+    );
+  });
+
+  it("throws on completely invalid JSON", () => {
+    expect(() => parseAndValidateResponseV2("not json")).toThrow();
+  });
+
+  it("drops findings with invalid severity", () => {
+    const raw = JSON.stringify({
+      styleMatch: {
+        summary: "",
+        findings: [
+          { severity: "warn", message: "Good finding" },
+          { severity: "critical", message: "Bad severity" },
+        ],
+      },
+      psychology: { summary: "", findings: [] },
+      algorithm: { summary: "", findings: [] },
+      aiDetection: { summary: "", findings: [] },
+    });
+    const result = parseAndValidateResponseV2(raw);
+    expect(result.styleMatch.findings).toHaveLength(1);
+    expect(result.styleMatch.findings[0].message).toBe("Good finding");
+  });
+
+  it("drops findings with empty message", () => {
+    const raw = JSON.stringify({
+      styleMatch: {
+        summary: "",
+        findings: [
+          { severity: "warn", message: "" },
+          { severity: "flag", message: "   " },
+          { severity: "info", message: "Real one" },
+        ],
+      },
+      psychology: { summary: "", findings: [] },
+      algorithm: { summary: "", findings: [] },
+      aiDetection: { summary: "", findings: [] },
+    });
+    const result = parseAndValidateResponseV2(raw);
+    expect(result.styleMatch.findings).toHaveLength(1);
+    expect(result.styleMatch.findings[0].message).toBe("Real one");
+  });
+
+  it("accepts algorithm findings with rule: \"R1\"", () => {
+    const raw = JSON.stringify({
+      styleMatch: { summary: "", findings: [] },
+      psychology: { summary: "", findings: [] },
+      algorithm: {
+        summary: "",
+        findings: [
+          {
+            rule: "R1",
+            severity: "warn",
+            message: "Engagement bait.",
+            evidence: "like if you agree",
+          },
+        ],
+      },
+      aiDetection: { summary: "", findings: [] },
+    });
+    const result = parseAndValidateResponseV2(raw);
+    expect(result.algorithm.findings[0].rule).toBe("R1");
+    expect(result.algorithm.findings[0].evidence).toBe("like if you agree");
+  });
+
+  it("tolerates aiDetection placeholder with empty findings", () => {
+    const raw = JSON.stringify({
+      styleMatch: { summary: "", findings: [] },
+      psychology: { summary: "", findings: [] },
+      algorithm: { summary: "", findings: [] },
+      aiDetection: { summary: "placeholder", findings: [] },
+    });
+    const result = parseAndValidateResponseV2(raw);
+    expect(result.aiDetection.findings).toEqual([]);
+    expect(result.aiDetection.summary).toBe("placeholder");
+  });
+
+  it("defaults summary to empty string when missing", () => {
+    const raw = JSON.stringify({
+      styleMatch: { findings: [] },
+      psychology: { findings: [] },
+      algorithm: { findings: [] },
+      aiDetection: { findings: [] },
+    });
+    const result = parseAndValidateResponseV2(raw);
+    expect(result.styleMatch.summary).toBe("");
+  });
+
+  it("drops invalid neighborCitations entries silently", () => {
+    const raw = JSON.stringify({
+      styleMatch: {
+        summary: "",
+        findings: [],
+        neighborCitations: [1, "2", 0, -1, 3.5, 4],
+      },
+      psychology: { summary: "", findings: [] },
+      algorithm: { summary: "", findings: [] },
+      aiDetection: { summary: "", findings: [] },
+    });
+    const result = parseAndValidateResponseV2(raw);
+    // Valid: 1, 4 (3.5 truncates to 3 — but 3.5 is not an integer so it's dropped;
+    // 0 and -1 are out of range; "2" is not a number).
+    expect(result.styleMatch._citations).toEqual([1, 4]);
   });
 });
