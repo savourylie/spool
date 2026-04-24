@@ -3,8 +3,8 @@
 import { SpinnerGap } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 
 import { ConfidenceBadge } from "@/components/ui/confidence-badge";
+import { RangeBar } from "@/components/dashboard/range-bar";
 import {
-  formatNumber,
   type PredictionResult,
   type LLMRefinement,
 } from "@/lib/engagement-prediction";
@@ -25,61 +25,6 @@ const CONFIDENCE_STYLES = {
   medium: "bg-tertiary/20 text-tertiary",
   low: "bg-muted text-muted-foreground",
 } as const;
-
-function RangeBar({
-  p25,
-  p50,
-  p75,
-  label,
-}: {
-  p25: number;
-  p50: number;
-  p75: number;
-  label?: string;
-}) {
-  // Scale: 0 to max where max gives some headroom beyond p75
-  const max = Math.max(p75 * 1.5, p75 + 100, 1);
-  const leftPct = (p25 / max) * 100;
-  const widthPct = ((p75 - p25) / max) * 100;
-  const markerPct = (p50 / max) * 100;
-
-  return (
-    <div className="space-y-1.5">
-      {label && (
-        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-      )}
-
-      {/* Bar track */}
-      <div className="relative h-6 overflow-hidden rounded-[var(--radius-sm)] border-2 border-border bg-muted">
-        {/* Range fill (p25 – p75) */}
-        <div
-          className="absolute inset-y-0 bg-primary/20 transition-all duration-300 [transition-timing-function:var(--ease-bounce)]"
-          style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-        />
-        {/* P50 marker */}
-        <div
-          className="absolute inset-y-0 w-0.5 bg-primary transition-all duration-300 [transition-timing-function:var(--ease-bounce)]"
-          style={{ left: `${markerPct}%` }}
-        />
-      </div>
-
-      {/* Labels */}
-      <div className="flex items-baseline justify-between text-xs">
-        <span className="text-muted-foreground">
-          Low: {formatNumber(p25)}
-        </span>
-        <span className="font-bold text-primary">
-          {formatNumber(p50)}
-        </span>
-        <span className="text-muted-foreground">
-          High: {formatNumber(p75)}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 // ── Component ────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 # [TICKET-075] Reviews Page
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #066 ✅, #072 ✅, #074 ✅
@@ -10,14 +10,14 @@
 Ship `/dashboard/understand/reviews` — a timeline of predictions vs actuals with cumulative stats. Each row shows the post, the original predicted ranges, the actual metrics, the band verdict, and the narrative from #074. A top-of-page summary answers "how good are my predictions?" with calibration stats ("Your predictions land in the Baseline band 62% of the time"). Also fills in the freshness-log health stub that #072 linked to.
 
 ## Acceptance Criteria
-- [ ] New route `/dashboard/understand/reviews/page.tsx` renders a two-section layout: cumulative stats at top, timeline below.
-- [ ] Cumulative stats section: hit-rate per band (below_conservative / conservative / baseline / optimistic / above_optimistic) shown as a horizontal stacked bar + numeric breakdown; trend arrow if last-30-days hit-rate differs from all-time.
-- [ ] Timeline section: list of `post_predictions` rows where `review_state = 'reviewed'`, sorted by `reviewed_at desc`, paginated at 20 per page.
-- [ ] New component `src/components/dashboard/prediction-review-card.tsx` renders one row: post excerpt, predicted range widget, actual metric, band verdict chip, narrative.
-- [ ] `<ConfidenceBadge />` on the cumulative stats header reflecting total reviewed count.
-- [ ] Freshness-log health section: embeds `freshness-log-card.tsx` (from #072) and extends it with a full 30-day verdict breakdown plus a small table of red verdicts (topic + timestamp + reason) — answering "what did I almost post that got flagged?".
-- [ ] Empty state for zero reviews: "Your first review will appear here 24 hours after your next published post" with a link to Composer.
-- [ ] Sidebar link added for `/dashboard/understand/reviews` under Understand section.
+- [x] New route `/dashboard/understand/reviews/page.tsx` renders a two-section layout: cumulative stats at top, timeline below.
+- [x] Cumulative stats section: hit-rate per band (below_conservative / conservative / baseline / optimistic / above_optimistic) shown as a horizontal stacked bar + numeric breakdown; trend arrow if last-30-days hit-rate differs from all-time.
+- [x] Timeline section: list of `post_predictions` rows where `review_state = 'reviewed'`, sorted by `reviewed_at desc`, paginated at 20 per page.
+- [x] New component `src/components/dashboard/prediction-review-card.tsx` renders one row: post excerpt, predicted range widget, actual metric, band verdict chip, narrative.
+- [x] `<ConfidenceBadge />` on the cumulative stats header reflecting total reviewed count.
+- [x] Freshness-log health section: embeds `freshness-log-card.tsx` (from #072) and extends it with a full 30-day verdict breakdown plus a small table of red verdicts (topic + timestamp + reason) — answering "what did I almost post that got flagged?".
+- [x] Empty state for zero reviews: "Your first review will appear here 24 hours after your next published post" with a link to Composer.
+- [x] Sidebar link added for `/dashboard/understand/reviews` under Understand section.
 
 ## Design Reference
 - **Components**: shadcn `Card`, `Table`, `Badge`; chart stacked bar via shadcn chart components.

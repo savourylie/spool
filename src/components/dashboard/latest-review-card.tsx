@@ -13,7 +13,7 @@ import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getLatestReviewEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
 import { formatNumber } from "@/lib/engagement-prediction";
-import { BAND_VERDICT_STYLES } from "@/lib/band-verdict-styles";
+import { BAND_STYLES } from "@/components/dashboard/band-palette";
 import type { LatestReviewData } from "@/lib/latest-review";
 import { cn } from "@/lib/utils";
 
@@ -82,14 +82,14 @@ function BandVerdictChip({
 }: {
   verdict: LatestReviewData["verdict"];
 }) {
-  const style = BAND_VERDICT_STYLES[verdict];
+  const style = BAND_STYLES[verdict];
   return (
     <span
       role="status"
       aria-label={`Verdict: ${style.label}`}
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap",
-        style.chipClass,
+        "inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap",
+        style.chip,
       )}
     >
       {style.label}
@@ -235,7 +235,7 @@ function DeltaBar({
       ? "text-emerald-600 dark:text-emerald-400"
       : "text-tertiary";
 
-  const style = BAND_VERDICT_STYLES[verdict];
+  const style = BAND_STYLES[verdict];
 
   return (
     <div
@@ -255,7 +255,7 @@ function DeltaBar({
         <div
           className={cn(
             "absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background",
-            style.barClass,
+            style.dot,
           )}
           style={{ left: `${actualPct}%` }}
         />
@@ -285,7 +285,7 @@ function ExpandedDetail({
   verdict: LatestReviewData["verdict"];
   matchedCount: number;
 }) {
-  const style = BAND_VERDICT_STYLES[verdict];
+  const style = BAND_STYLES[verdict];
   return (
     <div className="flex flex-col gap-3 border-t border-border pt-3">
       <div className="flex items-center justify-between gap-2">
@@ -299,7 +299,7 @@ function ExpandedDetail({
         p50={ranges.p50}
         p75={ranges.p75}
         actualViews={actualViews}
-        markerClass={style.barClass}
+        markerClass={style.dot}
       />
       <div className="flex items-baseline justify-between text-xs">
         <span className="text-muted-foreground">
