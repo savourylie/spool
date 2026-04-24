@@ -111,21 +111,43 @@ Be specific about which rule. `"rule": "R1"` is required;
 
 ## Part 5 — Axis 4: AI-Tone Detection
 
-This axis is a placeholder in the initial release. Return:
+Evaluate the draft against the 10 + 5 + 5 AI-tone taxonomy in
+`ai-detection.md`:
 
-```
-"aiDetection": {
-  "summary": "AI-tone marker extraction coming in a follow-up release.",
-  "findings": []
-}
-```
+- Sentence markers: `S01` through `S10`
+- Structure markers: `ST01` through `ST05`
+- Content markers: `C01` through `C05`
 
-Do not attempt to emit M1–M20 marker findings yet. A subsequent
-release will extend this axis with the full 10+5+5 taxonomy and
-span-level marker citations (see `ai-detection.md`). Until then, leave
-the array empty. If the draft is obviously AI-generated, that
-observation belongs under the Style Match axis as voice drift, not
-here.
+This axis returns two layers:
+
+1. `summary`: one sentence about the overall AI-tone density.
+2. `aiMarkers`: exact marker matches with character spans in the draft.
+
+Only emit a marker when you can cite an exact visible span in the
+draft. The `location.charStart` and `location.charEnd` values are
+zero-based JavaScript string offsets into the raw draft text supplied
+by the user message. `charEnd` is exclusive. The `quote` must exactly
+match, or closely match after whitespace normalization, the substring
+at that span.
+
+For structure-level markers that span more than one sentence, cite the
+shortest sentence or paragraph segment that best reveals the pattern.
+For content-level markers, cite the exact claim, number, or abstract
+statement that triggered the marker. Do not mark an entire post unless
+the post is a single short sentence.
+
+Use these categories exactly:
+
+- `S01`-`S10`: `"category": "sentence"`
+- `ST01`-`ST05`: `"category": "structure"`
+- `C01`-`C05`: `"category": "content"`
+
+Each marker hint should be one short actionable explanation, not a
+rewrite suggestion. Good hint: "Balanced contrast: avoid the neat
+not-X-but-Y shape." Bad hint: "Rewrite this as..."
+
+If no AI-tone markers are present, return an empty `aiMarkers` array
+and keep `findings` empty.
 
 ## Part 6 — Output Schema
 
@@ -137,7 +159,22 @@ Top-level keys are the four axes in this exact order:
   "styleMatch":  { "summary": "...", "findings": [ ... ], "neighborCitations": [1, 2] },
   "psychology":  { "summary": "...", "findings": [ ... ] },
   "algorithm":   { "summary": "...", "findings": [ ... ] },
-  "aiDetection": { "summary": "...", "findings": [] }
+  "aiDetection": {
+    "summary": "...",
+    "findings": [],
+    "aiMarkers": [
+      {
+        "id": "S01",
+        "category": "sentence",
+        "location": {
+          "charStart": 0,
+          "charEnd": 18,
+          "quote": "Here's the thing"
+        },
+        "hint": "Canned liveness phrase: avoid predictable opening filler."
+      }
+    ]
+  }
 }
 ```
 
@@ -165,6 +202,9 @@ Each finding is:
   numbered neighbor-post list (1-based). Omit the key when no
   neighbor was cited. Do not echo the neighbor text; the server
   resolves indices to full records.
+- **`aiMarkers` is span-level evidence only.** IDs must be one of
+  `S01`-`S10`, `ST01`-`ST05`, or `C01`-`C05`. Do not invent marker
+  IDs. Do not include markers without a quote.
 
 ## Part 7 — Why the Split
 

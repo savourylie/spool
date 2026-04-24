@@ -33,6 +33,8 @@ import {
   type LLMAnalysisResult,
   type ScannerDiagnosticV2,
   type NeighborPost,
+  type MarkerMatch,
+  type AiDetectionAxisDiagnostic,
 } from "@/lib/quality-scanner-shared";
 
 // Re-export shared types and parser for backward compatibility
@@ -44,6 +46,8 @@ export type {
   LLMAnalysisResult,
   ScannerDiagnosticV2,
   NeighborPost,
+  MarkerMatch,
+  AiDetectionAxisDiagnostic,
 };
 
 // ── Prompt Construction ──────────────────────────────────────────────
@@ -230,6 +234,10 @@ export function analyzeWithLLMStream(
 
 // ── V2 Prompt + Stream (TICKET-077) ──────────────────────────────────
 
+const SCANNER_V2_MAX_TOKENS = 8192;
+const SCANNER_V2_REASONING_EFFORT = "low";
+const SCANNER_V2_STREAM_TIMEOUT_MS = 90_000;
+
 /**
  * Render the numbered neighbor-post reference block for the Scanner's
  * Style Match axis. Each neighbor is rendered once with its index, a
@@ -389,6 +397,9 @@ export function analyzeWithLLMStreamV2(
   const iterator = llm.generateStreamIterator({
     systemPrompt,
     messages: [{ role: "user", content: userMessage }],
+    maxTokens: SCANNER_V2_MAX_TOKENS,
+    reasoningEffort: SCANNER_V2_REASONING_EFFORT,
+    timeout: SCANNER_V2_STREAM_TIMEOUT_MS,
   });
 
   const encoder = new TextEncoder();

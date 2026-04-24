@@ -1,18 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Brain } from "@phosphor-icons/react/dist/ssr/Brain";
 import { ChartLineUp } from "@phosphor-icons/react/dist/ssr/ChartLineUp";
 import { Palette } from "@phosphor-icons/react/dist/ssr/Palette";
 import { Robot } from "@phosphor-icons/react/dist/ssr/Robot";
 
+import { Button } from "@/components/ui/button";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { RulePill } from "@/components/dashboard/rule-pill";
+import {
+  AI_TONE_MARKERS,
+  AI_TONE_REMEDIATIONS,
+  type AiToneMarkerCategory,
+  type AiToneMarkerId,
+} from "@/lib/ai-tone-markers";
 import { MIN_POST_LENGTH } from "@/lib/quality-heuristics";
 import { extractCompletedAxes } from "@/lib/scanner-stream-parser";
 import type {
+  AiDetectionAxisDiagnostic,
   AxisDiagnostic,
   FindingSeverity,
+  MarkerMatch,
   NeighborPost,
   ScannerDiagnosticV2,
 } from "@/lib/quality-scanner-shared";
@@ -92,9 +101,13 @@ function initialAxisState(): AxisStateMap {
 
 interface FourAxisScannerProps {
   text: string;
+  onAiMarkerActiveChange?: (marker: MarkerMatch | null) => void;
 }
 
-export function FourAxisScanner({ text }: FourAxisScannerProps) {
+export function FourAxisScanner({
+  text,
+  onAiMarkerActiveChange,
+}: FourAxisScannerProps) {
   const [axes, setAxes] = useState<AxisStateMap>(initialAxisState);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [partialWarning, setPartialWarning] = useState<string | null>(null);
@@ -294,7 +307,13 @@ export function FourAxisScanner({ text }: FourAxisScannerProps) {
       )}
       <div className="space-y-6">
         {AXIS_CONFIG.map((cfg) => (
-          <AxisCard key={cfg.key} config={cfg} state={axes[cfg.key]} />
+          <AxisCard
+            key={cfg.key}
+            config={cfg}
+            state={axes[cfg.key]}
+            text={text}
+            onAiMarkerActiveChange={onAiMarkerActiveChange}
+          />
         ))}
       </div>
     </div>
@@ -304,9 +323,16 @@ export function FourAxisScanner({ text }: FourAxisScannerProps) {
 interface AxisCardProps {
   config: AxisConfig;
   state: AxisState;
+  text: string;
+  onAiMarkerActiveChange?: (marker: MarkerMatch | null) => void;
 }
 
-function AxisCard({ config, state }: AxisCardProps) {
+function AxisCard({
+  config,
+  state,
+  text,
+  onAiMarkerActiveChange,
+}: AxisCardProps) {
   return (
     <CollapsibleSection
       title={config.title}
@@ -316,7 +342,12 @@ function AxisCard({ config, state }: AxisCardProps) {
       iconColor={config.iconColor}
       defaultOpen
     >
-      <AxisCardBody config={config} state={state} />
+      <AxisCardBody
+        config={config}
+        state={state}
+        text={text}
+        onAiMarkerActiveChange={onAiMarkerActiveChange}
+      />
     </CollapsibleSection>
   );
 }
@@ -351,7 +382,12 @@ function AxisSummaryBadge({ state }: { state: AxisState }) {
   return <div className="flex flex-wrap gap-1.5">{chips}</div>;
 }
 
-function AxisCardBody({ config, state }: AxisCardProps) {
+function AxisCardBody({
+  config,
+  state,
+  text,
+  onAiMarkerActiveChange,
+}: AxisCardProps) {
   if (state.status === "pending") {
     return <p className="text-sm text-muted-foreground">Waiting for input…</p>;
   }
@@ -378,6 +414,17 @@ function AxisCardBody({ config, state }: AxisCardProps) {
   const { summary, findings, neighborPosts } = state.data;
   const isAlgorithm = config.key === "algorithm";
   const isStyleMatch = config.key === "styleMatch";
+  const isAiDetection = config.key === "aiDetection";
+
+  if (isAiDetection) {
+    return (
+      <AiToneAxisBody
+        axis={state.data as AiDetectionAxisDiagnostic}
+        text={text}
+        onAiMarkerActiveChange={onAiMarkerActiveChange}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -414,6 +461,216 @@ function AxisCardBody({ config, state }: AxisCardProps) {
       )}
     </div>
   );
+}
+
+const AI_TONE_CATEGORY_LABELS: Record<AiToneMarkerCategory, string> = {
+  sentence: "Sentence",
+  structure: "Structure",
+  content: "Content",
+};
+
+const AI_TONE_CATEGORY_ORDER: AiToneMarkerCategory[] = [
+  "sentence",
+  "structure",
+  "content",
+];
+
+function AiToneAxisBody({
+  axis,
+  text,
+  onAiMarkerActiveChange,
+}: {
+  axis: AiDetectionAxisDiagnostic;
+  text: string;
+  onAiMarkerActiveChange?: (marker: MarkerMatch | null) => void;
+}) {
+  const markerById = useMemo(
+    () => resolveAiMarkers(axis.aiMarkers ?? [], text),
+    [axis.aiMarkers, text],
+  );
+
+  return (
+    <div className="space-y-5">
+      {axis.summary && (
+        <p className="text-sm text-foreground">{axis.summary}</p>
+      )}
+
+      <div className="space-y-4">
+        {AI_TONE_CATEGORY_ORDER.map((category) => {
+          const markers = AI_TONE_MARKERS.filter(
+            (marker) => marker.category === category,
+          );
+          const detectedCount = markers.filter((marker) =>
+            markerById.has(marker.id),
+          ).length;
+
+          return (
+            <section key={category} className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                  {AI_TONE_CATEGORY_LABELS[category]}
+                </h4>
+                <span className="text-xs text-muted-foreground">
+                  {detectedCount}/{markers.length}
+                </span>
+              </div>
+              <ul className="space-y-2">
+                {markers.map((definition) => {
+                  const match = markerById.get(definition.id);
+                  const hint = match?.hint ?? definition.hint;
+                  return (
+                    <li
+                      key={definition.id}
+                      onMouseEnter={() =>
+                        match ? onAiMarkerActiveChange?.(match) : undefined
+                      }
+                      onMouseLeave={() =>
+                        match ? onAiMarkerActiveChange?.(null) : undefined
+                      }
+                      className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[var(--radius-md)] border-2 p-2.5 ${
+                        match
+                          ? "border-border bg-card"
+                          : "border-border/60 bg-muted/40 text-muted-foreground"
+                      }`}
+                    >
+                      <span className="font-mono text-xs font-bold">
+                        {definition.id}
+                      </span>
+                      <span
+                        className="min-w-0 text-sm"
+                        title={hint}
+                        aria-label={`${definition.id}: ${hint}`}
+                      >
+                        {hint}
+                      </span>
+                      {match ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onFocus={() => onAiMarkerActiveChange?.(match)}
+                          onBlur={() => onAiMarkerActiveChange?.(null)}
+                          aria-label={`Highlight ${definition.id}: ${hint}`}
+                          className="h-8 px-3 text-xs"
+                        >
+                          Highlight
+                        </Button>
+                      ) : (
+                        <span className="px-3 text-sm text-muted-foreground">
+                          -
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          );
+        })}
+      </div>
+
+      <section className="space-y-2 border-t-2 border-border pt-4">
+        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          Remediation
+        </h4>
+        <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          {AI_TONE_REMEDIATIONS.map((method) => (
+            <li
+              key={method.id}
+              className="rounded-[var(--radius-md)] border-2 border-border bg-card p-3"
+            >
+              <p className="text-sm font-bold text-foreground">
+                {method.title}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {method.description}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+function resolveAiMarkers(
+  markers: MarkerMatch[],
+  text: string,
+): Map<AiToneMarkerId, MarkerMatch> {
+  const resolved = new Map<AiToneMarkerId, MarkerMatch>();
+
+  for (const marker of markers) {
+    const match = resolveAiMarkerLocation(marker, text);
+    if (match && !resolved.has(match.id)) {
+      resolved.set(match.id, match);
+    }
+  }
+
+  return resolved;
+}
+
+function resolveAiMarkerLocation(
+  marker: MarkerMatch,
+  text: string,
+): MarkerMatch | null {
+  const { charStart, charEnd, quote } = marker.location;
+
+  if (charStart === -1 && charEnd === -1) {
+    const fallbackStart = text.indexOf(quote);
+    if (fallbackStart !== -1) {
+      return {
+        ...marker,
+        location: {
+          ...marker.location,
+          charStart: fallbackStart,
+          charEnd: fallbackStart + quote.length,
+        },
+      };
+    }
+    console.warn("[scanner-v2] ignoring ai marker without resolvable span", {
+      id: marker.id,
+      quote,
+    });
+    return null;
+  }
+
+  if (charStart < 0 || charEnd <= charStart || charEnd > text.length) {
+    console.warn("[scanner-v2] ignoring ai marker with out-of-range location", {
+      id: marker.id,
+      charStart,
+      charEnd,
+      textLength: text.length,
+    });
+    return null;
+  }
+
+  const span = text.slice(charStart, charEnd);
+  if (normalizeMarkerText(span) !== normalizeMarkerText(quote)) {
+    const fallbackStart = text.indexOf(quote);
+    if (fallbackStart !== -1) {
+      return {
+        ...marker,
+        location: {
+          ...marker.location,
+          charStart: fallbackStart,
+          charEnd: fallbackStart + quote.length,
+        },
+      };
+    }
+    console.warn("[scanner-v2] ignoring ai marker with mismatched quote", {
+      id: marker.id,
+      charStart,
+      charEnd,
+      quote,
+    });
+    return null;
+  }
+
+  return marker;
+}
+
+function normalizeMarkerText(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
 }
 
 function SeverityChip({ severity }: { severity: FindingSeverity }) {

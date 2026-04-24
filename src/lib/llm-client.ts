@@ -49,6 +49,8 @@ export interface LLMGenerateOptions {
   model?: string;
   /** Maximum tokens in the response */
   maxTokens?: number;
+  /** Reasoning effort for OpenAI-compatible reasoning models */
+  reasoningEffort?: "low" | "medium" | "high";
   /** Request timeout in milliseconds (default: 30s) */
   timeout?: number;
 }
@@ -62,6 +64,8 @@ export interface LLMStreamOptions {
   model?: string;
   /** Maximum tokens in the response */
   maxTokens?: number;
+  /** Reasoning effort for OpenAI-compatible reasoning models */
+  reasoningEffort?: "low" | "medium" | "high";
   /** Request timeout in milliseconds (default: 60s) */
   timeout?: number;
 }

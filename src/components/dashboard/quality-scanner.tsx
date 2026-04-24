@@ -24,6 +24,7 @@ import {
 import {
   parseAndValidateResponse,
   type LLMAnalysisResult,
+  type MarkerMatch,
 } from "@/lib/quality-scanner-shared";
 import {
   predictEngagement,
@@ -78,6 +79,7 @@ export function QualityScanner({
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [activeAiMarker, setActiveAiMarker] = useState<MarkerMatch | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -209,12 +211,14 @@ export function QualityScanner({
       setIsPublishing(false);
       setIsPublished(false);
       setPublishError(null);
+      setActiveAiMarker(null);
       abortRef.current?.abort();
       return;
     }
 
     setIsPublished(false);
     setPublishError(null);
+    setActiveAiMarker(null);
 
     debounceRef.current = setTimeout(() => {
       // Abort previous in-flight requests and create a fresh controller
@@ -358,14 +362,23 @@ export function QualityScanner({
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_240px]">
         {/* Left: textarea + controls */}
         <div className="space-y-2">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Type or paste a draft post to analyze..."
-            rows={5}
-            aria-label="Draft post text to analyze"
-            className="w-full resize-y rounded-[var(--radius-md)] border-2 border-[var(--input-border)] bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none"
-          />
+          <div className="relative">
+            {scannerV2 && activeAiMarker && (
+              <DraftHighlightOverlay text={text} marker={activeAiMarker} />
+            )}
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Type or paste a draft post to analyze..."
+              rows={5}
+              aria-label="Draft post text to analyze"
+              className={`relative z-20 w-full resize-y rounded-[var(--radius-md)] border-2 border-[var(--input-border)] px-4 py-3 text-sm placeholder:text-muted-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none ${
+                scannerV2 && activeAiMarker
+                  ? "bg-transparent text-transparent caret-foreground"
+                  : "bg-input text-foreground"
+              }`}
+            />
+          </div>
 
           <div className="flex items-center justify-between">
             <Button
@@ -473,7 +486,10 @@ export function QualityScanner({
       {hasText ? (
         <div className="space-y-6">
           {scannerV2 ? (
-            <FourAxisScanner text={text} />
+            <FourAxisScanner
+              text={text}
+              onAiMarkerActiveChange={setActiveAiMarker}
+            />
           ) : (
             <>
               <QualityIssuesList issues={allIssues} />
@@ -550,6 +566,45 @@ export function QualityScanner({
           title="Type or paste a draft post to analyze"
           description="We'll check for patterns the algorithm demotes and suggest improvements."
         />
+      )}
+    </div>
+  );
+}
+
+function DraftHighlightOverlay({
+  text,
+  marker,
+}: {
+  text: string;
+  marker: MarkerMatch;
+}) {
+  const start = Math.max(
+    0,
+    Math.min(marker.location.charStart, text.length),
+  );
+  const end = Math.max(start, Math.min(marker.location.charEnd, text.length));
+  const chunks = [
+    { key: "before", text: text.slice(0, start), highlight: false },
+    { key: "active", text: text.slice(start, end), highlight: true },
+    { key: "after", text: text.slice(end), highlight: false },
+  ];
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-[var(--radius-md)] border-2 border-transparent bg-input px-4 py-3 text-sm text-foreground whitespace-pre-wrap break-words"
+    >
+      {chunks.map((chunk) =>
+        chunk.highlight ? (
+          <span
+            key={chunk.key}
+            className="rounded-[3px] bg-tertiary/30 underline decoration-tertiary decoration-2 underline-offset-4"
+          >
+            {chunk.text}
+          </span>
+        ) : (
+          <span key={chunk.key}>{chunk.text}</span>
+        ),
       )}
     </div>
   );

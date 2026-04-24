@@ -79,6 +79,39 @@ describe("OpenAILLMClient.generate", () => {
     expect(mockCreate.mock.calls[0][0].model).toBe("gpt-4o");
   });
 
+  it("passes reasoning effort for Inception-compatible models", async () => {
+    mockCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: "OK" } }],
+    });
+
+    const client = new OpenAILLMClient("sk-test", {
+      baseURL: "https://api.inceptionlabs.ai/v1/",
+      defaultModel: "mercury-2",
+    });
+    await client.generate({
+      messages: [{ role: "user", content: "Hi" }],
+      reasoningEffort: "low",
+    });
+
+    expect(mockCreate.mock.calls[0][0].reasoning_effort).toBe("low");
+  });
+
+  it("does not pass reasoning effort to non-reasoning OpenAI chat models", async () => {
+    mockCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: "OK" } }],
+    });
+
+    const client = new OpenAILLMClient("sk-test", {
+      defaultModel: "gpt-4o",
+    });
+    await client.generate({
+      messages: [{ role: "user", content: "Hi" }],
+      reasoningEffort: "low",
+    });
+
+    expect(mockCreate.mock.calls[0][0].reasoning_effort).toBeUndefined();
+  });
+
   it("returns empty string when choices are empty", async () => {
     mockCreate.mockResolvedValueOnce({ choices: [] });
 
@@ -188,5 +221,26 @@ describe("OpenAILLMClient.generateStreamIterator", () => {
     }
 
     expect(mockCreate.mock.calls[0][0].stream).toBe(true);
+  });
+
+  it("passes reasoning effort for Inception-compatible streaming models", async () => {
+    mockCreate.mockResolvedValueOnce({
+      [Symbol.asyncIterator]: async function* () {
+        yield { choices: [{ delta: { content: "OK" } }] };
+      },
+    });
+
+    const client = new OpenAILLMClient("sk-test", {
+      baseURL: "https://api.inceptionlabs.ai/v1/",
+      defaultModel: "mercury-2",
+    });
+    for await (const _ of client.generateStreamIterator({
+      messages: [{ role: "user", content: "Hi" }],
+      reasoningEffort: "low",
+    })) {
+      void _;
+    }
+
+    expect(mockCreate.mock.calls[0][0].reasoning_effort).toBe("low");
   });
 });

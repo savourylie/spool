@@ -18,10 +18,7 @@
  *  - Tolerant: returns partial results and never throws.
  */
 
-import type {
-  AxisDiagnostic,
-  ScannerDiagnosticV2,
-} from "@/lib/quality-scanner-shared";
+import type { ScannerDiagnosticV2 } from "@/lib/quality-scanner-shared";
 
 const AXIS_KEYS = [
   "styleMatch",
@@ -34,17 +31,20 @@ type AxisKey = (typeof AXIS_KEYS)[number];
 export function extractCompletedAxes(
   accumulator: string,
 ): Partial<ScannerDiagnosticV2> {
-  const result: Partial<ScannerDiagnosticV2> = {};
+  const result: Partial<Record<AxisKey, ScannerDiagnosticV2[AxisKey]>> = {};
   for (const key of AXIS_KEYS) {
     const parsed = findAxisValue(accumulator, key);
     if (parsed) {
       result[key] = parsed;
     }
   }
-  return result;
+  return result as Partial<ScannerDiagnosticV2>;
 }
 
-function findAxisValue(source: string, key: AxisKey): AxisDiagnostic | null {
+function findAxisValue(
+  source: string,
+  key: AxisKey,
+): ScannerDiagnosticV2[AxisKey] | null {
   const pattern = `"${key}"`;
   let searchFrom = 0;
 
@@ -69,7 +69,7 @@ function findAxisValue(source: string, key: AxisKey): AxisDiagnostic | null {
     try {
       const parsed = JSON.parse(source.slice(valueStart, valueEnd + 1));
       if (isAxisShape(parsed)) {
-        return parsed as AxisDiagnostic;
+        return parsed as ScannerDiagnosticV2[AxisKey];
       }
     } catch {
       // fall through to next occurrence

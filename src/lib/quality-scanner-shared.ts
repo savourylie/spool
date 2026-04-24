@@ -8,6 +8,11 @@
 
 import type { QualityIssue, IssueCategory, IssueSeverity } from "@/lib/quality-heuristics";
 import type { BrandVoiceRecord } from "@/lib/brand-voice-types";
+import {
+  getAiToneMarker,
+  type AiToneMarkerCategory,
+  type AiToneMarkerId,
+} from "@/lib/ai-tone-markers";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -81,11 +86,26 @@ export interface AxisDiagnostic {
   _citations?: number[];
 }
 
+export interface MarkerMatch {
+  id: AiToneMarkerId;
+  category: AiToneMarkerCategory;
+  location: {
+    charStart: number;
+    charEnd: number;
+    quote: string;
+  };
+  hint: string;
+}
+
+export interface AiDetectionAxisDiagnostic extends AxisDiagnostic {
+  aiMarkers: MarkerMatch[];
+}
+
 export interface ScannerDiagnosticV2 {
   styleMatch: AxisDiagnostic;
   psychology: AxisDiagnostic;
   algorithm: AxisDiagnostic;
-  aiDetection: AxisDiagnostic;
+  aiDetection: AiDetectionAxisDiagnostic;
 }
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -232,7 +252,56 @@ function parseCitations(raw: unknown): number[] | undefined {
   return indices.length > 0 ? indices : undefined;
 }
 
-function parseAxis(raw: unknown): AxisDiagnostic {
+function parseMarkerMatch(raw: unknown): MarkerMatch | null {
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+
+  if (typeof record.id !== "string") return null;
+  const definition = getAiToneMarker(record.id);
+  if (!definition) return null;
+
+  if (record.category !== definition.category) return null;
+
+  const location =
+    record.location && typeof record.location === "object"
+      ? (record.location as Record<string, unknown>)
+      : null;
+  if (!location) return null;
+
+  const quote =
+    typeof location.quote === "string" ? location.quote.trim() : "";
+  if (quote.length === 0) return null;
+
+  const charStart =
+    typeof location.charStart === "number" &&
+    Number.isFinite(location.charStart)
+      ? Math.trunc(location.charStart)
+      : -1;
+  const charEnd =
+    typeof location.charEnd === "number" &&
+    Number.isFinite(location.charEnd)
+      ? Math.trunc(location.charEnd)
+      : -1;
+
+  return {
+    id: definition.id,
+    category: definition.category,
+    location: {
+      charStart,
+      charEnd,
+      quote,
+    },
+    hint:
+      typeof record.hint === "string" && record.hint.trim().length > 0
+        ? record.hint.trim()
+        : definition.hint,
+  };
+}
+
+function parseAxis(
+  raw: unknown,
+  axisKey?: AxisKey,
+): AxisDiagnostic | AiDetectionAxisDiagnostic {
   if (!raw || typeof raw !== "object") {
     throw new Error("axis is not an object");
   }
@@ -251,6 +320,18 @@ function parseAxis(raw: unknown): AxisDiagnostic {
 
   const axis: AxisDiagnostic = { summary, findings };
   if (citations) axis._citations = citations;
+
+  if (axisKey === "aiDetection") {
+    return {
+      ...axis,
+      aiMarkers: Array.isArray(record.aiMarkers)
+        ? record.aiMarkers
+            .map(parseMarkerMatch)
+            .filter((m): m is MarkerMatch => m !== null)
+        : [],
+    } satisfies AiDetectionAxisDiagnostic;
+  }
+
   return axis;
 }
 
@@ -279,7 +360,7 @@ export function parseAndValidateResponseV2(raw: string): ScannerDiagnosticV2 {
     if (axisRaw === undefined) {
       throw new Error(`missing axis: ${axis}`);
     }
-    result[axis] = parseAxis(axisRaw);
+    result[axis] = parseAxis(axisRaw, axis);
   }
 
   return result as ScannerDiagnosticV2;

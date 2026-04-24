@@ -98,6 +98,7 @@ function mapOpenAIError(error: unknown): LLMError {
 export class OpenAILLMClient implements ILLMClient {
   private client: OpenAI;
   private defaultModel: string;
+  private baseURL?: string;
 
   constructor(apiKey?: string, options?: { baseURL?: string; defaultModel?: string }) {
     this.client = new OpenAI({
@@ -105,6 +106,16 @@ export class OpenAILLMClient implements ILLMClient {
       ...(options?.baseURL ? { baseURL: options.baseURL } : {}),
     });
     this.defaultModel = options?.defaultModel || DEFAULT_MODEL;
+    this.baseURL = options?.baseURL;
+  }
+
+  private supportsReasoningEffort(model: string): boolean {
+    const normalizedModel = model.toLowerCase();
+    const normalizedBaseURL = this.baseURL?.toLowerCase() ?? "";
+    return (
+      normalizedBaseURL.includes("inceptionlabs.ai") ||
+      normalizedModel.startsWith("mercury")
+    );
   }
 
   async generate(options: LLMGenerateOptions): Promise<string> {
@@ -113,6 +124,7 @@ export class OpenAILLMClient implements ILLMClient {
       messages,
       model = this.defaultModel,
       maxTokens = DEFAULT_MAX_TOKENS,
+      reasoningEffort,
       timeout = DEFAULT_GENERATE_TIMEOUT_MS,
     } = options;
 
@@ -122,6 +134,9 @@ export class OpenAILLMClient implements ILLMClient {
         {
           model,
           max_tokens: maxTokens,
+          ...(reasoningEffort && this.supportsReasoningEffort(model)
+            ? { reasoning_effort: reasoningEffort }
+            : {}),
           messages: [
             ...(resolvedSystem
               ? [{ role: "system" as const, content: resolvedSystem }]
@@ -149,6 +164,7 @@ export class OpenAILLMClient implements ILLMClient {
       messages,
       model = this.defaultModel,
       maxTokens = DEFAULT_MAX_TOKENS,
+      reasoningEffort,
       timeout = DEFAULT_STREAM_TIMEOUT_MS,
     } = options;
 
@@ -158,6 +174,9 @@ export class OpenAILLMClient implements ILLMClient {
         {
           model,
           max_tokens: maxTokens,
+          ...(reasoningEffort && this.supportsReasoningEffort(model)
+            ? { reasoning_effort: reasoningEffort }
+            : {}),
           stream: true,
           messages: [
             ...(resolvedSystem

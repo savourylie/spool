@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  analyzeWithLLMStreamV2,
   buildScannerPrompt,
   buildScannerPromptV2,
   parseAndValidateResponse,
@@ -7,6 +8,8 @@ import {
   type UserContext,
 } from "../quality-llm";
 import { flattenSystemBlocks } from "../llm-client";
+import type { LLMStreamOptions } from "../llm-client";
+import type { ILLMClient } from "../llm-provider";
 import {
   BRAND_VOICE_DIMENSIONS,
   type BrandVoiceProfile,
@@ -397,10 +400,39 @@ const VALID_V2_RESPONSE = JSON.stringify({
     ],
   },
   aiDetection: {
-    summary: "AI-tone marker extraction coming in a follow-up release.",
+    summary: "Draft has one sentence-level AI-tone marker.",
     findings: [],
+    aiMarkers: [
+      {
+        id: "S01",
+        category: "sentence",
+        location: {
+          charStart: 0,
+          charEnd: 18,
+          quote: "Here's the thing",
+        },
+        hint: "Canned liveness phrase.",
+      },
+    ],
   },
 });
+
+async function readSseStream(
+  stream: ReadableStream<Uint8Array>,
+): Promise<string> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let result = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    result += decoder.decode(value, { stream: true });
+  }
+
+  result += decoder.decode();
+  return result;
+}
 
 // ── buildScannerPromptV2 ─────────────────────────────────────────────
 
@@ -509,6 +541,8 @@ describe("parseAndValidateResponseV2", () => {
     expect(result.algorithm.findings[0].severity).toBe("warn");
     expect(result.psychology.summary).toContain("Hook is soft");
     expect(result.aiDetection.findings).toEqual([]);
+    expect(result.aiDetection.aiMarkers[0].id).toBe("S01");
+    expect(result.aiDetection.aiMarkers[0].location.charStart).toBe(0);
   });
 
   it("preserves neighborCitations as _citations on the axis", () => {
@@ -612,7 +646,66 @@ describe("parseAndValidateResponseV2", () => {
     });
     const result = parseAndValidateResponseV2(raw);
     expect(result.aiDetection.findings).toEqual([]);
+    expect(result.aiDetection.aiMarkers).toEqual([]);
     expect(result.aiDetection.summary).toBe("placeholder");
+  });
+
+  it("drops invalid ai-tone marker ids and category mismatches", () => {
+    const raw = JSON.stringify({
+      styleMatch: { summary: "", findings: [] },
+      psychology: { summary: "", findings: [] },
+      algorithm: { summary: "", findings: [] },
+      aiDetection: {
+        summary: "",
+        findings: [],
+        aiMarkers: [
+          {
+            id: "S02",
+            category: "sentence",
+            location: { charStart: 3, charEnd: 11, quote: "Not this" },
+            hint: "Valid marker.",
+          },
+          {
+            id: "M2",
+            category: "sentence",
+            location: { charStart: 3, charEnd: 11, quote: "Not this" },
+            hint: "Old marker id.",
+          },
+          {
+            id: "C01",
+            category: "sentence",
+            location: { charStart: 3, charEnd: 11, quote: "70%" },
+            hint: "Wrong category.",
+          },
+        ],
+      },
+    });
+    const result = parseAndValidateResponseV2(raw);
+    expect(result.aiDetection.aiMarkers).toHaveLength(1);
+    expect(result.aiDetection.aiMarkers[0].id).toBe("S02");
+  });
+
+  it("keeps quote-only ai-tone markers for client-side span fallback", () => {
+    const raw = JSON.stringify({
+      styleMatch: { summary: "", findings: [] },
+      psychology: { summary: "", findings: [] },
+      algorithm: { summary: "", findings: [] },
+      aiDetection: {
+        summary: "",
+        findings: [],
+        aiMarkers: [
+          {
+            id: "C03",
+            category: "content",
+            location: { quote: "Many accounts see this pattern." },
+            hint: "Abstract claim without a concrete case.",
+          },
+        ],
+      },
+    });
+    const result = parseAndValidateResponseV2(raw);
+    expect(result.aiDetection.aiMarkers[0].location.charStart).toBe(-1);
+    expect(result.aiDetection.aiMarkers[0].location.charEnd).toBe(-1);
   });
 
   it("defaults summary to empty string when missing", () => {
@@ -641,5 +734,39 @@ describe("parseAndValidateResponseV2", () => {
     // Valid: 1, 4 (3.5 truncates to 3 — but 3.5 is not an integer so it's dropped;
     // 0 and -1 are out of range; "2" is not a number).
     expect(result.styleMatch._citations).toEqual([1, 4]);
+  });
+});
+
+// ── analyzeWithLLMStreamV2 ───────────────────────────────────────────
+
+describe("analyzeWithLLMStreamV2", () => {
+  it("uses a scanner-sized token budget instead of the provider default", async () => {
+    let receivedOptions: LLMStreamOptions | undefined;
+
+    const llm: ILLMClient = {
+      generate: async () => "",
+      generateStream: () => new ReadableStream<Uint8Array>(),
+      generateStreamIterator(options) {
+        receivedOptions = options;
+        return (async function* () {
+          yield VALID_V2_RESPONSE;
+        })();
+      },
+    };
+
+    const stream = analyzeWithLLMStreamV2(
+      "Here's the thing about systems thinking.",
+      EMPTY_CONTEXT,
+      EMPTY_NEIGHBORS,
+      llm,
+    );
+
+    const output = await readSseStream(stream);
+
+    expect(receivedOptions?.maxTokens).toBeGreaterThanOrEqual(8192);
+    expect(receivedOptions?.reasoningEffort).toBe("low");
+    expect(receivedOptions?.timeout).toBeGreaterThanOrEqual(90_000);
+    expect(output).toContain("__v2_result");
+    expect(output).not.toContain("__v2_error");
   });
 });
