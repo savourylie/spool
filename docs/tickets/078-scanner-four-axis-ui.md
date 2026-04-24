@@ -1,7 +1,7 @@
 # [TICKET-078] Scanner Four-Axis UI
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #077 ✅
@@ -10,14 +10,14 @@
 Refactor the Scanner page UI from a flat issue list to four collapsible diagnostic cards, one per axis. Each card shows the axis summary, its findings with rule references, and neighbor-post citations inline. Replace the old automatic rewrites with an explicit "Get rewrite suggestions" CTA that routes to the Composer with the analyzed text pre-filled. This preserves the user journey while aligning with the AK discipline.
 
 ## Acceptance Criteria
-- [ ] `src/components/dashboard/quality-scanner.tsx` refactored to render four cards: Style Matching, Psychology Triggers, Algorithm Alignment, AI-Tone Detection.
-- [ ] Each card is collapsible (default expanded) and shows axis summary at top + findings list; severity chips (`info`/`flag`/`warn`) colored via tier palette from #066.
-- [ ] Algorithm-axis findings that carry `rule: "R3"` etc. render the rule code as a small pill linking to an in-app tooltip with the 1-line rule summary (sourced from `algorithm.md`).
-- [ ] Neighbor-post citations render as a small inline strip at the bottom of the Style card: "Similar posts: " + 3 post thumbnails linking to the post detail.
-- [ ] "Get rewrite suggestions" button replaces the old inline-rewrites section; clicking routes to `/dashboard/create/compose?from=scanner&text=<encoded>`.
-- [ ] Streaming: cards render progressively as each axis completes — axis-specific skeletons show while data streams.
-- [ ] Feature flag aware: when `SCANNER_V2_ENABLED` is false, render the legacy flat issue list unchanged.
-- [ ] Loading, empty, and error states per card.
+- [x] `src/components/dashboard/quality-scanner.tsx` refactored to render four cards: Style Matching, Psychology Triggers, Algorithm Alignment, AI-Tone Detection.
+- [x] Each card is collapsible (default expanded) and shows axis summary at top + findings list; severity chips (`info`/`flag`/`warn`) colored via tier palette from #066.
+- [x] Algorithm-axis findings that carry `rule: "R3"` etc. render the rule code as a small pill linking to an in-app tooltip with the 1-line rule summary (sourced from `algorithm.md`).
+- [x] Neighbor-post citations render as a small inline strip at the bottom of the Style card: "Similar posts: " + 3 post thumbnails linking to the post detail.
+- [x] "Get rewrite suggestions" button replaces the old inline-rewrites section; clicking routes to `/dashboard/create/compose?from=scanner&text=<encoded>`.
+- [x] Streaming: cards render progressively as each axis completes — axis-specific skeletons show while data streams.
+- [x] Feature flag aware: when `SCANNER_V2_ENABLED` is false, render the legacy flat issue list unchanged.
+- [x] Loading, empty, and error states per card.
 
 ## Design Reference
 - **Components**: shadcn `Card`, `Collapsible`, `Badge`, `Tooltip`; existing card styles from dashboard.

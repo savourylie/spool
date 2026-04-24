@@ -1,10 +1,10 @@
 # [TICKET-079] AI-Tone Marker Taxonomy
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #078
+- Requires: #078 ✅
 
 ## Description
 Upgrade the Scanner's AI-tone detection from a generic "sounds AI-generated" vibe check to the structured 10 + 5 + 5 marker taxonomy from `src/lib/prompts/ai-detection.md`: 10 sentence-level markers (fixed phrases, balanced-contrast patterns, etc.), 5 structure-level markers (too-smooth arguments, perfect narrative arc), 5 content-level markers (floating numbers, one-directional evidence). Each matched marker cites its exact location in the draft, and the UI highlights the offending sentence on hover. Ships the 6 de-AI-ification remediation actions as recommended next steps.
