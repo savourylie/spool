@@ -1,7 +1,7 @@
 # [TICKET-076] Today Hub "Latest Review" Card
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #074 ✅
@@ -10,12 +10,12 @@
 Add a new card to Today Hub that surfaces the most recent prediction-vs-actual review: the post, the band verdict, the actual vs predicted deltas, and one key learning from the narrative. Completes the review loop — every time the user opens Today Hub, the hero reminder is "here's what your last post taught us." Includes a graceful empty state for users with no reviews yet.
 
 ## Acceptance Criteria
-- [ ] New component `src/components/dashboard/latest-review-card.tsx` renders the most recent `post_predictions` row where `review_state = 'reviewed'`.
-- [ ] Card shows: post excerpt (2 lines max, truncated), band verdict chip matching the palette from #075, one-line key learning pulled from the narrative (first sentence), and "See full review →" link to `/dashboard/understand/reviews`.
-- [ ] Card integrated into `src/app/dashboard/page.tsx` in the primary card grid, positioned after `BestPostCard` and before `WhatToPostCard`.
-- [ ] Empty state (no reviewed rows): card displays "Your first review lands here after your next published post."
-- [ ] Loading state (skeleton) while server component fetches.
-- [ ] `<ConfidenceBadge />` shown on the predicted-range detail if the user expands the card.
+- [x] New component `src/components/dashboard/latest-review-card.tsx` renders the most recent `post_predictions` row where `review_state = 'reviewed'`.
+- [x] Card shows: post excerpt (2 lines max, truncated), band verdict chip matching the palette from #075, one-line key learning pulled from the narrative (first sentence), and "See full review →" link to `/dashboard/understand/reviews`.
+- [x] Card integrated into `src/app/dashboard/page.tsx` in the primary card grid, positioned after `BestPostCard` and before `WhatToPostCard`.
+- [x] Empty state (no reviewed rows): card displays "Your first review lands here after your next published post."
+- [x] Loading state (skeleton) while server component fetches.
+- [x] `<ConfidenceBadge />` shown on the predicted-range detail if the user expands the card.
 
 ## Design Reference
 - **Components**: reuses Today Hub `StickerCard` chrome; shadcn `Badge` for the band verdict; existing skeleton pattern from other Today Hub cards.
