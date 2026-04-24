@@ -189,3 +189,19 @@ export function getBestPostEmptyStateCopy(isImporting: boolean) {
       "Post to see your top-performing content highlighted here with insights into why it worked.",
   };
 }
+
+export function getLatestReviewEmptyStateCopy(isImporting: boolean) {
+  if (isImporting) {
+    return {
+      title: "Importing your post history",
+      description:
+        "Your first review lands here after your next published post.",
+    };
+  }
+
+  return {
+    title: "Your first review lands here",
+    description:
+      "After your next published post, we'll show how it performed against your predicted range.",
+  };
+}

@@ -28,8 +28,10 @@ import {
 import { ReselectionAlert } from "@/components/dashboard/reselection-alert";
 import { ViralRecoveryCard } from "@/components/dashboard/viral-recovery-card";
 import { FreshnessLogCard } from "@/components/dashboard/freshness-log-card";
+import { LatestReviewCard } from "@/components/dashboard/latest-review-card";
 import { getTodayHubTopicsBundle } from "@/lib/today-hub-freshness";
 import { getFreshnessLogCounts } from "@/lib/freshness-log";
+import { getLatestReview } from "@/lib/latest-review";
 
 export const metadata: Metadata = { title: "Today — Spool" };
 
@@ -42,25 +44,32 @@ export default async function DashboardPage() {
   const supabase = createAdminClient();
 
   // ── Parallel data fetching ─────────────────────────────────────────
-  const [postsResult, dailyStatsResult, backfillJob, reselectedPosts, userResult] =
-    await Promise.all([
-      supabase.rpc("get_posts_with_metrics", {
-        p_user_id: userId,
-        p_sort_column: "views",
-        p_sort_order: "desc",
-        p_limit: 50,
-        p_offset: 0,
-      }),
-      supabase
-        .from("daily_stats")
-        .select("date, followers_count")
-        .eq("user_id", userId)
-        .order("date", { ascending: false })
-        .limit(14),
-      getMostRecentBackfillJob(supabase, userId),
-      detectReselectedPosts(supabase, userId),
-      supabase.from("users").select("username").eq("id", userId).single(),
-    ]);
+  const [
+    postsResult,
+    dailyStatsResult,
+    backfillJob,
+    reselectedPosts,
+    userResult,
+    latestReview,
+  ] = await Promise.all([
+    supabase.rpc("get_posts_with_metrics", {
+      p_user_id: userId,
+      p_sort_column: "views",
+      p_sort_order: "desc",
+      p_limit: 50,
+      p_offset: 0,
+    }),
+    supabase
+      .from("daily_stats")
+      .select("date, followers_count")
+      .eq("user_id", userId)
+      .order("date", { ascending: false })
+      .limit(14),
+    getMostRecentBackfillJob(supabase, userId),
+    detectReselectedPosts(supabase, userId),
+    supabase.from("users").select("username").eq("id", userId).single(),
+    getLatestReview(supabase, userId),
+  ]);
 
   // ── Normalize data ─────────────────────────────────────────────────
   const posts: PostRow[] = (postsResult.data ?? []).map((row) => ({
@@ -196,6 +205,7 @@ export default async function DashboardPage() {
           sampleSize={recentPosts.length}
           isImporting={isImporting}
         />
+        <LatestReviewCard review={latestReview} isImporting={isImporting} />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
