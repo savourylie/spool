@@ -1,10 +1,10 @@
 # [TICKET-078] Scanner Four-Axis UI
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #077
+- Requires: #077 ✅
 
 ## Description
 Refactor the Scanner page UI from a flat issue list to four collapsible diagnostic cards, one per axis. Each card shows the axis summary, its findings with rule references, and neighbor-post citations inline. Replace the old automatic rewrites with an explicit "Get rewrite suggestions" CTA that routes to the Composer with the analyzed text pre-filled. This preserves the user journey while aligning with the AK discipline.
