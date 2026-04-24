@@ -8,6 +8,10 @@ import type { FreshnessLogCounts } from "@/lib/freshness-log";
 interface FreshnessLogCardProps {
   counts: FreshnessLogCounts;
   className?: string;
+  /** Label above the bar. Default "Last 7 days". */
+  windowLabel?: string;
+  /** Hide the "See review log" link — useful when rendered on the reviews page. */
+  showReviewLink?: boolean;
 }
 
 interface Segment {
@@ -48,10 +52,15 @@ function buildSegments(counts: FreshnessLogCounts): Segment[] {
   ];
 }
 
-export function FreshnessLogCard({ counts, className }: FreshnessLogCardProps) {
+export function FreshnessLogCard({
+  counts,
+  className,
+  windowLabel = "Last 7 days",
+  showReviewLink = true,
+}: FreshnessLogCardProps) {
   const { total, hasData } = counts;
   const segments = buildSegments(counts);
-  const ariaSummary = `Freshness log last 7 days: ${counts.green} fresh, ${counts.yellow} caution, ${counts.red} saturated.`;
+  const ariaSummary = `Freshness log ${windowLabel.toLowerCase()}: ${counts.green} fresh, ${counts.yellow} caution, ${counts.red} saturated.`;
 
   return (
     <div
@@ -67,13 +76,15 @@ export function FreshnessLogCard({ counts, className }: FreshnessLogCardProps) {
             Freshness log health
           </h3>
         </div>
-        <Link
-          href="/dashboard/understand/reviews"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
-        >
-          See review log
-          <ArrowRight weight="bold" className="size-3" />
-        </Link>
+        {showReviewLink && (
+          <Link
+            href="/dashboard/understand/reviews"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            See review log
+            <ArrowRight weight="bold" className="size-3" />
+          </Link>
+        )}
       </div>
 
       {!hasData ? (
@@ -82,7 +93,7 @@ export function FreshnessLogCard({ counts, className }: FreshnessLogCardProps) {
         </p>
       ) : (
         <>
-          <p className="text-xs text-muted-foreground">Last 7 days</p>
+          <p className="text-xs text-muted-foreground">{windowLabel}</p>
           <div
             role="img"
             aria-label={ariaSummary}
