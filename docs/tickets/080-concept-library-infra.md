@@ -1,7 +1,7 @@
 # [TICKET-080] Concept Library Infrastructure
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #065 ✅, #067 ✅
@@ -10,14 +10,14 @@
 Build the classifier that extracts concepts and analogies from every post, the `concept_ledger` table to persist them, and the incremental update path that catches new posts as they arrive via backfill. This is the foundation for the "have I explained this before?" surface (#081). The ledger tracks `{concept, analogy, post_id, seen_at}` rows plus a computed reuse risk aggregate (green / yellow / red) per concept.
 
 ## Acceptance Criteria
-- [ ] Supabase migration creates `concept_ledger` with: `id uuid pk`, `user_id uuid`, `concept text`, `analogy text null`, `post_id uuid`, `seen_at timestamptz`, unique index on `(user_id, concept, post_id)` to prevent dup rows.
-- [ ] `src/lib/prompts/concept-extraction.md` contains the classifier prompt: emits an array of `{concept, analogy?, evidence}` from a single post's full text.
-- [ ] `src/lib/concept-library.ts` exports: `extractConceptsForPost(postId): Promise<LedgerRow[]>`, `extractForUser(userId, batchSize=20): Promise<{processed: number}>`, `computeReuseRisk(userId, concept): "green"|"yellow"|"red"`.
-- [ ] Initial backfill: `POST /api/concept-library/rebuild` (cron-secret protected) processes all of a user's posts in batches and upserts into the ledger.
-- [ ] Incremental update: `src/lib/backfill-job.ts` calls `extractConceptsForPost` immediately after ingesting a new post.
-- [ ] Reuse risk thresholds: green = concept used 0–1 times in last 90 days; yellow = 2 times; red = 3+ times (tune-friendly constants at top of file).
-- [ ] LLM call goes through `resolveLLMClient(userId)` — respects BYOK.
-- [ ] Rate limit `/api/concept-library/rebuild` to 1 call per user per hour.
+- [x] Supabase migration creates `concept_ledger` with: `id uuid pk`, `user_id uuid`, `concept text`, `analogy text null`, `post_id uuid`, `seen_at timestamptz`, unique index on `(user_id, concept, post_id)` to prevent dup rows.
+- [x] `src/lib/prompts/concept-extraction.md` contains the classifier prompt: emits an array of `{concept, analogy?, evidence}` from a single post's full text.
+- [x] `src/lib/concept-library.ts` exports: `extractConceptsForPost(postId): Promise<LedgerRow[]>`, `extractForUser(userId, batchSize=20): Promise<{processed: number}>`, `computeReuseRisk(userId, concept): "green"|"yellow"|"red"`.
+- [x] Initial backfill: `POST /api/concept-library/rebuild` (cron-secret protected) processes all of a user's posts in batches and upserts into the ledger.
+- [x] Incremental update: `src/lib/backfill-job.ts` calls `extractConceptsForPost` immediately after ingesting a new post.
+- [x] Reuse risk thresholds: green = concept used 0–1 times in last 90 days; yellow = 2 times; red = 3+ times (tune-friendly constants at top of file).
+- [x] LLM call goes through `resolveLLMClient(userId)` — respects BYOK.
+- [x] Rate limit `/api/concept-library/rebuild` to 1 call per user per hour.
 
 ## Implementation Notes
 - Classifier should err toward precision — better to miss a concept than fabricate one. Prompt explicitly says "skip if uncertain."

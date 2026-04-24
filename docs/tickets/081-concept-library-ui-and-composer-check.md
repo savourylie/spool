@@ -1,10 +1,10 @@
 # [TICKET-081] Concept Library UI + Composer Pre-Draft Check
 
 ## Status
-`blocked`
+`pending`
 
 ## Dependencies
-- Requires: #080
+- Requires: #080 ✅
 
 ## Description
 Ship `/dashboard/understand/concepts` — a searchable table of every concept and analogy the user has already used, with reuse risk per concept. Add a pre-draft check in the Composer that surfaces "you've used analogy X before; consider Y" when the chosen topic hits ledger concepts. Completes the editorial superpower: answers "have I explained this before?" and prevents unconscious repetition.
