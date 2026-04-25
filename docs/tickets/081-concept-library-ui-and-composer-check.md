@@ -1,7 +1,7 @@
 # [TICKET-081] Concept Library UI + Composer Pre-Draft Check
 
 ## Status
-`pending`
+`done`
 
 ## Dependencies
 - Requires: #080 ✅
@@ -10,16 +10,16 @@
 Ship `/dashboard/understand/concepts` — a searchable table of every concept and analogy the user has already used, with reuse risk per concept. Add a pre-draft check in the Composer that surfaces "you've used analogy X before; consider Y" when the chosen topic hits ledger concepts. Completes the editorial superpower: answers "have I explained this before?" and prevents unconscious repetition.
 
 ## Acceptance Criteria
-- [ ] New route `/dashboard/understand/concepts/page.tsx` renders the library at max-width.
-- [ ] New component `src/components/dashboard/concept-library-table.tsx` renders columns: Concept, First-seen post, Times explained, Analogies used, Reuse risk (chip), Last used, Related cluster.
-- [ ] Search input at top filters by concept or analogy substring.
-- [ ] Sort toggles: reuse-risk descending, last-used descending, times-explained descending.
-- [ ] Reuse-risk chip colors: green / yellow / red from #080's `computeReuseRisk`.
-- [ ] Click a concept row → inline drawer expands showing all posts where it appeared (linked to post detail).
-- [ ] Composer pre-draft check: when the user picks a topic, `src/lib/composer-prompt.ts` or a new helper queries the ledger for concepts/analogies likely to come up; surfaces the top 3 matches as an advisory panel above the generated drafts.
-- [ ] Advisory panel shows: "You've explained `topic concept` 4 times in the last 90 days" + "Analogies used: rainforest ecosystem (5x), factory assembly line (2x)" + "Consider a fresh angle."
-- [ ] Sidebar link added for `/dashboard/understand/concepts` under Understand section.
-- [ ] Empty state (no ledger rows) → "Build your concept library" CTA that calls `/api/concept-library/rebuild`.
+- [x] New route `/dashboard/understand/concepts/page.tsx` renders the library at max-width.
+- [x] New component `src/components/dashboard/concept-library-table.tsx` renders columns: Concept, First-seen post, Times explained, Analogies used, Reuse risk (chip), Last used, Related cluster.
+- [x] Search input at top filters by concept or analogy substring.
+- [x] Sort toggles: reuse-risk descending, last-used descending, times-explained descending.
+- [x] Reuse-risk chip colors: green / yellow / red from #080's `computeReuseRisk`.
+- [x] Click a concept row → inline drawer expands showing all posts where it appeared (linked to post detail).
+- [x] Composer pre-draft check: when the user picks a topic, `src/lib/composer-prompt.ts` or a new helper queries the ledger for concepts/analogies likely to come up; surfaces the top 3 matches as an advisory panel above the generated drafts.
+- [x] Advisory panel shows: "You've explained `topic concept` 4 times in the last 90 days" + "Analogies used: rainforest ecosystem (5x), factory assembly line (2x)" + "Consider a fresh angle."
+- [x] Sidebar link added for `/dashboard/understand/concepts` under Understand section.
+- [x] Empty state (no ledger rows) → "Build your concept library" CTA that calls `/api/concept-library/rebuild`.
 
 ## Design Reference
 - **Components**: shadcn `Table`, `Badge`, `Input`, `Drawer` or `Collapsible`.
