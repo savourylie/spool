@@ -7,6 +7,7 @@ import { ChartBar } from "@phosphor-icons/react";
 import { Users } from "@phosphor-icons/react";
 import { SpeakerHigh } from "@phosphor-icons/react";
 import { ClockCounterClockwise } from "@phosphor-icons/react";
+import { Books } from "@phosphor-icons/react";
 import { Lightbulb } from "@phosphor-icons/react";
 import { Compass } from "@phosphor-icons/react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
@@ -49,6 +50,11 @@ const sections: NavSection[] = [
         label: "Reviews",
         href: "/dashboard/understand/reviews",
         icon: ClockCounterClockwise,
+      },
+      {
+        label: "Concepts",
+        href: "/dashboard/understand/concepts",
+        icon: Books,
       },
     ],
   },

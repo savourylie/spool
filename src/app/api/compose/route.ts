@@ -23,6 +23,10 @@ import {
   SURPRISE_ME_SENTINEL,
   type FreshnessResult,
 } from "@/lib/freshness-gate";
+import {
+  fetchComposerConceptAdvisory,
+  type ConceptAdvisoryPayload,
+} from "@/lib/concept-library-view";
 
 const MAX_TOPIC_LENGTH = 500;
 const MAX_TOKENS = 2048;
@@ -112,6 +116,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   // render the banner before drafts stream in.
   const runId = randomUUID();
   let freshnessEvent: FreshnessEventPayload = null;
+  let conceptAdvisory: ConceptAdvisoryPayload | null = null;
   if (topic.startsWith(SURPRISE_ME_SENTINEL)) {
     // Sentinel from "Generate ideas for me" — gate has no signal on the
     // literal placeholder string, so we skip it and emit a symmetric event.
@@ -143,6 +148,13 @@ export async function POST(request: NextRequest): Promise<Response> {
         console.error("Freshness gate failed:", err);
         freshnessEvent = null;
       }
+    }
+
+    try {
+      conceptAdvisory = await fetchComposerConceptAdvisory(userId, topic);
+    } catch (err) {
+      console.error("Concept advisory failed:", err);
+      conceptAdvisory = null;
     }
   }
 
@@ -310,6 +322,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
 
       try {
+        emitSSE("concept_advisory", conceptAdvisory);
+
         // First event: freshness verdict (TICKET-071). Always emit — UI
         // tolerates null (gate errored) and { rateLimited: true } shapes.
         emitSSE("freshness", freshnessEvent);

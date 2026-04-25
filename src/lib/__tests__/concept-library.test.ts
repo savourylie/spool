@@ -54,6 +54,33 @@ describe("parseAndValidateConcepts", () => {
     expect(out[0].analogy).toBeNull();
   });
 
+  it("parses compact concept output without evidence", () => {
+    const raw = '{"concepts":[{"concept":"memory strategy","analogy":null}]}';
+    const out = parseAndValidateConcepts(raw);
+    expect(out).toEqual([
+      {
+        concept: "memory strategy",
+        analogy: null,
+        evidence: "",
+      },
+    ]);
+  });
+
+  it("salvages complete concept objects from truncated JSON", () => {
+    const raw = `{
+      "concepts": [
+        {"concept":"language mixing","analogy":null},
+        {"concept":"memory strategy","analogy":`;
+    const out = parseAndValidateConcepts(raw);
+    expect(out).toEqual([
+      {
+        concept: "language mixing",
+        analogy: null,
+        evidence: "",
+      },
+    ]);
+  });
+
   it("returns an empty array for an empty concepts list", () => {
     expect(parseAndValidateConcepts('{"concepts":[]}')).toEqual([]);
   });
@@ -108,10 +135,20 @@ describe("parseAndValidateConcepts", () => {
     );
   });
 
-  it("throws when the top level is not an object", () => {
-    expect(() => parseAndValidateConcepts("[]")).toThrow(
-      ConceptExtractionError,
-    );
+  it("accepts a top-level concept array for provider compatibility", () => {
+    expect(parseAndValidateConcepts("[]")).toEqual([]);
+    expect(
+      parseAndValidateConcepts('[{"concept":"switching costs","analogy":null}]'),
+    ).toEqual([
+      {
+        concept: "switching costs",
+        analogy: null,
+        evidence: "",
+      },
+    ]);
+  });
+
+  it("throws when the top level is not a concept object or array", () => {
     expect(() => parseAndValidateConcepts('"str"')).toThrow(
       ConceptExtractionError,
     );

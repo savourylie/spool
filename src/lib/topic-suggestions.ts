@@ -146,14 +146,33 @@ function extractFirstJSONArray(raw: string): string | null {
 
 function parseSuggestionArray(raw: string): unknown {
   try {
-    return JSON.parse(raw);
+    return unwrapSuggestionPayload(JSON.parse(raw));
   } catch {
     const extracted = extractFirstJSONArray(raw);
     if (!extracted) {
       throw new Error("Expected JSON array of topic suggestions");
     }
-    return JSON.parse(extracted);
+    return unwrapSuggestionPayload(JSON.parse(extracted));
   }
+}
+
+function unwrapSuggestionPayload(parsed: unknown): unknown {
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
+  if (!parsed || typeof parsed !== "object") {
+    return parsed;
+  }
+
+  const record = parsed as Record<string, unknown>;
+  if (Array.isArray(record.suggestions)) {
+    return record.suggestions;
+  }
+  if (Array.isArray(record.topics)) {
+    return record.topics;
+  }
+
+  return parsed;
 }
 
 function formatTopicName(raw: string): string {
@@ -345,7 +364,12 @@ export async function generateTopicSuggestions(
     timeout: TOPIC_SUGGESTIONS_TIMEOUT_MS,
   });
 
-  const suggestions = parseTopicSuggestions(raw);
+  let suggestions: TopicSuggestion[];
+  try {
+    suggestions = parseTopicSuggestions(raw);
+  } catch {
+    return buildFallbackTopicSuggestions(posts);
+  }
 
   if (suggestions.length === 0) {
     return buildFallbackTopicSuggestions(posts);
@@ -389,7 +413,12 @@ export async function streamTopicSuggestions(
     }
   }
 
-  const suggestions = parseTopicSuggestions(raw);
+  let suggestions: TopicSuggestion[];
+  try {
+    suggestions = parseTopicSuggestions(raw);
+  } catch {
+    return buildFallbackTopicSuggestions(posts);
+  }
 
   if (suggestions.length === 0) {
     return buildFallbackTopicSuggestions(posts);

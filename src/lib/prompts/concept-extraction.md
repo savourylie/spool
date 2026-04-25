@@ -16,9 +16,9 @@ space.
 ## Task
 
 You will receive the full text of a single post. Read it carefully,
-then output a JSON object listing every distinct concept the post
-explains or references, along with any analogy used to explain that
-concept.
+then output a compact JSON object listing every distinct concept the
+post explains or references, along with any analogy used to explain
+that concept.
 
 A **concept** is a self-contained idea, claim, or framework the post
 centers on. Think of it as what you would write on a library card if
@@ -54,10 +54,6 @@ the post just states the idea plainly, `analogy` is `null`.
   says "product development is like tending a garden," record
   `analogy: "garden"`. If no comparison is drawn, `analogy: null`. Do
   not invent domains the post never mentions.
-- **Evidence is a verbatim quote from the post.** Single sentence or
-  clause, ≤ 200 characters. Must be the span where the concept is
-  introduced or explained. Do not paraphrase. Do not stitch
-  non-contiguous phrases.
 - **Dedupe within the post.** A single post rarely has more than
   3–5 distinct concepts. If the post circles the same idea in
   different words, emit one concept, not multiple.
@@ -67,19 +63,13 @@ the post just states the idea plainly, `analogy` is `null`.
 
 ## Output Format
 
-Return exactly one fenced JSON block — no prose before or after. The
-JSON must be a single object with a `concepts` array.
+Return exactly one minified JSON object — no markdown fences, no prose
+before or after. The JSON must be a single object with a `concepts`
+array. Do not include evidence quotes; the ledger only stores concept
+and analogy.
 
 ```
-{
-  "concepts": [
-    {
-      "concept": "<1–4 word lowercase noun phrase>",
-      "analogy": "<lowercase source domain>" | null,
-      "evidence": "<verbatim quote from the post, ≤ 200 chars>"
-    }
-  ]
-}
+{"concepts":[{"concept":"compound interest","analogy":null}]}
 ```
 
 An empty array is valid: `{ "concepts": [] }`.
@@ -89,38 +79,17 @@ An empty array is valid: `{ "concepts": [] }`.
 Given a post about compound interest explained via a rolling snowball:
 
 ```json
-{
-  "concepts": [
-    {
-      "concept": "compound interest",
-      "analogy": "snowball",
-      "evidence": "Compound interest is a snowball — small at first, unstoppable once it gets rolling."
-    }
-  ]
-}
+{"concepts":[{"concept":"compound interest","analogy":"snowball"}]}
 ```
 
 Given a short personal post with no concept:
 
 ```json
-{ "concepts": [] }
+{"concepts":[]}
 ```
 
 Given a post that explains two concepts with no analogies:
 
 ```json
-{
-  "concepts": [
-    {
-      "concept": "premature optimization",
-      "analogy": null,
-      "evidence": "Optimizing before you know what's slow is a waste of your time."
-    },
-    {
-      "concept": "profiler-driven work",
-      "analogy": null,
-      "evidence": "Let the profiler tell you where the hot path actually is."
-    }
-  ]
-}
+{"concepts":[{"concept":"premature optimization","analogy":null},{"concept":"profiler-driven work","analogy":null}]}
 ```

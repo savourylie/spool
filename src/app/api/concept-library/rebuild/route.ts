@@ -1,38 +1,46 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { extractForUser, ConceptExtractionError } from "@/lib/concept-library";
 import { LLMAuthError } from "@/lib/llm-client";
+import { getSession } from "@/lib/session";
 
 const RATE_LIMIT_MS = 60 * 60 * 1000; // 1 hour
 const BATCH_SIZE = 20;
 const MAX_ITERATIONS = 50; // 50 * 20 = 1000 posts/call ceiling
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
-  if (
-    !process.env.CRON_SECRET ||
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
+  const isCronRequest =
+    !!process.env.CRON_SECRET &&
+    authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  const sessionUserId = getSession(request);
+
+  if (!isCronRequest && !sessionUserId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 },
-    );
+  let userId = sessionUserId;
+  if (isCronRequest) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 },
+      );
+    }
+
+    const requestedUserId =
+      body && typeof body === "object" && "user_id" in body
+        ? (body as { user_id?: unknown }).user_id
+        : undefined;
+
+    userId = typeof requestedUserId === "string" ? requestedUserId : null;
   }
 
-  const userId =
-    body && typeof body === "object" && "user_id" in body
-      ? (body as { user_id?: unknown }).user_id
-      : undefined;
-
-  if (typeof userId !== "string" || userId.length === 0) {
+  if (!userId) {
     return NextResponse.json(
       { error: "user_id required" },
       { status: 400 },

@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { QualityGauge } from "@/components/dashboard/quality-gauge";
 import { PredictionWidget } from "@/components/dashboard/prediction-widget";
 import { DraftCard, type DraftState } from "@/components/dashboard/draft-card";
+import { ConceptReuseAdvisory } from "@/components/dashboard/concept-reuse-advisory";
 import { TopicSuggestions } from "@/components/dashboard/topic-suggestions";
 import {
   FreshnessBanner,
@@ -36,6 +37,7 @@ import {
   type PredictionResult,
   type PostCharacteristics,
 } from "@/lib/engagement-prediction";
+import type { ConceptAdvisoryPayload } from "@/lib/concept-library-view";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -71,6 +73,8 @@ interface ComposerState {
   freshness: FreshnessPayload;
   freshnessAcknowledged: boolean;
   bufferedDraftEvents: BufferableAction[];
+  conceptAdvisory: ConceptAdvisoryPayload | null;
+  dismissedConceptAdvisoryKeys: string[];
 }
 
 type BufferableAction =
@@ -104,6 +108,11 @@ type ComposerAction =
   | { type: "UPDATE_EDIT_TEXT"; index: number; text: string }
   | { type: "FRESHNESS_RECEIVED"; freshness: FreshnessPayload }
   | { type: "FRESHNESS_ACKNOWLEDGE" }
+  | {
+      type: "CONCEPT_ADVISORY_RECEIVED";
+      advisory: ConceptAdvisoryPayload | null;
+    }
+  | { type: "CONCEPT_ADVISORY_DISMISS"; key: string }
   | { type: "START_PUBLISH"; index: number }
   | { type: "PUBLISH_SUCCESS"; index: number }
   | { type: "PUBLISH_ERROR"; index: number; message: string }
@@ -150,6 +159,8 @@ const initialState: ComposerState = {
   freshness: null,
   freshnessAcknowledged: false,
   bufferedDraftEvents: [],
+  conceptAdvisory: null,
+  dismissedConceptAdvisoryKeys: [],
 };
 
 function composerReducer(
@@ -186,6 +197,7 @@ function composerReducer(
           freshness: null,
           freshnessAcknowledged: true,
           bufferedDraftEvents: [],
+          conceptAdvisory: null,
         };
       }
       // Full generation — clear all drafts. Reset freshness so the new
@@ -200,6 +212,7 @@ function composerReducer(
         freshness: null,
         freshnessAcknowledged: false,
         bufferedDraftEvents: [],
+        conceptAdvisory: null,
       };
     }
 
@@ -216,6 +229,21 @@ function composerReducer(
         freshnessAcknowledged: autoAck,
       };
     }
+
+    case "CONCEPT_ADVISORY_RECEIVED":
+      return {
+        ...state,
+        conceptAdvisory: action.advisory,
+      };
+
+    case "CONCEPT_ADVISORY_DISMISS":
+      return {
+        ...state,
+        dismissedConceptAdvisoryKeys:
+          state.dismissedConceptAdvisoryKeys.includes(action.key)
+            ? state.dismissedConceptAdvisoryKeys
+            : [...state.dismissedConceptAdvisoryKeys, action.key],
+      };
 
     case "FRESHNESS_ACKNOWLEDGE": {
       // Flush any buffered draft events through the reducer now that the
@@ -458,6 +486,7 @@ function composerReducer(
         ...initialState,
         topic: state.topic,
         style: state.style,
+        dismissedConceptAdvisoryKeys: state.dismissedConceptAdvisoryKeys,
       };
 
     default:
@@ -577,6 +606,14 @@ export function Composer({
                 dispatch({
                   type: "FRESHNESS_RECEIVED",
                   freshness: data as FreshnessPayload,
+                });
+                continue;
+              }
+
+              if (eventName === "concept_advisory") {
+                dispatch({
+                  type: "CONCEPT_ADVISORY_RECEIVED",
+                  advisory: data as ConceptAdvisoryPayload | null,
                 });
                 continue;
               }
@@ -702,6 +739,11 @@ export function Composer({
   const isGenerating = state.status === "generating";
   const canGenerate =
     state.topic.trim().length > 0 && !isGenerating;
+  const visibleConceptAdvisory =
+    state.conceptAdvisory &&
+    !state.dismissedConceptAdvisoryKeys.includes(state.conceptAdvisory.key)
+      ? state.conceptAdvisory
+      : null;
 
   // ── Handlers ───────────────────────────────────────────────────
 
@@ -860,6 +902,18 @@ export function Composer({
 
       {/* ── Center Panel: Drafts ──────────────────────────────── */}
       <div className="space-y-4">
+        {visibleConceptAdvisory && (
+          <ConceptReuseAdvisory
+            advisory={visibleConceptAdvisory}
+            onDismiss={() =>
+              dispatch({
+                type: "CONCEPT_ADVISORY_DISMISS",
+                key: visibleConceptAdvisory.key,
+              })
+            }
+          />
+        )}
+
         <FreshnessBanner
           freshness={state.freshness}
           acknowledged={state.freshnessAcknowledged}

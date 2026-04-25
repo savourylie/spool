@@ -164,6 +164,14 @@ describe("parseTopicSuggestions", () => {
     expect(result[1].name).toBe("Remote Work Culture");
   });
 
+  it("accepts suggestions wrapped in an object", () => {
+    const result = parseTopicSuggestions(
+      JSON.stringify({ suggestions: VALID_SUGGESTIONS }),
+    );
+    expect(result).toHaveLength(3);
+    expect(result[0].name).toBe("AI Ethics Debates");
+  });
+
   it("filters out items with missing name", () => {
     const input = [
       { relevanceScore: 80, semanticDistance: "near", rationale: "No name" },
@@ -358,6 +366,27 @@ describe("generateTopicSuggestions", () => {
     expect(result.suggestions[0].rationale).toMatch(/Recurring theme|Related keyword/);
   });
 
+  it("falls back when the model returns malformed suggestions", async () => {
+    const mockLlm = {
+      generate: vi.fn().mockResolvedValue('{"suggestions": ['),
+    } as unknown as ILLMClient;
+
+    const posts = [
+      makePost("Marketing strategy for startups and growth hacking"),
+      makePost("Marketing brand building and growth metrics"),
+      makePost("Marketing funnel optimization and brand strategy"),
+      makePost("Growth marketing strategy for digital brands"),
+      makePost("Design systems and figma components"),
+      makePost("Design principles for modern figma interfaces"),
+      makePost("User interface design with figma prototyping"),
+    ];
+
+    const result = await generateTopicSuggestions(posts, mockLlm);
+
+    expect(result.suggestions.length).toBeGreaterThan(0);
+    expect(result.suggestions[0].rationale).toMatch(/Recurring theme|Related keyword/);
+  });
+
   it("propagates LLM errors", async () => {
     const mockLlm = {
       generate: vi.fn().mockRejectedValue(new Error("LLM unavailable")),
@@ -414,6 +443,29 @@ describe("streamTopicSuggestions", () => {
   it("falls back when the streamed model output is empty", async () => {
     const mockLlm = {
       generateStreamIterator: vi.fn().mockReturnValue(streamChunks(["[]"])),
+    } as unknown as ILLMClient;
+
+    const posts = [
+      makePost("Marketing strategy for startups and growth hacking"),
+      makePost("Marketing brand building and growth metrics"),
+      makePost("Marketing funnel optimization and brand strategy"),
+      makePost("Growth marketing strategy for digital brands"),
+      makePost("Design systems and figma components"),
+      makePost("Design principles for modern figma interfaces"),
+      makePost("User interface design with figma prototyping"),
+    ];
+
+    const result = await streamTopicSuggestions(posts, mockLlm);
+
+    expect(result.suggestions.length).toBeGreaterThan(0);
+    expect(result.suggestions[0].rationale).toMatch(/Recurring theme|Related keyword/);
+  });
+
+  it("falls back when the streamed model output is malformed", async () => {
+    const mockLlm = {
+      generateStreamIterator: vi.fn().mockReturnValue(
+        streamChunks(['{"suggestions": [']),
+      ),
     } as unknown as ILLMClient;
 
     const posts = [

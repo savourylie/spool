@@ -21,7 +21,7 @@ export const REUSE_RISK_GREEN_MAX = 1; // 0–1 uses in window → green
 export const REUSE_RISK_YELLOW_MAX = 2; // 2 uses in window → yellow
 // 3+ uses in window → red
 
-const EXTRACTION_MAX_TOKENS = 800;
+const EXTRACTION_MAX_TOKENS = 1200;
 const EXTRACTION_TIMEOUT_MS = 30_000;
 const DEFAULT_BATCH_SIZE = 20;
 
@@ -52,32 +52,19 @@ export class ConceptExtractionError extends Error {
 
 // ── Parse + validate ─────────────────────────────────────────────────
 
-export function parseAndValidateConcepts(raw: string): ExtractedConcept[] {
-  if (!raw || !raw.trim()) {
-    throw new ConceptExtractionError("LLM returned empty response");
-  }
+function stripMarkdownFence(raw: string): string {
+  const cleaned = raw.trim();
+  if (!cleaned.startsWith("```")) return cleaned;
+  return cleaned.replace(/^```[^\n]*\n?/, "").replace(/\n?```\s*$/, "");
+}
 
-  let cleaned = raw.trim();
-  if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```[^\n]*\n?/, "").replace(/\n?```\s*$/, "");
-  }
+function normalizeExtractedConcepts(parsed: unknown): ExtractedConcept[] {
+  const conceptsRaw = Array.isArray(parsed)
+    ? parsed
+    : parsed && typeof parsed === "object"
+      ? (parsed as Record<string, unknown>).concepts
+      : null;
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch (err) {
-    throw new ConceptExtractionError(
-      `Failed to parse LLM JSON: ${err instanceof Error ? err.message : String(err)}. Raw (first 200 chars): ${cleaned.slice(0, 200)}`,
-    );
-  }
-
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new ConceptExtractionError(
-      "LLM output is not a JSON object at the top level",
-    );
-  }
-
-  const conceptsRaw = (parsed as Record<string, unknown>).concepts;
   if (!Array.isArray(conceptsRaw)) {
     throw new ConceptExtractionError(
       "LLM output missing required `concepts` array",
@@ -116,6 +103,104 @@ export function parseAndValidateConcepts(raw: string): ExtractedConcept[] {
   }
 
   return deduped;
+}
+
+function extractCompleteJSONObjects(raw: string): string[] {
+  const conceptsIndex = raw.indexOf('"concepts"');
+  const arrayStart =
+    conceptsIndex >= 0 ? raw.indexOf("[", conceptsIndex) : raw.indexOf("[");
+  if (arrayStart < 0) return [];
+
+  const objects: string[] = [];
+  let start = -1;
+  let depth = 0;
+  let inString = false;
+  let isEscaped = false;
+
+  for (let i = arrayStart + 1; i < raw.length; i++) {
+    const char = raw[i];
+
+    if (inString) {
+      if (isEscaped) {
+        isEscaped = false;
+        continue;
+      }
+      if (char === "\\") {
+        isEscaped = true;
+        continue;
+      }
+      if (char === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === "\"") {
+      inString = true;
+      continue;
+    }
+    if (char === "{") {
+      if (depth === 0) start = i;
+      depth += 1;
+      continue;
+    }
+    if (char === "}" && depth > 0) {
+      depth -= 1;
+      if (depth === 0 && start >= 0) {
+        objects.push(raw.slice(start, i + 1));
+        start = -1;
+      }
+    }
+  }
+
+  return objects;
+}
+
+function parsePartialConceptObjects(raw: string): ExtractedConcept[] {
+  const parsedObjects = extractCompleteJSONObjects(raw)
+    .map((objectRaw) => {
+      try {
+        return JSON.parse(objectRaw);
+      } catch {
+        return null;
+      }
+    })
+    .filter((entry): entry is Record<string, unknown> => entry != null);
+
+  if (parsedObjects.length === 0) {
+    throw new ConceptExtractionError("No complete concept objects found");
+  }
+
+  return normalizeExtractedConcepts({ concepts: parsedObjects });
+}
+
+export function parseAndValidateConcepts(raw: string): ExtractedConcept[] {
+  if (!raw || !raw.trim()) {
+    throw new ConceptExtractionError("LLM returned empty response");
+  }
+
+  const cleaned = stripMarkdownFence(raw);
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (err) {
+    try {
+      return parsePartialConceptObjects(cleaned);
+    } catch {
+      throw new ConceptExtractionError(
+        `Failed to parse LLM JSON: ${err instanceof Error ? err.message : String(err)}. Raw (first 200 chars): ${cleaned.slice(0, 200)}`,
+      );
+    }
+  }
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new ConceptExtractionError(
+      "LLM output is not a JSON object at the top level",
+    );
+  }
+
+  return normalizeExtractedConcepts(parsed);
 }
 
 // ── Public: extract for a single post ────────────────────────────────
@@ -163,7 +248,22 @@ export async function extractConceptsForPost(
     timeout: EXTRACTION_TIMEOUT_MS,
   });
 
-  const concepts = parseAndValidateConcepts(raw);
+  let concepts: ExtractedConcept[];
+  try {
+    concepts = parseAndValidateConcepts(raw);
+  } catch (err) {
+    // The ledger is advisory. A malformed model response should not leave the
+    // post in a permanent retry loop that blocks rebuild progress.
+    const message =
+      err instanceof Error
+        ? err.message.split(". Raw (first 200 chars):")[0]
+        : String(err);
+    console.warn("[concept-library] Ignoring malformed extraction output:", {
+      postId,
+      error: message,
+    });
+    concepts = [];
+  }
 
   let insertedRows: LedgerRow[] = [];
   if (concepts.length > 0) {
