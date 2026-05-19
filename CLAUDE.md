@@ -10,6 +10,11 @@
 - **Data Fetching**: TanStack Query (React Query v5)
 - **Database**: Supabase
 
+## Dev server
+
+- `npm run dev` — HTTP at `http://localhost:3000`
+- `npm run dev:https` — HTTPS at `https://localhost:3000` (uses `next dev --experimental-https`; auto-generates a self-signed cert into `./certificates/` via `mkcert`, prompts for sudo on first run to install the local CA). Use when an OAuth provider or feature requires HTTPS locally; ensure redirect URIs and any `NEXT_PUBLIC_*` URL env vars use `https://` variants.
+
 ## Technical Decisions (PRD v0)
 
 Resolved ambiguities from `docs/PRD.md` and `docs/threads-api.md`:

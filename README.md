@@ -37,6 +37,23 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### HTTPS dev mode
+
+To run the dev server over HTTPS (required by some OAuth providers and useful for
+testing secure cookies):
+
+```bash
+npm run dev:https
+```
+
+This runs `next dev --experimental-https`, which auto-generates a self-signed
+cert into `./certificates/` via `mkcert`. The first run prompts for sudo to
+install the local CA into your system keychain. The app then serves at
+`https://localhost:3000`.
+
+If you use HTTPS locally, make sure OAuth redirect URIs and any
+`http://localhost:3000` env vars have matching `https://` variants.
+
 ## Supabase Cron
 
 Spool uses Supabase Cron as the scheduler of record for recurring jobs. The
@@ -125,6 +142,7 @@ calling the existing `/api/cron/*` routes.
 | Command           | Description                          |
 | ----------------- | ------------------------------------ |
 | `npm run dev`     | Start dev server                     |
+| `npm run dev:https` | Start dev server over HTTPS (self-signed cert) |
 | `npm run build`   | Production build                     |
 | `npm run start`   | Start production server              |
 | `npm run lint`    | Run ESLint                           |
