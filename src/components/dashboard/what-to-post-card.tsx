@@ -46,7 +46,7 @@ export function WhatToPostCard({
     >
       <div className="flex items-center gap-2">
         <Sparkle weight="fill" className="size-5 text-primary" />
-        <h3 className="font-heading text-base font-bold">What to Post Next</h3>
+        <h3 className="font-heading text-base font-medium">What to Post Next</h3>
       </div>
 
       {isImporting && (
@@ -126,7 +126,7 @@ export function WhatToPostCard({
           {firstTopic && (
             <Link
               href={`/dashboard/create/compose?topic=${encodeURIComponent(firstTopic)}`}
-              className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-[13px] font-semibold text-white transition-all duration-300 [transition-timing-function:var(--ease-bounce)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5"
+              className="inline-flex w-fit items-center gap-2 rounded-[var(--radius-sm)] bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground transition-colors duration-150 hover:bg-[color-mix(in_oklab,var(--primary)_88%,var(--ink-3))]"
             >
               <PencilLine weight="bold" className="size-4" />
               Go compose

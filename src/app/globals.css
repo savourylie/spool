@@ -4,59 +4,114 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   Spool — Editorial Utility
+   Minimal · architectural · all-sans · mono accents.
+   Source palette (paper / ink / one accent) drives every
+   semantic alias below; dark mode overrides only the source.
+   ============================================================ */
+
 :root {
-  /* Colors — DESIGN.md Light Mode */
-  --background: #FFFDF5;       /* Warm cream / paper */
-  --foreground: #1E293B;       /* Slate 800 */
-  --card: #FFFFFF;
-  --card-foreground: #1E293B;
-  --popover: #FFFFFF;
-  --popover-foreground: #1E293B;
-  --primary: #8B5CF6;          /* Vivid Violet — primary actions */
-  --primary-foreground: #FFFFFF;
-  --secondary: #F472B6;        /* Hot Pink — decorative pop */
-  --secondary-foreground: #1E293B;
-  --muted: #F1F5F9;            /* Slate 100 */
-  --muted-foreground: #64748B; /* Slate 500 */
-  --accent: #8B5CF6;           /* Vivid Violet */
-  --accent-foreground: #FFFFFF;
-  --destructive: #EF4444;      /* Red 500 */
-  --border: #E2E8F0;           /* Slate 200 */
-  --input: #FFFFFF;
-  --ring: #8B5CF6;             /* Matches accent */
+  /* ---- Editorial source palette (light) ---------------------- */
+  --paper:        #fafaf7;   /* page background — soft warm white */
+  --paper-2:      #f3f2ed;   /* sunken / muted blocks */
+  --paper-3:      #ebeae3;   /* zebra rows, tracks */
+  --card-surface: #ffffff;   /* lifted card surface */
+  --ink:          #0a0a09;   /* primary text — near-black */
+  --ink-2:        #3a3a36;   /* secondary text */
+  --ink-3:        #6e6e66;   /* tertiary / meta */
+  --ink-4:        #a8a89e;   /* placeholders, dim labels */
+  --line:         #e6e4dd;   /* default hairline */
+  --line-strong:  #c9c7be;   /* hover / emphasis hairline */
+  --accent:       #2a4cf0;   /* single muted ink-blue — links + focus + active */
+  --accent-soft:  #e6eafe;   /* selection / focus tint */
+  --pos:          #2f7a4f;   /* positive / success */
+  --pos-soft:     #e4f1ea;
+  --neg:          #b8392d;   /* negative / destructive */
+  --neg-soft:     #f6e4e1;
+  --warn:         #8a6b16;   /* warning */
+  --warn-soft:    #f4ecd6;
 
-  /* Extended palette — DESIGN.md decorative colors */
-  --tertiary: #FBBF24;         /* Amber/Yellow */
-  --tertiary-foreground: #1E293B;
-  --quaternary: #34D399;       /* Emerald/Mint */
-  --quaternary-foreground: #FFFFFF;
+  /* ---- Semantic aliases (shadcn + existing component names) --- */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--card-surface);
+  --card-foreground: var(--ink);
+  --popover: var(--card-surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);                 /* primary actions = ink */
+  --primary-foreground: var(--paper);
+  --secondary: var(--ink-3);             /* decorative pop collapsed to neutral */
+  --secondary-foreground: var(--paper);
+  --muted: var(--paper-2);
+  --muted-foreground: var(--ink-3);
+  /* --accent defined in source palette above */
+  --accent-foreground: var(--paper);     /* always opposite of accent across themes */
+  --destructive: var(--neg);
+  --border: var(--line);
+  --input: var(--card-surface);
+  --ring: var(--accent);
 
-  /* Chart colors — mapped to brand palette */
-  --chart-1: #8B5CF6;
-  --chart-2: #F472B6;
-  --chart-3: #FBBF24;
-  --chart-4: #34D399;
-  --chart-5: #64748B;
+  /* Decorative names retained, remapped to semantics (preserve meaning) */
+  --tertiary: var(--warn);               /* amber/ochre — warning-ish */
+  --tertiary-foreground: var(--paper);
+  --quaternary: var(--pos);              /* green — success / "great" */
+  --quaternary-foreground: var(--paper);
 
-  /* Input */
-  --input-border: #CBD5E1;       /* Slate 300, input resting border */
+  /* Charts — monochrome ink ramp + one accent */
+  --chart-1: var(--ink);
+  --chart-2: var(--accent);
+  --chart-3: var(--ink-3);
+  --chart-4: var(--ink-4);
+  --chart-5: var(--line-strong);
 
-  /* Base radius for shadcn calculations */
-  --radius: 1rem;
+  /* Input resting border */
+  --input-border: var(--line-strong);
+
+  /* Base radius for shadcn calculations — architectural */
+  --radius: 0.5rem;
 
   /* Sidebar */
-  --sidebar: #FFFDF5;
-  --sidebar-foreground: #1E293B;
-  --sidebar-primary: #8B5CF6;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F1F5F9;
-  --sidebar-accent-foreground: #1E293B;
-  --sidebar-border: #E2E8F0;
-  --sidebar-ring: #8B5CF6;
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink-2);
+  --sidebar-primary: var(--ink);
+  --sidebar-primary-foreground: var(--paper);
+  --sidebar-accent: var(--paper-2);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--accent);
+
+  /* Density */
+  --row-h:   40px;
+  --field-h: 36px;
+  --pad-y:   12px;
+}
+
+/* ---- Dark mode — override only the source palette ------------- */
+.dark {
+  color-scheme: dark;
+  --paper:        #0c0c0b;
+  --paper-2:      #161614;
+  --paper-3:      #1f1f1c;
+  --card-surface: #141412;
+  --ink:          #f6f5ef;
+  --ink-2:        #c8c7c1;
+  --ink-3:        #8d8c85;
+  --ink-4:        #54534d;
+  --line:         #26251f;
+  --line-strong:  #3a3933;
+  --accent:       #7d96ff;
+  --accent-soft:  #1a2240;
+  --pos:          #5fb487;
+  --pos-soft:     #14241b;
+  --neg:          #e08378;
+  --neg-soft:     #2a1815;
+  --warn:         #d4b266;
+  --warn-soft:    #2a2210;
 }
 
 @theme inline {
-  /* Colors */
+  /* Colors — semantic */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -74,13 +129,32 @@
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-border: var(--input-border);
   --color-ring: var(--ring);
 
-  /* Extended palette */
+  /* Decorative (retained names) */
   --color-tertiary: var(--tertiary);
   --color-tertiary-foreground: var(--tertiary-foreground);
   --color-quaternary: var(--quaternary);
   --color-quaternary-foreground: var(--quaternary-foreground);
+
+  /* Editorial source tokens exposed as utilities */
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-paper-3: var(--paper-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-pos: var(--pos);
+  --color-pos-soft: var(--pos-soft);
+  --color-neg: var(--neg);
+  --color-neg-soft: var(--neg-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
 
   /* Chart colors */
   --color-chart-1: var(--chart-1);
@@ -99,33 +173,30 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Fonts */
-  --font-sans: var(--font-plus-jakarta-sans);
-  --font-heading: var(--font-outfit);
+  /* Fonts — Geist (all sans) + Geist Mono (structure) */
+  --font-sans: var(--font-geist-sans);
+  --font-heading: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 
-  /* Radius — DESIGN.md values */
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  /* Radius — sharp / architectural (2 / 4 / 6 / 8) */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Input */
-  --color-input-border: var(--input-border);
+  /* Shadows — hairlines, not lift. Theme-aware via var() */
+  --shadow-default:  0 1px 2px 0 color-mix(in oklab, var(--ink) 7%, transparent);
+  --shadow-hover:    0 2px 6px 0 color-mix(in oklab, var(--ink) 10%, transparent);
+  --shadow-active:   none;
+  --shadow-soft:     0 1px 0 0 var(--line);
+  --shadow-featured: 0 0 0 1px var(--ink);
+  --shadow-accent:   0 0 0 3px var(--accent-soft);
 
-  /* Shadows — hard, zero blur per DESIGN.md */
-  --shadow-default: 4px 4px 0 0 #1E293B;
-  --shadow-hover: 6px 6px 0 0 #1E293B;
-  --shadow-active: 2px 2px 0 0 #1E293B;
-  --shadow-soft: 8px 8px 0 0 #E2E8F0;
-  --shadow-featured: 8px 8px 0 0 #F472B6;
-
-  --shadow-accent: 4px 4px 0 0 #8B5CF6;
-
-  /* Motion — DESIGN.md bounce easing */
-  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Motion — quiet ease (replaces bounce everywhere it was referenced) */
+  --ease-bounce: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @layer base {
@@ -134,29 +205,36 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    font-weight: 500;
+    letter-spacing: -0.02em;
   }
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+}
+
+/* Mono eyebrow / label helper (editorial signature) */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
 }
 
 @keyframes progress-indeterminate {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(400%); }
-}
-
-@media (max-width: 767px) {
-  :root {
-    --shadow-default: 2px 2px 0 0 #1E293B;
-    --shadow-hover: 3px 3px 0 0 #1E293B;
-    --shadow-active: 1px 1px 0 0 #1E293B;
-    --shadow-soft: 2px 2px 0 0 #E2E8F0;
-    --shadow-featured: 2px 2px 0 0 #F472B6;
-    --shadow-accent: 2px 2px 0 0 #8B5CF6;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

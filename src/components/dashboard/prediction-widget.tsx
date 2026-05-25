@@ -50,7 +50,7 @@ export function PredictionWidget({
   return (
     <div className="space-y-3 py-2">
       {/* Title */}
-      <p className="font-heading text-xs font-bold uppercase tracking-wide text-muted-foreground">
+      <p className="font-heading text-xs font-medium uppercase tracking-wide text-muted-foreground">
         Predicted Views
       </p>
 

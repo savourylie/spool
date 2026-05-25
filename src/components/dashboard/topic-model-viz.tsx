@@ -121,7 +121,7 @@ function TopicDetailPanel({
   onClose: () => void;
 }) {
   return (
-    <div className="mt-4 rounded-[var(--radius-md)] border-2 border-foreground bg-muted/50 p-4">
+    <div className="mt-4 rounded-[var(--radius-md)] border border-foreground bg-muted/50 p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span
@@ -129,13 +129,13 @@ function TopicDetailPanel({
             style={{ backgroundColor: cluster.color }}
             aria-hidden="true"
           />
-          <h4 className="font-heading text-base font-bold">{cluster.name}</h4>
+          <h4 className="font-heading text-base font-medium">{cluster.name}</h4>
           <ConfidenceBadge sample={cluster.postCount} />
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="flex size-7 items-center justify-center rounded-full border-2 border-foreground bg-card transition-all duration-200 hover:bg-muted"
+          className="flex size-7 items-center justify-center rounded-full border border-foreground bg-card transition-all duration-200 hover:bg-muted"
           aria-label="Close detail panel"
         >
           <X weight="bold" className="size-4" />

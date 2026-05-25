@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Quality gauge</title>
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="card-wrap">
+  <div class="row" style="gap:18px; align-items:flex-end; justify-content:space-around">
+    <div class="col" style="align-items:center;gap:0">
+      <svg viewBox="0 0 200 110" width="180">
+        <path d="M 30 90 A 70 70 0 0 1 170 90" fill="none" stroke="var(--muted)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M 30 90 A 70 70 0 0 1 170 90" fill="none" stroke="#EF4444" stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="219.9" stroke-dashoffset="158.3"/>
+        <text x="100" y="85" text-anchor="middle" font-family="Outfit, system-ui, sans-serif" font-size="36" font-weight="800" fill="#1E293B">28</text>
+      </svg>
+      <div style="font-size:13px;font-weight:700;color:#EF4444">Needs work</div>
+    </div>
+    <div class="col" style="align-items:center;gap:0">
+      <svg viewBox="0 0 200 110" width="180">
+        <path d="M 30 90 A 70 70 0 0 1 170 90" fill="none" stroke="var(--muted)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M 30 90 A 70 70 0 0 1 170 90" fill="none" stroke="#FBBF24" stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="219.9" stroke-dashoffset="105.6"/>
+        <text x="100" y="85" text-anchor="middle" font-family="Outfit, system-ui, sans-serif" font-size="36" font-weight="800" fill="#1E293B">52</text>
+      </svg>
+      <div style="font-size:13px;font-weight:700;color:#B45309">Fair</div>
+    </div>
+    <div class="col" style="align-items:center;gap:0">
+      <svg viewBox="0 0 200 110" width="180">
+        <path d="M 30 90 A 70 70 0 0 1 170 90" fill="none" stroke="var(--muted)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M 30 90 A 70 70 0 0 1 170 90" fill="none" stroke="#34D399" stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="219.9" stroke-dashoffset="35.2"/>
+        <text x="100" y="85" text-anchor="middle" font-family="Outfit, system-ui, sans-serif" font-size="36" font-weight="800" fill="#1E293B">84</text>
+      </svg>
+      <div style="font-size:13px;font-weight:700;color:#047857">Great</div>
+    </div>
+  </div>
+  <div style="font-family:ui-monospace,monospace;font-size:11px;color:var(--muted-foreground);text-align:center">Color zones: 0–40 red · 40–70 amber · 70–100 mint</div>
+</div>
+</body></html>

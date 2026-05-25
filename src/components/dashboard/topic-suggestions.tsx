@@ -25,7 +25,7 @@ const DISTANCE_DOT: Record<SemanticDistance, string> = {
 
 const DISTANCE_HOVER: Record<SemanticDistance, string> = {
   near: "hover:bg-quaternary/5",
-  medium: "hover:bg-tertiary/5",
+  medium: "hover:bg-paper-2/5",
   far: "hover:bg-muted/50",
 };
 
@@ -139,10 +139,10 @@ export function TopicSuggestions({ onSelectTopic }: TopicSuggestionsProps) {
   }, []);
 
   return (
-    <div className="rounded-[var(--radius-md)] border-2 border-border bg-card p-4">
+    <div className="rounded-[var(--radius-md)] border border-border bg-card p-4">
       {/* Header */}
       <div className="mb-2 flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-full bg-quaternary text-white">
+        <div className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] bg-paper-2 text-ink-3">
           <Lightbulb weight="bold" className="size-4" />
         </div>
         <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">

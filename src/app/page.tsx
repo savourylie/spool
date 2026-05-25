@@ -40,7 +40,7 @@ export default async function Home() {
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-1/3 left-1/4 -z-10 hidden size-16 rotate-12 rounded-[var(--radius-sm)] border-2 border-dashed border-secondary/40 md:block"
+        className="pointer-events-none absolute bottom-1/3 left-1/4 -z-10 hidden size-16 rotate-12 rounded-[var(--radius-sm)] border border-dashed border-secondary/40 md:block"
       />
 
       {/* ---- Hero ---- */}
@@ -94,7 +94,7 @@ export default async function Home() {
                 height="20"
                 patternUnits="userSpaceOnUse"
               >
-                <circle cx="2" cy="2" r="1.2" fill="#E2E8F0" />
+                <circle cx="2" cy="2" r="1.2" className="fill-line" />
               </pattern>
               <clipPath id="blob">
                 <ellipse cx="240" cy="180" rx="210" ry="160" />
@@ -112,27 +112,26 @@ export default async function Home() {
               y="80"
               width="240"
               height="200"
-              rx="16"
-              fill="white"
-              stroke="#1E293B"
-              strokeWidth="2"
+              rx="6"
+              className="fill-card stroke-ink"
+              strokeWidth="1"
             />
-            {/* Chart bars */}
-            <rect x="150" y="200" width="24" height="60" rx="4" fill="#8B5CF6" />
-            <rect x="186" y="170" width="24" height="90" rx="4" fill="#F472B6" />
-            <rect x="222" y="150" width="24" height="110" rx="4" fill="#FBBF24" />
-            <rect x="258" y="180" width="24" height="80" rx="4" fill="#34D399" />
-            <rect x="294" y="160" width="24" height="100" rx="4" fill="#8B5CF6" />
+            {/* Chart bars — monochrome ink ramp + one accent */}
+            <rect x="150" y="200" width="24" height="60" rx="2" className="fill-ink-4" />
+            <rect x="186" y="170" width="24" height="90" rx="2" className="fill-ink-3" />
+            <rect x="222" y="150" width="24" height="110" rx="2" className="fill-accent" />
+            <rect x="258" y="180" width="24" height="80" rx="2" className="fill-ink-3" />
+            <rect x="294" y="160" width="24" height="100" rx="2" className="fill-ink-4" />
             {/* Title bar lines */}
-            <rect x="150" y="105" width="80" height="8" rx="4" fill="#E2E8F0" />
-            <rect x="150" y="122" width="120" height="6" rx="3" fill="#F1F5F9" />
+            <rect x="150" y="105" width="80" height="8" rx="2" className="fill-line" />
+            <rect x="150" y="122" width="120" height="6" rx="2" className="fill-paper-3" />
           </svg>
         </div>
       </section>
 
       {/* ---- Features ---- */}
       <section className="relative mx-auto max-w-5xl px-6 pb-24">
-        <h2 className="mb-4 text-center font-heading text-3xl font-bold md:text-4xl">
+        <h2 className="mb-4 text-center font-heading text-3xl font-medium md:text-4xl">
           Analytics that understand the algorithm
         </h2>
         <p className="mx-auto mb-12 max-w-lg text-center text-muted-foreground">

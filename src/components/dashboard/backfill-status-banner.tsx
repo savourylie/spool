@@ -151,7 +151,7 @@ export function DashboardBackfillBanner({
 
   if (job.status === "failed") {
     return (
-      <div className="mb-4 rounded-[var(--radius-md)] border-2 border-destructive/30 bg-destructive/10 px-4 py-3">
+      <div className="mb-4 rounded-[var(--radius-md)] border border-destructive/30 bg-destructive/10 px-4 py-3">
         <div className="flex flex-wrap items-start gap-3">
           <WarningCircle
             weight="bold"
@@ -191,7 +191,7 @@ export function DashboardBackfillBanner({
 
   if (job.status === "complete") {
     return (
-      <div className="mb-4 rounded-[var(--radius-md)] border-2 border-secondary/30 bg-secondary/10 px-4 py-3">
+      <div className="mb-4 rounded-[var(--radius-md)] border border-secondary/30 bg-secondary/10 px-4 py-3">
         <div className="flex items-center gap-3">
           <CheckCircle
             weight="bold"
@@ -209,7 +209,7 @@ export function DashboardBackfillBanner({
   }
 
   return (
-    <div className="mb-4 rounded-[var(--radius-md)] border-2 border-primary/20 bg-primary/5 px-4 py-3">
+    <div className="mb-4 rounded-[var(--radius-md)] border border-primary/20 bg-primary/5 px-4 py-3">
       <div className="flex items-start gap-3">
         <SpinnerGap
           weight="bold"

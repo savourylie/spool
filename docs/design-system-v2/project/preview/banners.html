@@ -1,0 +1,59 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Banners</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.banner{
+  display:flex; align-items:center; gap:14px;
+  padding: 14px 18px;
+  border: 2px solid;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+}
+.banner .ic{ flex-shrink:0; width:32px; height:32px; border-radius:9999px;
+  display:flex;align-items:center;justify-content:center; color:white;}
+.banner .body{ flex:1 }
+.banner .body b{ font-weight: 700 }
+.banner .body p{ color: var(--foreground); font-size: 13px; margin: 2px 0 0; opacity: .8}
+.banner .cta{ margin-left:auto }
+
+.token-expired{ background: rgba(239,68,68,0.08); border-color: #EF4444 }
+.token-expired .ic{ background: #EF4444 }
+
+.token-expiring{ background: rgba(251,191,36,0.12); border-color: #FBBF24 }
+.token-expiring .ic{ background: #FBBF24; color:#1E293B }
+
+.backfill{ background: var(--card); border-color: #1E293B; box-shadow: var(--shadow-default); }
+.backfill .ic{ background: #8B5CF6 }
+</style>
+</head>
+<body>
+<div class="card-wrap">
+  <div class="banner token-expired">
+    <div class="ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+    </div>
+    <div class="body"><b>Your Threads connection has expired.</b><p>Reconnect to keep your insights up to date.</p></div>
+    <button class="btn sm" style="background:#EF4444;border-color:#EF4444">Reconnect</button>
+  </div>
+
+  <div class="banner token-expiring">
+    <div class="ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    </div>
+    <div class="body"><b>Reconnect by Apr 12.</b><p>Your Threads token expires in 6 days.</p></div>
+    <button class="btn sm outline">Reconnect</button>
+  </div>
+
+  <div class="banner backfill">
+    <div class="ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v6h-6"/></svg>
+    </div>
+    <div class="body">
+      <b>Importing your posts… 142 of 260</b>
+      <div style="margin-top:6px;height:8px;background:var(--muted);border-radius:9999px;border:1.5px solid var(--foreground);overflow:hidden">
+        <div style="width:55%;height:100%;background:var(--accent)"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

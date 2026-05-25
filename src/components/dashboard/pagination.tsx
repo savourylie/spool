@@ -41,8 +41,8 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
           href={buildHref(currentPage - 1)}
           aria-label="Previous page"
           className={cn(
-            "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
-            currentPage <= 1 ? "pointer-events-none opacity-40" : "hover:bg-tertiary"
+            "inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] border border-line-strong text-sm font-medium transition-colors duration-150",
+            currentPage <= 1 ? "pointer-events-none opacity-40" : "hover:bg-paper-2"
           )}
           aria-disabled={currentPage <= 1}
           tabIndex={currentPage <= 1 ? -1 : undefined}
@@ -55,10 +55,10 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
             key={page}
             href={buildHref(page)}
             className={cn(
-              "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
+              "inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] border border-line-strong text-sm font-medium transition-colors duration-150",
               page === currentPage
-                ? "bg-accent text-accent-foreground"
-                : "hover:bg-tertiary"
+                ? "border-foreground bg-foreground text-background"
+                : "hover:bg-paper-2"
             )}
             aria-current={page === currentPage ? "page" : undefined}
           >
@@ -70,10 +70,10 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
           href={buildHref(currentPage + 1)}
           aria-label="Next page"
           className={cn(
-            "inline-flex items-center justify-center size-12 md:size-10 rounded-full border-2 border-foreground text-sm font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
+            "inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] border border-line-strong text-sm font-medium transition-colors duration-150",
             currentPage >= totalPages
               ? "pointer-events-none opacity-40"
-              : "hover:bg-tertiary"
+              : "hover:bg-paper-2"
           )}
           aria-disabled={currentPage >= totalPages}
           tabIndex={currentPage >= totalPages ? -1 : undefined}

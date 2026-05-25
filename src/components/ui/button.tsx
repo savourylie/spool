@@ -26,9 +26,7 @@ function Button({
     >
       {children}
       {trailingIcon && (
-        <span className="ml-1 inline-flex size-6 items-center justify-center rounded-full bg-white/30">
-          <ArrowRight weight="bold" className="size-3.5 text-primary-foreground" />
-        </span>
+        <ArrowRight weight="bold" className="ml-1 size-4" />
       )}
     </ButtonPrimitive>
   )

@@ -20,7 +20,7 @@ export default function DashboardError({
           <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
             <WarningCircle weight="bold" className="size-7" />
           </div>
-          <h3 className="font-heading text-lg font-bold">Something went wrong</h3>
+          <h3 className="font-heading text-lg font-medium">Something went wrong</h3>
           <p className="max-w-sm text-sm text-muted-foreground">
             An unexpected error occurred. Please try again.
           </p>

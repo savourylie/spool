@@ -25,13 +25,13 @@ export function ErrorState({
   const handleRetry = onRetry ?? (() => router.refresh());
 
   return (
-    <StickerCard className={className ?? "hover:rotate-0 hover:scale-100"}>
+    <StickerCard className={className}>
       <StickerCardContent>
         <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <WarningCircle weight="bold" className="size-7" />
+          <div className="flex size-12 items-center justify-center rounded-[var(--radius-md)] border border-line bg-neg-soft text-neg">
+            <WarningCircle weight="bold" className="size-6" />
           </div>
-          <h3 className="font-heading text-lg font-bold">{title}</h3>
+          <h3 className="font-heading text-lg font-medium tracking-[-0.015em]">{title}</h3>
           <p className="max-w-sm text-sm text-muted-foreground">
             {description}
           </p>

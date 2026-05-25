@@ -292,7 +292,7 @@ export function FourAxisScanner({
       {streamError && (
         <div
           role="alert"
-          className="rounded-[var(--radius-md)] border-2 border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+          className="rounded-[var(--radius-md)] border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
         >
           {streamError}
         </div>
@@ -300,7 +300,7 @@ export function FourAxisScanner({
       {partialWarning && !streamError && (
         <div
           role="status"
-          className="rounded-[var(--radius-md)] border-2 border-tertiary/40 bg-tertiary/10 p-4 text-sm text-tertiary"
+          className="rounded-[var(--radius-md)] border border-tertiary/40 bg-tertiary/10 p-4 text-sm text-tertiary"
         >
           {partialWarning}
         </div>
@@ -371,7 +371,7 @@ function AxisSummaryBadge({ state }: { state: AxisState }) {
     .map((s) => (
       <span
         key={s}
-        className={`inline-flex items-center rounded-full border-2 px-2 py-0.5 text-[0.7rem] font-bold leading-none ${SEVERITY_STYLES[s]}`}
+        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[0.7rem] font-bold leading-none ${SEVERITY_STYLES[s]}`}
       >
         {counts[s]} {SEVERITY_LABEL[s].toLowerCase()}
       </span>
@@ -438,7 +438,7 @@ function AxisCardBody({
           {findings.map((finding, i) => (
             <li
               key={i}
-              className="flex flex-col gap-1.5 rounded-[var(--radius-md)] border-2 border-border p-3"
+              className="flex flex-col gap-1.5 rounded-[var(--radius-md)] border border-border p-3"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <SeverityChip severity={finding.severity} />
@@ -448,7 +448,7 @@ function AxisCardBody({
               </div>
               <p className="text-sm text-foreground">{finding.message}</p>
               {finding.evidence && (
-                <blockquote className="border-l-2 border-border pl-3 text-xs italic text-muted-foreground">
+                <blockquote className="border-l border-border pl-3 text-xs italic text-muted-foreground">
                   {finding.evidence}
                 </blockquote>
               )}
@@ -527,7 +527,7 @@ function AiToneAxisBody({
                       onMouseLeave={() =>
                         match ? onAiMarkerActiveChange?.(null) : undefined
                       }
-                      className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[var(--radius-md)] border-2 p-2.5 ${
+                      className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[var(--radius-md)] border p-2.5 ${
                         match
                           ? "border-border bg-card"
                           : "border-border/60 bg-muted/40 text-muted-foreground"
@@ -569,7 +569,7 @@ function AiToneAxisBody({
         })}
       </div>
 
-      <section className="space-y-2 border-t-2 border-border pt-4">
+      <section className="space-y-2 border-t border-border pt-4">
         <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
           Remediation
         </h4>
@@ -577,7 +577,7 @@ function AiToneAxisBody({
           {AI_TONE_REMEDIATIONS.map((method) => (
             <li
               key={method.id}
-              className="rounded-[var(--radius-md)] border-2 border-border bg-card p-3"
+              className="rounded-[var(--radius-md)] border border-border bg-card p-3"
             >
               <p className="text-sm font-bold text-foreground">
                 {method.title}
@@ -676,7 +676,7 @@ function normalizeMarkerText(value: string): string {
 function SeverityChip({ severity }: { severity: FindingSeverity }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border-2 px-2 py-0.5 text-[0.7rem] font-bold uppercase leading-none ${SEVERITY_STYLES[severity]}`}
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[0.7rem] font-bold uppercase leading-none ${SEVERITY_STYLES[severity]}`}
     >
       {SEVERITY_LABEL[severity]}
     </span>
@@ -685,7 +685,7 @@ function SeverityChip({ severity }: { severity: FindingSeverity }) {
 
 function NeighborStrip({ neighbors }: { neighbors: NeighborPost[] }) {
   return (
-    <div className="space-y-2 border-t-2 border-border pt-3">
+    <div className="space-y-2 border-t border-border pt-3">
       <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
         Similar posts
       </p>
@@ -700,7 +700,7 @@ function NeighborStrip({ neighbors }: { neighbors: NeighborPost[] }) {
 
 function NeighborCard({ neighbor }: { neighbor: NeighborPost }) {
   const cardClass =
-    "block rounded-[var(--radius-md)] border-2 border-border bg-card p-2 text-xs transition-colors";
+    "block rounded-[var(--radius-md)] border border-border bg-card p-2 text-xs transition-colors";
   const body = (
     <>
       <p className="line-clamp-2 text-foreground">{neighbor.textPreview}</p>

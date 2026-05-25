@@ -42,7 +42,7 @@ export function TokenExpiryBanner({
 
   return (
     <div
-      className={`flex flex-wrap items-center gap-3 rounded-[var(--radius-md)] border-2 ${c.border} ${c.bg} px-4 py-3`}
+      className={`flex flex-wrap items-center gap-3 rounded-[var(--radius-md)] border ${c.border} ${c.bg} px-4 py-3`}
     >
       <WarningCircle weight="bold" className={`size-5 shrink-0 ${c.iconColor}`} />
       <p className="flex-1 text-sm font-medium">{c.message}</p>

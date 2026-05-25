@@ -21,7 +21,7 @@ interface YouTubeInspirationProps {
 
 function SkeletonCard() {
   return (
-    <div className="flex flex-col overflow-hidden rounded-[var(--radius-sm)] border-2 border-border">
+    <div className="flex flex-col overflow-hidden rounded-[var(--radius-sm)] border border-border">
       <div className="aspect-video animate-pulse bg-muted" />
       <div className="flex flex-col gap-2 p-3">
         <div className="h-4 w-full animate-pulse rounded bg-border" />
@@ -37,7 +37,7 @@ function SkeletonCard() {
 
 function VideoCard({ video }: { video: YouTubeVideo }) {
   return (
-    <div className="group flex flex-col overflow-hidden rounded-[var(--radius-sm)] border-2 border-border bg-card transition-all duration-300 [transition-timing-function:var(--ease-bounce)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--foreground)]">
+    <div className="group flex flex-col overflow-hidden rounded-[var(--radius-sm)] border border-border bg-card transition-colors duration-150 hover:border-line-strong">
       {/* Thumbnail */}
       <div className="relative aspect-video bg-foreground/10">
         {video.thumbnailUrl ? (
@@ -67,13 +67,13 @@ function VideoCard({ video }: { video: YouTubeVideo }) {
           <span className="shrink-0">{video.viewCount}</span>
         </div>
 
-        <span className="w-fit rounded-full bg-secondary/15 px-2 py-0.5 text-[10px] font-bold text-secondary">
+        <span className="w-fit rounded-[var(--radius-sm)] bg-paper-3 px-2 py-0.5 text-[10px] font-medium text-ink-3">
           Matches: {video.matchedTopic}
         </span>
 
         <Link
           href={`/dashboard/create/compose?topic=${encodeURIComponent(video.title)}`}
-          className="mt-auto inline-flex items-center gap-1 self-start rounded-full bg-accent px-3 py-1.5 text-[11px] font-bold text-accent-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--foreground)]"
+          className="mt-auto inline-flex items-center gap-1 self-start rounded-[var(--radius-sm)] bg-accent px-2.5 py-1 text-[11px] font-medium text-accent-foreground transition-colors duration-150 hover:bg-[color-mix(in_oklab,var(--accent)_88%,var(--ink))]"
         >
           Use as inspiration
           <ArrowRight weight="bold" className="size-3" />
@@ -121,10 +121,10 @@ export function YouTubeInspiration({ topics }: YouTubeInspirationProps) {
   }, [topics, retryCount]);
 
   return (
-    <div className="rounded-[var(--radius-md)] border-2 border-border bg-card p-4">
+    <div className="rounded-[var(--radius-md)] border border-border bg-card p-4">
       {/* Header */}
       <div className="mb-3 flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-full bg-destructive text-white">
+        <div className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] bg-paper-2 text-ink-3">
           <YoutubeLogo weight="bold" className="size-4" />
         </div>
         <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -163,7 +163,7 @@ export function YouTubeInspiration({ topics }: YouTubeInspirationProps) {
               setError(null);
               setRetryCount((c) => c + 1);
             }}
-            className="inline-flex items-center gap-1.5 rounded-full border-2 border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] hover:bg-tertiary"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] hover:bg-paper-2"
           >
             <ArrowClockwise weight="bold" className="size-3.5" />
             Retry

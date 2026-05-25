@@ -206,7 +206,7 @@ export function SettingsForm({
                 }
               }}
               className={cn(
-                "flex items-start gap-3 rounded-[var(--radius-md)] border-2 px-4 py-3 text-left transition-all",
+                "flex items-start gap-3 rounded-[var(--radius-md)] border px-4 py-3 text-left transition-all",
                 provider === opt.value
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-border/80 hover:bg-muted/50",
@@ -214,7 +214,7 @@ export function SettingsForm({
             >
               <div
                 className={cn(
-                  "mt-0.5 size-4 shrink-0 rounded-full border-2 transition-colors",
+                  "mt-0.5 size-4 shrink-0 rounded-full border transition-colors",
                   provider === opt.value
                     ? "border-primary bg-primary"
                     : "border-muted-foreground/40",
@@ -250,7 +250,7 @@ export function SettingsForm({
           </label>
 
           {hasKey && !isChangingKey ? (
-            <div className="flex items-center gap-3 rounded-[var(--radius-md)] border-2 border-border bg-muted/30 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-border bg-muted/30 px-4 py-3">
               <Key weight="duotone" className="size-5 text-muted-foreground" />
               <span className="flex-1 text-sm text-muted-foreground">
                 Key saved
@@ -360,7 +360,7 @@ export function SettingsForm({
 
       {/* Error message */}
       {errorMessage && (
-        <div className="flex items-center gap-2 rounded-[var(--radius-md)] border-2 border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           <Warning weight="fill" className="size-4 shrink-0" />
           {errorMessage}
         </div>
@@ -368,7 +368,7 @@ export function SettingsForm({
 
       {/* Success message */}
       {status === "success" && (
-        <div className="flex items-center gap-2 rounded-[var(--radius-md)] border-2 border-green-500/30 bg-green-500/5 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-green-500/30 bg-green-500/5 px-4 py-3 text-sm text-green-700 dark:text-green-400">
           <CheckCircle weight="fill" className="size-4 shrink-0" />
           Settings saved successfully.
         </div>
@@ -376,13 +376,13 @@ export function SettingsForm({
 
       {/* Test result */}
       {testStatus === "success" && (
-        <div className="flex items-start gap-2 rounded-[var(--radius-md)] border-2 border-green-500/30 bg-green-500/5 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+        <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-green-500/30 bg-green-500/5 px-4 py-3 text-sm text-green-700 dark:text-green-400">
           <CheckCircle weight="fill" className="mt-0.5 size-4 shrink-0" />
           <span className="break-words">{testMessage}</span>
         </div>
       )}
       {testStatus === "error" && (
-        <div className="flex items-start gap-2 rounded-[var(--radius-md)] border-2 border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           <Warning weight="fill" className="mt-0.5 size-4 shrink-0" />
           <span className="break-words">{testMessage}</span>
         </div>

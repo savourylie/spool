@@ -51,10 +51,10 @@ export function QuickScan() {
   const hasText = text.trim().length > 0;
 
   return (
-    <div className="rounded-[var(--radius-md)] border-2 border-border bg-card p-4">
+    <div className="rounded-[var(--radius-md)] border border-border bg-card p-4">
       {/* Header */}
       <div className="mb-3 flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-full bg-quaternary text-white">
+        <div className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] bg-paper-2 text-ink-3">
           <MagnifyingGlass weight="bold" className="size-4" />
         </div>
         <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -70,7 +70,7 @@ export function QuickScan() {
           rows={3}
           placeholder="Paste a draft to quick-check quality..."
           aria-label="Draft text to quick-scan"
-          className="w-full resize-y rounded-[var(--radius-md)] border-2 border-[#CBD5E1] bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:shadow-[4px_4px_0_var(--accent)] focus:outline-none"
+          className="w-full resize-y rounded-[var(--radius-sm)] border border-input-border bg-input px-3 py-2.5 text-sm text-foreground placeholder:text-ink-4 focus:border-accent focus:shadow-[var(--shadow-accent)] focus:outline-none"
         />
         {hasText && (
           <div className="flex shrink-0 items-start">

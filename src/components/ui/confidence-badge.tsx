@@ -5,11 +5,11 @@ import {
 } from "@/lib/data-confidence";
 
 const TIER_STYLES: Record<ConfidenceTier, string> = {
-  directional: "bg-muted text-muted-foreground border-border",
-  weak: "bg-tertiary/25 text-foreground border-tertiary",
-  usable: "bg-primary/15 text-primary border-primary/40",
-  strong: "bg-quaternary/25 text-foreground border-quaternary",
-  deep: "bg-quaternary text-white border-quaternary",
+  directional: "bg-paper-3 text-ink-3",
+  weak: "bg-warn-soft text-warn",
+  usable: "bg-accent-soft text-accent",
+  strong: "bg-pos-soft text-pos",
+  deep: "bg-pos text-[var(--paper)]",
 };
 
 const TIER_TOOLTIP: Record<ConfidenceTier, string> = {
@@ -57,7 +57,7 @@ export function ConfidenceBadge({
       title={TIER_TOOLTIP[tier]}
       aria-label={`${info.label} confidence, based on ${clampedSample} post${clampedSample === 1 ? "" : "s"}. ${TIER_TOOLTIP[tier]}`}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap",
+        "inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-1.5 py-0.5 font-mono text-[11px] font-medium uppercase tracking-[0.04em] whitespace-nowrap",
         TIER_STYLES[tier],
         className,
       )}

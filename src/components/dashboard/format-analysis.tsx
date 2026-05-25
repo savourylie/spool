@@ -149,7 +149,7 @@ function RecommendationBanner({
   lengthComparison: string | null;
 }) {
   return (
-    <div className="mt-4 rounded-[var(--radius-sm)] border-2 border-tertiary bg-tertiary/10 px-4 py-2 text-sm">
+    <div className="mt-4 rounded-[var(--radius-sm)] border border-tertiary bg-tertiary/10 px-4 py-2 text-sm">
       <strong>{formatComparison}</strong>
       {lengthComparison && (
         <>

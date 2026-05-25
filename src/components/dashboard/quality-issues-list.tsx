@@ -54,7 +54,7 @@ export function QualityIssuesList({ issues }: QualityIssuesListProps) {
           return (
             <li
               key={issue.id}
-              className="rounded-[var(--radius-sm)] border-2 border-border p-3"
+              className="rounded-[var(--radius-sm)] border border-border p-3"
             >
               <div className="flex items-start gap-3">
                 <span

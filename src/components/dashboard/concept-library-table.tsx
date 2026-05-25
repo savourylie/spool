@@ -86,7 +86,7 @@ function SortButton({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex min-h-10 items-center gap-1.5 rounded-full border-2 px-3 text-xs font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
+        "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-xs font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
         active
           ? "border-foreground bg-tertiary text-foreground shadow-[var(--shadow-default)]"
           : "border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground",
@@ -102,7 +102,7 @@ function ReuseRiskChip({ risk }: { risk: ConceptLibraryRow["reuseRisk"] }) {
   return (
     <span
       className={cn(
-        "inline-flex whitespace-nowrap rounded-full border-2 px-2.5 py-1 text-xs font-bold",
+        "inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-bold",
         riskClass[risk],
       )}
     >
@@ -160,7 +160,7 @@ function ConceptOccurrencesDrawer({ concept }: { concept: string }) {
       )}
 
       {error && (
-        <div className="rounded-[var(--radius-md)] border-2 border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-[var(--radius-md)] border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
@@ -180,7 +180,7 @@ function ConceptOccurrencesDrawer({ concept }: { concept: string }) {
             return (
               <div
                 key={`${row.postId}-${row.seenAt}`}
-                className="rounded-[var(--radius-md)] border-2 border-border bg-card p-4"
+                className="rounded-[var(--radius-md)] border border-border bg-card p-4"
               >
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   <span>{formatDate(row.seenAt)}</span>
@@ -380,26 +380,26 @@ export function ConceptLibraryTable({ rows }: ConceptLibraryTableProps) {
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[980px] text-sm">
           <thead>
-            <tr className="border-b-2 border-foreground">
-              <th className="px-3 py-3 text-left font-heading text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            <tr className="border-b border-foreground">
+              <th className="px-3 py-3 text-left font-heading text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Concept
               </th>
-              <th className="px-3 py-3 text-left font-heading text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-3 text-left font-heading text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 First-seen post
               </th>
-              <th className="px-3 py-3 text-right font-heading text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-3 text-right font-heading text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Times explained
               </th>
-              <th className="px-3 py-3 text-left font-heading text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-3 text-left font-heading text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Analogies used
               </th>
-              <th className="px-3 py-3 text-left font-heading text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-3 text-left font-heading text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Reuse risk
               </th>
-              <th className="px-3 py-3 text-left font-heading text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-3 text-left font-heading text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Last used
               </th>
-              <th className="px-3 py-3 text-left font-heading text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-3 text-left font-heading text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Related cluster
               </th>
             </tr>
@@ -486,7 +486,7 @@ export function ConceptLibraryTable({ rows }: ConceptLibraryTableProps) {
                       </div>
                       <div className="px-3 py-3">
                         {row.relatedCluster ? (
-                          <span className="rounded-full border-2 border-border bg-card px-2.5 py-1 text-xs font-bold">
+                          <span className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-bold">
                             {row.relatedCluster}
                           </span>
                         ) : (

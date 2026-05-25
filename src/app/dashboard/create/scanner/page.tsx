@@ -75,7 +75,7 @@ export default async function CreateScannerPage({
   if (scannerV2) {
     return (
       <div className="py-8">
-        <h1 className="font-heading text-3xl font-bold">Content Scanner</h1>
+        <h1 className="font-heading text-3xl font-medium">Content Scanner</h1>
         <p className="mt-2 text-muted-foreground">
           Four-axis diagnostic: style match, psychology, algorithm alignment,
           and AI-tone detection. Scanner diagnoses; Composer rewrites.

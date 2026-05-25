@@ -233,7 +233,7 @@ export default async function UnderstandAudiencePage() {
   return (
     <div className="py-8">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h1 className="font-heading text-3xl font-bold">Audience</h1>
+        <h1 className="font-heading text-3xl font-medium">Audience</h1>
         <ConfidenceBadge sample={focusPosts.length} />
       </div>
       <p className="mt-2 text-muted-foreground">

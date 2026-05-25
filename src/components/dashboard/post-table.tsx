@@ -143,13 +143,13 @@ export function PostTable({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b-2 border-foreground">
+            <tr className="border-b border-foreground">
               {COLUMNS.map((col) => (
                 <th
                   key={col.key}
                   aria-sort={col.sortable && sortBy === col.key ? (sortOrder === "asc" ? "ascending" : "descending") : undefined}
                   className={cn(
-                    "px-3 py-3 text-left font-heading font-bold text-xs uppercase tracking-wide text-muted-foreground",
+                    "px-3 py-3 text-left font-heading font-medium text-xs uppercase tracking-wide text-muted-foreground",
                     col.key !== "text_preview" && "text-right"
                   )}
                 >
@@ -205,13 +205,8 @@ export function PostTable({
                   >
                     <td className="px-3 py-3 max-w-[280px]">
                       <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "flex-shrink-0 inline-flex items-center justify-center size-7 rounded-full text-white",
-                            media.color
-                          )}
-                        >
-                          <Icon weight="fill" className="size-3.5" />
+                        <span className="flex-shrink-0 inline-flex items-center justify-center text-ink-3">
+                          <Icon weight="regular" className="size-4" />
                         </span>
                         <span className="truncate" title={post.text_preview ?? undefined}>
                           {post.text_preview || "—"}

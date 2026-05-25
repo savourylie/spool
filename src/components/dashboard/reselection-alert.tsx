@@ -38,7 +38,7 @@ export function ReselectionAlert({ posts }: { posts: ReselectedPost[] }) {
   if (dismissed || posts.length === 0) return null;
 
   return (
-    <div className="mb-4 rounded-[var(--radius-md)] border-2 border-accent/30 bg-accent/10 px-4 py-3">
+    <div className="mb-4 rounded-[var(--radius-md)] border border-accent/30 bg-accent/10 px-4 py-3">
       <div className="flex items-start gap-3">
         <Lightning
           weight="bold"

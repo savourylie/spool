@@ -34,7 +34,7 @@ export default async function CreatePage() {
 
   return (
     <div className="py-8">
-      <h1 className="font-heading text-3xl font-bold">Discover</h1>
+      <h1 className="font-heading text-3xl font-medium">Discover</h1>
       <p className="mt-2 text-muted-foreground">
         Find inspiration and create your next post.
       </p>

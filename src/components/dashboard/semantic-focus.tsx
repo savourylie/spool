@@ -171,7 +171,7 @@ export function SemanticFocus({
     <>
       {/* Score display */}
       <div className="mb-4 flex items-baseline gap-3">
-        <span className="font-heading text-5xl font-bold">
+        <span className="font-heading text-5xl font-medium">
           {Math.round(focusData.currentScore)}
         </span>
         <span
@@ -187,7 +187,7 @@ export function SemanticFocus({
           {focusData.topClusters.map((cluster) => (
             <span
               key={cluster.topic}
-              className="rounded-full border-2 border-foreground bg-muted px-3 py-1 text-sm font-medium capitalize"
+              className="rounded-full border border-foreground bg-muted px-3 py-1 text-sm font-medium capitalize"
             >
               {cluster.topic}
             </span>
@@ -238,7 +238,7 @@ export function SemanticFocus({
 
       {/* Low score warning */}
       {focusData.currentScore < LOW_SCORE_THRESHOLD && (
-        <div className="mt-4 rounded-[var(--radius-sm)] border-2 border-destructive/30 bg-destructive/10 px-4 py-2 text-sm">
+        <div className="mt-4 rounded-[var(--radius-sm)] border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm">
           Your content is spread across many topics. Narrowing to 2–3
           core themes can improve algorithmic reach.
         </div>

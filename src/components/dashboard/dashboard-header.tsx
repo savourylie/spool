@@ -5,9 +5,9 @@ import { buttonVariants } from "@/components/ui/button-variants";
 
 export function DashboardHeader({ username }: { username: string }) {
   return (
-    <header className="border-b-2 border-border">
+    <header className="border-b border-border">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <span className="font-heading text-xl font-bold">Spool</span>
+        <span className="font-heading text-xl font-medium">Spool</span>
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted-foreground">@{username}</span>
           <form action="/api/auth/sign-out" method="POST">

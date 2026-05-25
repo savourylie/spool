@@ -72,7 +72,7 @@ export function FreshnessLogCard({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <ChartBar weight="fill" className="size-5 text-primary" />
-          <h3 className="font-heading text-base font-bold">
+          <h3 className="font-heading text-base font-medium">
             Freshness log health
           </h3>
         </div>

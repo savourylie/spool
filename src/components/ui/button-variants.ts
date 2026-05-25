@@ -1,36 +1,34 @@
 import { cva, type VariantProps } from "class-variance-authority"
 
+/* Editorial Utility buttons — two intents, one sharp shape.
+   Primary is ink on paper; everything else is hairlined.
+   No gradient fills, no hard drop shadows. Accent appears only
+   in the focus ring. */
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)] outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-sm)] font-medium tracking-[-0.005em] transition-colors duration-150 outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
   {
     variants: {
       variant: {
         candy: [
-          "rounded-full border-2 border-foreground bg-primary text-primary-foreground",
-          "shadow-[var(--shadow-default)]",
-          "hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)]",
-          "active:translate-x-0.5 active:translate-y-0.5 active:shadow-[var(--shadow-active)]",
-          "focus-visible:ring-3 focus-visible:ring-ring focus-visible:shadow-[var(--shadow-hover)]",
+          "border border-foreground bg-primary text-primary-foreground",
+          "hover:bg-[color-mix(in_oklab,var(--primary)_88%,var(--ink-3))]",
         ],
         outline: [
-          "rounded-full border-2 border-foreground bg-transparent text-foreground",
-          "hover:bg-tertiary",
-          "focus-visible:ring-3 focus-visible:ring-ring",
+          "border border-line-strong bg-transparent text-foreground",
+          "hover:border-foreground hover:bg-paper-2",
         ],
-        ghost:
-          "rounded-full hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring",
-        link: "text-primary underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring",
+        ghost: "text-ink-2 hover:bg-paper-2 hover:text-foreground",
+        link: "text-accent underline-offset-4 hover:underline",
         destructive: [
-          "rounded-full border-2 border-destructive bg-destructive/10 text-destructive",
-          "hover:bg-destructive/20",
-          "focus-visible:ring-3 focus-visible:ring-destructive/50",
+          "border border-[color-mix(in_oklab,var(--neg)_40%,transparent)] bg-transparent text-destructive",
+          "hover:border-destructive hover:bg-neg-soft",
         ],
       },
       size: {
-        default: "h-12 px-6 text-sm",
-        sm: "h-12 px-4 text-sm md:h-9",
-        lg: "h-14 px-8 text-base",
-        icon: "size-12",
+        default: "h-9 px-4 text-sm",
+        sm: "h-7 px-2.5 text-xs",
+        lg: "h-11 px-6 text-[15px]",
+        icon: "size-9",
       },
     },
     defaultVariants: {

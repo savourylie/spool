@@ -30,9 +30,9 @@ export function ReviewCumulativeStats({
   ).join(", ");
 
   return (
-    <section className="rounded-[var(--radius-lg)] border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--muted)]">
+    <section className="rounded-[var(--radius-lg)] border border-border bg-card p-6 shadow-[4px_4px_0_0_var(--muted)]">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-heading text-lg font-bold">How your predictions land</h2>
+        <h2 className="font-heading text-lg font-medium">How your predictions land</h2>
         <p className="text-xs text-muted-foreground">
           {total} review{total === 1 ? "" : "s"} all-time
         </p>

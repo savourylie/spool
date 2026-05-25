@@ -24,13 +24,13 @@ export default function DevPage() {
   return (
     <div className="min-h-screen bg-background p-8 md:p-16">
       <div className="mx-auto max-w-4xl space-y-16">
-        <h1 className="font-heading text-4xl font-bold">
+        <h1 className="font-heading text-4xl font-medium">
           Component Preview
         </h1>
 
         {/* ---- Buttons ---- */}
         <section className="space-y-6">
-          <h2 className="font-heading text-2xl font-bold">Buttons</h2>
+          <h2 className="font-heading text-2xl font-medium">Buttons</h2>
 
           <div className="flex flex-wrap items-center gap-4">
             <Button>Candy Button</Button>
@@ -54,7 +54,7 @@ export default function DevPage() {
 
         {/* ---- Cards ---- */}
         <section className="space-y-6">
-          <h2 className="font-heading text-2xl font-bold">Sticker Cards</h2>
+          <h2 className="font-heading text-2xl font-medium">Sticker Cards</h2>
 
           <div className="grid gap-8 pt-8 md:grid-cols-3">
             <StickerCard>
@@ -152,7 +152,7 @@ export default function DevPage() {
 
         {/* ---- Inputs ---- */}
         <section className="space-y-6">
-          <h2 className="font-heading text-2xl font-bold">Inputs</h2>
+          <h2 className="font-heading text-2xl font-medium">Inputs</h2>
 
           <div className="max-w-md space-y-6">
             <Input placeholder="Basic input — click to see focus style" />

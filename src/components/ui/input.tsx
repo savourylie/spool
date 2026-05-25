@@ -17,10 +17,11 @@ function Input({
     <InputPrimitive
       data-slot="input"
       className={cn(
-        "flex w-full bg-input border-2 border-input-border rounded-[var(--radius-md)]",
-        "h-12 px-4 text-sm text-foreground placeholder:text-muted-foreground",
-        "transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
-        "focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none",
+        "flex w-full bg-input border border-input-border rounded-[var(--radius-sm)]",
+        "h-9 px-3 text-sm text-foreground placeholder:text-ink-4",
+        "transition-[border-color,box-shadow] duration-150",
+        "hover:border-ink-3",
+        "focus:border-accent focus:shadow-[var(--shadow-accent)] focus:outline-none",
         "disabled:pointer-events-none disabled:opacity-50",
         className
       )}
@@ -57,7 +58,7 @@ function FormLabel({
     <Field.Label
       data-slot="form-label"
       className={cn(
-        "text-xs font-bold uppercase tracking-wide text-foreground",
+        "text-xs font-medium text-ink-2",
         className
       )}
       {...props}
@@ -73,10 +74,11 @@ function FormControl({
     <Field.Control
       data-slot="form-control"
       className={cn(
-        "flex w-full bg-input border-2 border-input-border rounded-[var(--radius-md)]",
-        "h-12 px-4 text-sm text-foreground placeholder:text-muted-foreground",
-        "transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
-        "focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none",
+        "flex w-full bg-input border border-input-border rounded-[var(--radius-sm)]",
+        "h-9 px-3 text-sm text-foreground placeholder:text-ink-4",
+        "transition-[border-color,box-shadow] duration-150",
+        "hover:border-ink-3",
+        "focus:border-accent focus:shadow-[var(--shadow-accent)] focus:outline-none",
         "disabled:pointer-events-none disabled:opacity-50",
         className
       )}

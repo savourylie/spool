@@ -51,7 +51,7 @@ export function PredictionReviewCard({
   return (
     <article
       className={cn(
-        "rounded-[var(--radius-md)] border-2 border-l-[6px] border-border bg-card p-5 shadow-[4px_4px_0_0_var(--muted)]",
+        "rounded-[var(--radius-md)] border border-l-[6px] border-border bg-card p-5 shadow-[4px_4px_0_0_var(--muted)]",
         style.borderL,
       )}
     >
@@ -128,7 +128,7 @@ export function PredictionReviewCard({
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             Actual (24h)
           </p>
-          <p className="mt-1 font-heading text-2xl font-bold">
+          <p className="mt-1 font-heading text-2xl font-medium">
             {formatNumber(row.actual.views)}{" "}
             <span className="text-sm font-semibold text-muted-foreground">
               views

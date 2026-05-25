@@ -12,21 +12,21 @@ export function ProgressBar({
   return (
     <div
       className={cn(
-        "h-6 w-full overflow-hidden rounded-full border-2 border-foreground bg-muted shadow-[var(--shadow-default)]",
+        "h-2 w-full overflow-hidden rounded-[2px] bg-paper-3",
         className,
       )}
     >
       {indeterminate ? (
         <div
-          className="h-full w-1/4 rounded-full bg-primary"
+          className="h-full w-1/4 bg-primary"
           style={{ animation: "progress-indeterminate 1.5s ease-in-out infinite" }}
         />
       ) : (
         <div
-          className="h-full rounded-full bg-primary"
+          className="h-full bg-primary"
           style={{
             width: `${Math.min(100, Math.max(0, percentage))}%`,
-            transition: "width 500ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+            transition: "width 400ms cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         />
       )}

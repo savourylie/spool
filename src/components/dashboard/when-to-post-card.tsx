@@ -10,15 +10,15 @@ import type {
   CadenceStatus,
 } from "@/lib/today-hub-helpers";
 
-// ── Heatmap color scale (violet, matches mockup) ─────────────────────
+// ── Heatmap color scale (monochrome ink ramp) ───────────────────────
 
 const INTENSITY_COLORS = [
-  "#F1F5F9", // 0 — muted/empty
-  "#EDE9FE", // 1
-  "#DDD6FE", // 2
-  "#C4B5FD", // 3
-  "#A78BFA", // 4
-  "#8B5CF6", // 5 — full intensity
+  "var(--paper-2)",    // 0 — empty
+  "var(--paper-3)",    // 1
+  "var(--line-strong)", // 2
+  "var(--ink-4)",      // 3
+  "var(--ink-3)",      // 4
+  "var(--ink)",        // 5 — full intensity
 ] as const;
 
 function intensityToColor(t: number): string {
@@ -95,7 +95,7 @@ export function WhenToPostCard({
       {/* Header */}
       <div className="flex items-center gap-2">
         <Clock weight="bold" className="size-5 text-primary" />
-        <h3 className="font-heading text-base font-bold">When to Post</h3>
+        <h3 className="font-heading text-base font-medium">When to Post</h3>
       </div>
 
       {/* Loading skeleton */}
@@ -140,7 +140,7 @@ export function WhenToPostCard({
               <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">
                 NEXT BEST SLOT
               </span>
-              <span className="font-heading text-xl font-bold text-foreground">
+              <span className="font-heading text-xl font-medium text-foreground">
                 {bestSlot.dayLabel}, {bestSlot.timeLabel}
               </span>
               <span className="text-xs text-muted-foreground">

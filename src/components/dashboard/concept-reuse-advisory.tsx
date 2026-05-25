@@ -36,9 +36,9 @@ export function ConceptReuseAdvisory({
   if (!primary) return null;
 
   return (
-    <div className="rounded-[var(--radius-md)] border-2 border-foreground bg-card p-4 shadow-[var(--shadow-soft)]">
+    <div className="rounded-[var(--radius-md)] border border-foreground bg-card p-4 shadow-[var(--shadow-soft)]">
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-tertiary text-white">
+        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-paper-2 text-ink-3">
           <Lightbulb weight="bold" className="size-4" />
         </div>
         <div className="min-w-0 flex-1">
@@ -70,7 +70,7 @@ export function ConceptReuseAdvisory({
               {advisory.matches.slice(1).map((match) => (
                 <span
                   key={match.concept}
-                  className="inline-flex items-center gap-1.5 rounded-full border-2 border-border bg-muted px-2.5 py-1 text-xs font-bold"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-bold"
                 >
                   <span
                     className={cn(

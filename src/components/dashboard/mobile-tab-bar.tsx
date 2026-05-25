@@ -3,70 +3,88 @@
 import { useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { House } from "@phosphor-icons/react";
-import { ChartBar } from "@phosphor-icons/react";
-import { Lightbulb } from "@phosphor-icons/react";
-import { PencilLine } from "@phosphor-icons/react";
-import { Users } from "@phosphor-icons/react";
-import { SpeakerHigh } from "@phosphor-icons/react";
-import { ClockCounterClockwise } from "@phosphor-icons/react";
-import { Books } from "@phosphor-icons/react";
-import { Compass } from "@phosphor-icons/react";
-import { MagnifyingGlass } from "@phosphor-icons/react";
-import { X } from "@phosphor-icons/react";
+import {
+  House,
+  ChartBar,
+  PencilLine,
+  Books,
+  ListBullets,
+  Clock,
+  Users,
+  MagnifyingGlass,
+  Compass,
+  SpeakerHigh,
+  Lightbulb,
+  ClockCounterClockwise,
+  X,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────────────
+
+interface SubItem {
+  label: string;
+  href: string;
+  icon: typeof House;
+}
 
 interface TabItem {
   label: string;
   icon: typeof House;
   href?: string;
-  subItems?: { label: string; href: string; icon: typeof House }[];
+  subItems?: SubItem[];
 }
 
 // ── Tab definitions ──────────────────────────────────────────────────
 
 const tabs: TabItem[] = [
+  { label: "Overview", icon: House, href: "/dashboard" },
   {
-    label: "Today",
-    icon: House,
-    href: "/dashboard",
-  },
-  {
-    label: "Understand",
+    label: "Studio",
     icon: ChartBar,
     subItems: [
+      { label: "Posts", href: "/dashboard/posts", icon: ListBullets },
       { label: "Performance", href: "/dashboard/understand", icon: ChartBar },
+      { label: "Timing", href: "/dashboard/timing", icon: Clock },
       { label: "Audience", href: "/dashboard/understand/audience", icon: Users },
-      { label: "Voice", href: "/dashboard/understand/voice", icon: SpeakerHigh },
-      { label: "Reviews", href: "/dashboard/understand/reviews", icon: ClockCounterClockwise },
-      { label: "Concepts", href: "/dashboard/understand/concepts", icon: Books },
     ],
   },
   {
-    label: "Insights",
-    icon: Lightbulb,
-    href: "/dashboard/insights",
-  },
-  {
-    label: "Create",
+    label: "Tools",
     icon: PencilLine,
     subItems: [
-      { label: "Discover", href: "/dashboard/create", icon: Compass },
-      { label: "Scanner", href: "/dashboard/create/scanner", icon: MagnifyingGlass },
       { label: "Compose", href: "/dashboard/create/compose", icon: PencilLine },
+      { label: "Scanner", href: "/dashboard/create/scanner", icon: MagnifyingGlass },
+      { label: "Discover", href: "/dashboard/create", icon: Compass },
+    ],
+  },
+  {
+    label: "Library",
+    icon: Books,
+    subItems: [
+      { label: "Voice", href: "/dashboard/understand/voice", icon: SpeakerHigh },
+      { label: "Topics & Patterns", href: "/dashboard/insights", icon: Lightbulb },
+      { label: "Concepts", href: "/dashboard/understand/concepts", icon: Books },
+      { label: "Reviews", href: "/dashboard/understand/reviews", icon: ClockCounterClockwise },
     ],
   },
 ];
 
-// ── Active section detection ─────────────────────────────────────────
+// ── Active section detection (longest-prefix across all hrefs) ───────
+
+const HREF_TO_TAB: { href: string; tab: string }[] = tabs
+  .flatMap((t) =>
+    t.href
+      ? [{ href: t.href, tab: t.label }]
+      : (t.subItems ?? []).map((s) => ({ href: s.href, tab: t.label })),
+  )
+  .sort((a, b) => b.href.length - a.href.length);
 
 function getActiveSection(pathname: string): string {
-  if (pathname.startsWith("/dashboard/understand")) return "Understand";
-  if (pathname.startsWith("/dashboard/insights")) return "Insights";
-  if (pathname.startsWith("/dashboard/create")) return "Create";
-  return "Today";
+  const match = HREF_TO_TAB.find(
+    (e) => pathname === e.href || pathname.startsWith(e.href + "/"),
+  );
+  return match?.tab ?? "Overview";
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -102,7 +120,7 @@ export function MobileTabBar() {
   const sheetTab = tabs.find((t) => t.label === sheetSection);
 
   const instant = { duration: 0 };
-  const spring = { type: "spring" as const, stiffness: 400, damping: 30 };
+  const spring = { type: "spring" as const, stiffness: 400, damping: 32 };
 
   return (
     <>
@@ -116,8 +134,8 @@ export function MobileTabBar() {
               initial={shouldReduceMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={shouldReduceMotion ? undefined : { opacity: 0 }}
-              transition={shouldReduceMotion ? instant : { duration: 0.2 }}
-              className="fixed inset-0 z-40 bg-black/40 md:hidden"
+              transition={shouldReduceMotion ? instant : { duration: 0.18 }}
+              className="fixed inset-0 z-40 bg-foreground/30 md:hidden"
               onClick={() => setSheetSection(null)}
             />
 
@@ -134,28 +152,30 @@ export function MobileTabBar() {
               onDragEnd={(_, info) => {
                 if (info.offset.y > 80) setSheetSection(null);
               }}
-              className="fixed inset-x-0 bottom-0 z-50 rounded-t-[var(--radius-lg)] border-2 border-b-0 border-border bg-card pb-[calc(64px+env(safe-area-inset-bottom))] md:hidden"
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-[var(--radius-lg)] border border-b-0 border-border bg-card pb-[calc(64px+env(safe-area-inset-bottom))] md:hidden"
             >
               {/* Drag handle */}
               <div className="flex justify-center py-3">
-                <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+                <div className="h-1 w-10 rounded-full bg-line-strong" />
               </div>
 
               {/* Header */}
               <div className="flex items-center justify-between px-5 pb-3">
-                <h3 className="font-heading text-lg font-bold">{sheetTab.label}</h3>
+                <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-ink-3">
+                  {sheetTab.label}
+                </h3>
                 <button
                   type="button"
                   onClick={() => setSheetSection(null)}
-                  className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="rounded-[var(--radius-sm)] p-1.5 text-ink-3 transition-colors hover:bg-paper-2 hover:text-foreground"
                   aria-label="Close navigation"
                 >
-                  <X weight="bold" className="size-5" />
+                  <X className="size-5" />
                 </button>
               </div>
 
               {/* Sub-nav items */}
-              <nav className="flex flex-col gap-1 px-4 pb-4">
+              <nav className="flex flex-col gap-0.5 px-3 pb-4">
                 {sheetTab.subItems.map((sub) => {
                   const SubIcon = sub.icon;
                   const isActive =
@@ -167,16 +187,13 @@ export function MobileTabBar() {
                       type="button"
                       onClick={() => handleSheetNavigate(sub.href)}
                       className={cn(
-                        "flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium transition-colors",
+                        "flex items-center gap-3 rounded-[var(--radius-sm)] px-4 py-3 text-sm transition-colors",
                         isActive
-                          ? "bg-primary/10 font-semibold text-primary"
-                          : "text-foreground hover:bg-muted",
+                          ? "bg-foreground font-medium text-background"
+                          : "text-ink-2 hover:bg-paper-2 hover:text-foreground",
                       )}
                     >
-                      <SubIcon
-                        weight={isActive ? "fill" : "regular"}
-                        className="size-5"
-                      />
+                      <SubIcon weight="regular" className="size-5" />
                       {sub.label}
                     </button>
                   );
@@ -189,7 +206,7 @@ export function MobileTabBar() {
 
       {/* Bottom tab bar */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t-2 border-border bg-card md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-border bg-card md:hidden"
         style={{ height: "calc(64px + env(safe-area-inset-bottom))", paddingBottom: "env(safe-area-inset-bottom)" }}
         role="tablist"
         aria-label="Main navigation"
@@ -205,16 +222,11 @@ export function MobileTabBar() {
               aria-selected={isActive}
               onClick={() => handleTabPress(tab)}
               className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground",
+                "flex flex-1 flex-col items-center gap-0.5 py-2 font-mono text-[10px] uppercase tracking-[0.06em] transition-colors",
+                isActive ? "text-foreground" : "text-ink-4",
               )}
             >
-              <Icon
-                weight={isActive ? "fill" : "regular"}
-                className="size-6"
-              />
+              <Icon weight="regular" className="size-6" />
               {tab.label}
             </button>
           );
