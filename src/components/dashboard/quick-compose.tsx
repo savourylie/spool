@@ -23,10 +23,10 @@ export function QuickCompose() {
   }
 
   return (
-    <div className="rounded-[var(--radius-md)] border-2 border-border bg-card p-4">
+    <div className="rounded-[var(--radius-md)] border border-border bg-card p-4">
       {/* Header */}
       <div className="mb-3 flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-full bg-accent text-white">
+        <div className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] bg-paper-2 text-ink-3">
           <PencilLine weight="bold" className="size-4" />
         </div>
         <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -44,7 +44,7 @@ export function QuickCompose() {
         }}
         placeholder="Enter a topic to generate drafts..."
         aria-label="Topic for draft generation"
-        className="w-full rounded-[var(--radius-md)] border-2 border-[#CBD5E1] bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:shadow-[4px_4px_0_var(--accent)] focus:outline-none"
+        className="w-full rounded-[var(--radius-sm)] border border-input-border bg-input px-3 py-2.5 text-sm text-foreground placeholder:text-ink-4 focus:border-accent focus:shadow-[var(--shadow-accent)] focus:outline-none"
       />
 
       {/* Generate button */}

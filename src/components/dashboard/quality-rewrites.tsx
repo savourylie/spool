@@ -20,7 +20,7 @@ export function QualityRewrites({ rewrites, onApply }: QualityRewritesProps) {
         {rewrites.map((rewrite, i) => (
           <li
             key={i}
-            className="rounded-[var(--radius-sm)] border-2 border-border p-3"
+            className="rounded-[var(--radius-sm)] border border-border p-3"
           >
             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
               {rewrite.label}

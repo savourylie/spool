@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils"
 
 /* ------------------------------------------------------------------ */
-/*  Sticker Card — DESIGN.md compound component                       */
+/*  Card — Editorial Utility: flat, hairlined, no lift                 */
 /* ------------------------------------------------------------------ */
 
 function StickerCard({
@@ -14,12 +14,8 @@ function StickerCard({
     <div
       data-slot="card"
       className={cn(
-        "relative overflow-visible bg-card border-2 border-foreground rounded-[var(--radius-lg)]",
-        featured
-          ? "shadow-[var(--shadow-featured)]"
-          : "shadow-[var(--shadow-soft)]",
-        "transition-all duration-300 [transition-timing-function:var(--ease-bounce)]",
-        "hover:rotate-[-1deg] hover:scale-[1.02]",
+        "relative overflow-hidden bg-card rounded-[var(--radius-lg)] border",
+        featured ? "border-foreground" : "border-border",
         className
       )}
       {...props}
@@ -36,7 +32,7 @@ function StickerCardHeader({
   return (
     <div
       data-slot="card-header"
-      className={cn("flex flex-col gap-1.5 px-6 pt-6", className)}
+      className={cn("flex flex-col gap-1.5 px-5 pt-5", className)}
       {...props}
     />
   )
@@ -49,7 +45,10 @@ function StickerCardTitle({
   return (
     <h3
       data-slot="card-title"
-      className={cn("font-heading font-bold text-lg", className)}
+      className={cn(
+        "font-heading text-lg font-medium tracking-[-0.015em]",
+        className
+      )}
       {...props}
     />
   )
@@ -75,7 +74,7 @@ function StickerCardContent({
   return (
     <div
       data-slot="card-content"
-      className={cn("px-6 py-4", className)}
+      className={cn("px-5 py-4", className)}
       {...props}
     />
   )
@@ -88,41 +87,25 @@ function StickerCardFooter({
   return (
     <div
       data-slot="card-footer"
-      className={cn("flex items-center px-6 pb-6", className)}
+      className={cn("flex items-center px-5 pb-5", className)}
       {...props}
     />
   )
 }
 
-const iconColorMap = {
-  primary: "bg-primary",
-  secondary: "bg-secondary",
-  tertiary: "bg-tertiary",
-  quaternary: "bg-quaternary",
-} as const
-
-function StickerCardIcon({
-  className,
-  color = "primary",
-  children,
-  ...props
-}: React.ComponentProps<"div"> & {
-  color?: keyof typeof iconColorMap
-}) {
-  return (
-    <div
-      data-slot="card-icon"
-      aria-hidden="true"
-      className={cn(
-        "absolute -top-6 left-6 flex size-12 items-center justify-center rounded-full text-white",
-        iconColorMap[color],
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  )
+/**
+ * Editorial Utility removes the "sticker" floating icon circle entirely —
+ * cards carry meaning through eyebrow → title → body hierarchy, not chrome.
+ * Kept as an inert no-op so existing call sites compile unchanged; pass an
+ * inline icon next to the title instead where a glyph adds value.
+ */
+function StickerCardIcon(
+  props: React.ComponentProps<"div"> & {
+    color?: "primary" | "secondary" | "tertiary" | "quaternary"
+  }
+) {
+  void props
+  return null
 }
 
 export {

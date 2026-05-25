@@ -93,7 +93,7 @@ export default async function DevBackfillsPage() {
     <div className="min-h-screen bg-background px-6 py-10">
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="space-y-2">
-          <h1 className="font-heading text-4xl font-bold">Backfill Debugger</h1>
+          <h1 className="font-heading text-4xl font-medium">Backfill Debugger</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
             Recent backfill jobs for the current signed-in user, including the
             latest persisted stage, heartbeat, and structured event timeline.
@@ -129,7 +129,7 @@ export default async function DevBackfillsPage() {
                 </StickerCardHeader>
                 <StickerCardContent className="space-y-4">
                   <div className="grid gap-3 md:grid-cols-2">
-                    <div className="rounded-[var(--radius-md)] border-2 border-foreground/10 bg-background px-4 py-3 text-sm">
+                    <div className="rounded-[var(--radius-md)] border border-foreground/10 bg-background px-4 py-3 text-sm">
                       <p>
                         <strong>Processed:</strong>{" "}
                         {job.processed_posts ?? 0}
@@ -148,7 +148,7 @@ export default async function DevBackfillsPage() {
                         {formatTimestamp(job.completed_at)}
                       </p>
                     </div>
-                    <div className="rounded-[var(--radius-md)] border-2 border-foreground/10 bg-background px-4 py-3 text-sm">
+                    <div className="rounded-[var(--radius-md)] border border-foreground/10 bg-background px-4 py-3 text-sm">
                       <p>
                         <strong>Error message:</strong>{" "}
                         {job.last_error_message ?? "n/a"}
@@ -165,7 +165,7 @@ export default async function DevBackfillsPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <h2 className="font-heading text-xl font-bold">
+                    <h2 className="font-heading text-xl font-medium">
                       Event Timeline
                     </h2>
                     {jobEvents.length === 0 ? (
@@ -177,7 +177,7 @@ export default async function DevBackfillsPage() {
                         {jobEvents.map((event) => (
                           <div
                             key={event.id}
-                            className="rounded-[var(--radius-md)] border-2 border-foreground/10 bg-background px-4 py-3"
+                            className="rounded-[var(--radius-md)] border border-foreground/10 bg-background px-4 py-3"
                           >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <p className="text-sm font-semibold">

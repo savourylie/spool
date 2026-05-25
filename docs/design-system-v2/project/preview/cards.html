@@ -1,0 +1,35 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sticker Card</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.sticker{ padding:24px 20px 20px; }
+.sticker .floaticon{
+  position:absolute; top:-22px; left:20px;
+  width:44px; height:44px; border-radius:9999px;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+}
+.sticker h3{ font-family:var(--font-heading); font-weight:700; font-size:18px; margin-top:4px}
+.sticker p{ color: var(--muted-foreground); font-size:13px; margin-top:4px }
+</style>
+</head>
+<body>
+<div class="card-wrap" style="padding-top:28px">
+  <div class="row" style="gap:24px; align-items:stretch">
+    <div class="sticker" style="flex:1">
+      <div class="floaticon bg-accent">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 21h18v-2H3v2zM5 17h2V9H5v8zm4 0h2V5H9v12zm4 0h2v-6h-2v6zm4 0h2V8h-2v9z"/></svg>
+      </div>
+      <h3>Weighted Performance</h3>
+      <p>See how the algorithm scores your posts — shares and comments matter far more than likes.</p>
+    </div>
+    <div class="sticker featured" style="flex:1">
+      <div class="floaticon bg-secondary">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <h3>Timing &amp; Cadence</h3>
+      <p>Find your best posting times and optimal spacing to avoid the diversity filter.</p>
+    </div>
+  </div>
+  <div style="font-family:ui-monospace,monospace;font-size:11px;color:var(--muted-foreground)">Sticker card · 2px border · 24-radius · soft 8 8 0 shadow (or pink "featured"). Hover: rotate(-1deg) scale(1.02). Floating icon sits half-out of top border.</div>
+</div>
+</body></html>

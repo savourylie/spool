@@ -2,16 +2,10 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
 
-const iconColorMap = {
-  primary: "bg-primary",
-  secondary: "bg-secondary",
-  tertiary: "bg-tertiary",
-  quaternary: "bg-quaternary",
-} as const;
-
 interface EmptyStateProps {
   icon: React.ReactNode;
-  iconColor?: keyof typeof iconColorMap;
+  /** Retained for API compatibility; Editorial Utility renders a neutral chip. */
+  iconColor?: "primary" | "secondary" | "tertiary" | "quaternary";
   title: string;
   description: string;
   action?: {
@@ -24,7 +18,6 @@ interface EmptyStateProps {
 
 export function EmptyState({
   icon,
-  iconColor = "primary",
   title,
   description,
   action,
@@ -39,14 +32,11 @@ export function EmptyState({
     >
       <div
         aria-hidden="true"
-        className={cn(
-          "flex size-14 items-center justify-center rounded-full text-white",
-          iconColorMap[iconColor]
-        )}
+        className="flex size-12 items-center justify-center rounded-[var(--radius-md)] border border-line bg-paper-2 text-ink-3"
       >
         {icon}
       </div>
-      <h3 className="font-heading text-lg font-bold">{title}</h3>
+      <h3 className="font-heading text-lg font-medium tracking-[-0.015em]">{title}</h3>
       <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
       {action &&
         (action.href ? (

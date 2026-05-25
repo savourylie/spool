@@ -92,7 +92,7 @@ export function CommentQuality({ postId, isImporting = false }: CommentQualityPr
         <button
           type="button"
           onClick={fetchReplies}
-          className="inline-flex items-center gap-1 rounded-full border-2 border-foreground px-2 py-0.5 text-xs font-semibold transition-colors hover:bg-tertiary"
+          className="inline-flex items-center gap-1 rounded-full border border-foreground px-2 py-0.5 text-xs font-semibold transition-colors hover:bg-paper-2"
         >
           <ArrowClockwise weight="bold" className="size-3" />
           Try again
@@ -138,13 +138,13 @@ export function CommentQuality({ postId, isImporting = false }: CommentQualityPr
         )}
         {data.medium > 0 && (
           <div
-            className="bg-[#FBBF24]"
+            className="bg-warn"
             style={{ width: `${mediumPct}%` }}
           />
         )}
         {data.long > 0 && (
           <div
-            className="bg-[#34D399]"
+            className="bg-pos"
             style={{ width: `${longPct}%` }}
           />
         )}
@@ -157,11 +157,11 @@ export function CommentQuality({ postId, isImporting = false }: CommentQualityPr
           Short ({data.short})
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block size-2 rounded-full bg-[#FBBF24]" />
+          <span className="inline-block size-2 rounded-full bg-warn" />
           Medium ({data.medium})
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block size-2 rounded-full bg-[#34D399]" />
+          <span className="inline-block size-2 rounded-full bg-pos" />
           Long ({data.long})
         </span>
       </div>

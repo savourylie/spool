@@ -53,12 +53,10 @@ export function formatSlot(day: number, hour: number): string {
 /*  Color interpolation                                                */
 /* ------------------------------------------------------------------ */
 
-// muted: hsl(210, 40%, 96%) → accent: hsl(263, 90%, 66%)
+// Monochrome ink ramp: paper-2 (empty) → ink (full intensity), theme-aware.
 function interpolateColor(t: number): string {
-  const h = 210 + (263 - 210) * t;
-  const s = 40 + (90 - 40) * t;
-  const l = 96 + (66 - 96) * t;
-  return `hsl(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%)`;
+  const pct = Math.round(Math.max(0, Math.min(1, t)) * 100);
+  return `color-mix(in oklab, var(--ink) ${pct}%, var(--paper-2))`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -118,10 +116,10 @@ function CellTooltip({
 
   return (
     <div
-      className="pointer-events-none fixed z-50 max-w-[calc(100vw-2rem)] rounded-[var(--radius-sm)] border-2 border-foreground bg-card px-3 py-2 text-xs shadow-[var(--shadow-default)]"
+      className="pointer-events-none fixed z-50 max-w-[calc(100vw-2rem)] rounded-[var(--radius-sm)] border border-foreground bg-card px-3 py-2 text-xs shadow-[var(--shadow-default)]"
       style={{ left: Math.max(120, Math.min(x, typeof window !== "undefined" ? window.innerWidth - 120 : x)), top: y, transform: "translate(-50%, -110%)" }}
     >
-      <p className="font-heading font-bold">
+      <p className="font-heading font-medium">
         {DAY_LABELS[day]} {hour === 0 ? "12:00 AM" : hour < 12 ? `${hour}:00 AM` : hour === 12 ? "12:00 PM" : `${hour - 12}:00 PM`}
       </p>
       <p>{bucket.count} post{bucket.count !== 1 ? "s" : ""}</p>
@@ -137,7 +135,7 @@ function CellTooltip({
 
 function LowDataBanner({ count }: { count: number }) {
   return (
-    <div className="mb-4 rounded-[var(--radius-sm)] border-2 border-tertiary bg-tertiary/10 px-4 py-2 text-sm">
+    <div className="mb-4 rounded-[var(--radius-sm)] border border-tertiary bg-tertiary/10 px-4 py-2 text-sm">
       Post more to improve accuracy. Based on <strong>{count}</strong> post
       {count !== 1 ? "s" : ""} so far.
     </div>
@@ -148,7 +146,7 @@ function SameTimeBanner({ day, hour }: { day: number; hour: number }) {
   const timeStr =
     hour === 0 ? "12:00 AM" : hour < 12 ? `${hour}:00 AM` : hour === 12 ? "12:00 PM" : `${hour - 12}:00 PM`;
   return (
-    <div className="mb-4 rounded-[var(--radius-sm)] border-2 border-secondary bg-secondary/10 px-4 py-2 text-sm">
+    <div className="mb-4 rounded-[var(--radius-sm)] border border-secondary bg-secondary/10 px-4 py-2 text-sm">
       You always post at <strong>{DAY_LABELS[day]} {timeStr}</strong>. Try varying your schedule to discover better times.
     </div>
   );
@@ -401,7 +399,7 @@ export function TimingHeatmap({
                       backgroundColor: hasData ? interpolateColor(t) : undefined,
                       color: hasData
                         ? t > 0.5
-                          ? "white"
+                          ? "var(--paper)"
                           : "var(--foreground)"
                         : undefined,
                     }}
@@ -438,7 +436,7 @@ export function TimingHeatmap({
             aria-label="Select timezone"
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
-            className="h-12 md:h-9 rounded-[var(--radius-sm)] border-2 border-input-border bg-input px-2 text-sm outline-none focus:border-ring focus-visible:ring-3 focus-visible:ring-ring"
+            className="h-12 md:h-9 rounded-[var(--radius-sm)] border border-input-border bg-input px-2 text-sm outline-none focus:border-ring focus-visible:ring-3 focus-visible:ring-ring"
           >
             {Object.entries(groupedTimezones).map(([continent, zones]) => (
               <optgroup key={continent} label={continent}>
@@ -510,7 +508,7 @@ export function TimingHeatmap({
                         : undefined,
                       color: hasData
                         ? t > 0.5
-                          ? "white"
+                          ? "var(--paper)"
                           : "var(--foreground)"
                         : undefined,
                     }}

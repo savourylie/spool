@@ -1,98 +1,98 @@
-# DESIGN.md — Playful Geometric
+# DESIGN.md — Editorial Utility
 
-> **Purpose**: This file is the single source of truth for all visual and interaction design decisions in this project. Reference it when implementing any UI component, page, or layout. It complements `CLAUDE.md` (coding conventions) and `PRD.md` (product requirements).
+> **Purpose**: Single source of truth for all visual and interaction design in this project. Reference it when implementing any UI component, page, or layout. It complements `CLAUDE.md` (coding conventions) and `PRD.md` (product requirements).
+>
+> **Supersedes** the original "Playful Geometric" system. The full design-tool handoff bundle this was derived from lives in `docs/design-system-v2/` (HTML spec + `system.css` + screenshots). Live tokens are in `src/app/globals.css`.
 
 ---
 
 ## Philosophy
 
-**"Stable Grid, Wild Decoration."**
+**"Editorial Utility."**
 
-Content (text, forms, data) lives in clean, readable areas. Everything around it is alive with shape, color, and movement. The feeling is optimistic, tactile, and fun — a well-organized sticker book, not a corporate dashboard.
+A quiet, architectural system for reading the algorithm. One typeface in several weights, paper-and-ink contrast, monospace where structure matters, and a single muted accent that gets out of the way. Sharp corners, hairline borders, tabular by default. Content does the talking; chrome recedes.
 
-**References**: Memphis Group (1980s) cleaned up for modern screens. Remove the chaos, keep the energy.
+**References**: editorial/utilitarian interfaces — text-first hierarchy, restrained color, generous structure.
 
-**Keywords**: Friendly · Tactile · Pop · Energetic
+**Keywords**: Minimal · Architectural · Monochrome · Precise
 
 ---
 
 ## Visual Signatures
 
-These are the defining traits of the system. Every screen should exhibit at least two:
+Defining traits of the system:
 
-1. **Primitive shapes** — circles, triangles, squares, pills, squiggles as decorative background elements, masks, or icon containers.
-2. **Hard shadows** — solid offset drop shadows with zero blur, giving a sticker / cut-paper feel.
-3. **Pattern fills** — polka dots, grid lines, diagonal stripes inside shapes or behind sections.
-4. **Mixed radii** — fully rounded corners next to sharp ones to create leaf shapes and asymmetric blobs.
+1. **Paper + ink** — warm near-white surfaces, near-black text, no decorative color fills.
+2. **Hairlines, not shadows** — elevation is communicated by 1px lines and tone, not lift.
+3. **Mono for structure** — Geist Mono carries eyebrows, labels, badges, timestamps, and tabular numerals.
+4. **Sharp corners** — 2–8px radii; pill radius reserved for avatars and selection chips only.
+5. **One accent** — a single muted ink-blue for links, focus rings, active tints — never decorative fills.
 
 ---
 
 ## Tokens
 
+The system defines a small **source palette** (paper / ink / one accent / semantics); existing semantic names (`background`, `primary`, `muted`, …) are aliased to it. Dark mode overrides only the source palette, so every alias follows automatically. See `src/app/globals.css`.
+
 ### Colors (Light Mode)
 
-| Token              | Value     | Usage                                           |
-| ------------------ | --------- | ----------------------------------------------- |
-| `background`       | `#FFFDF5` | Page background (warm cream / paper feel)        |
-| `foreground`       | `#1E293B` | Primary text (Slate 800, softer than pure black) |
-| `muted`            | `#F1F5F9` | Subtle backgrounds (Slate 100)                   |
-| `muted-foreground` | `#64748B` | Secondary text (Slate 500)                       |
-| `accent`           | `#8B5CF6` | Primary actions and brand (Vivid Violet)         |
-| `accent-foreground`| `#FFFFFF` | Text on accent backgrounds                       |
-| `secondary`        | `#F472B6` | Decorative pop (Hot Pink)                        |
-| `tertiary`         | `#FBBF24` | Decorative pop (Amber/Yellow)                    |
-| `quaternary`       | `#34D399` | Decorative pop (Emerald/Mint)                    |
-| `border`           | `#E2E8F0` | Default borders (Slate 200)                      |
-| `input`            | `#FFFFFF` | Input backgrounds                                |
-| `card`             | `#FFFFFF` | Card backgrounds                                 |
-| `ring`             | `#8B5CF6` | Focus rings (matches accent)                     |
+| Token              | Value     | Usage                                            |
+| ------------------ | --------- | ------------------------------------------------ |
+| `background` / `--paper`   | `#fafaf7` | Page background (warm near-white)        |
+| `--paper-2`        | `#f3f2ed` | Sunken / muted blocks (`muted`)                  |
+| `--paper-3`        | `#ebeae3` | Zebra rows, meter tracks                         |
+| `card`             | `#ffffff` | Lifted card surface                              |
+| `foreground` / `--ink`     | `#0a0a09` | Primary text; **primary actions** (ink) |
+| `--ink-2`          | `#3a3a36` | Secondary text                                   |
+| `muted-foreground` / `--ink-3` | `#6e6e66` | Tertiary / meta                          |
+| `--ink-4`          | `#a8a89e` | Placeholders, dim labels                         |
+| `border` / `--line`        | `#e6e4dd` | Default hairline                         |
+| `--line-strong`    | `#c9c7be` | Hover / emphasis hairline; input resting border  |
+| `accent` / `ring`  | `#2a4cf0` | Links, focus rings, active tints **only**        |
+| `--accent-soft`    | `#e6eafe` | Selection / focus halo                           |
+| `pos` / `quaternary` | `#2f7a4f` | Positive / success / "great"                   |
+| `neg` / `destructive` | `#b8392d` | Negative / destructive                        |
+| `warn` / `tertiary` | `#8a6b16` | Warning                                         |
 
 **Rules**:
-- `accent` is for primary actions only — buttons, links, active states.
-- `secondary`, `tertiary`, `quaternary` rotate across decorative shapes, icons, and emphasized words to create a "confetti" effect. Never use all three on the same element; distribute them across a section.
+- `primary` is **ink**; primary buttons are ink on paper.
+- `accent` (ink-blue) is reserved for links, focus, active states, and faint tints (`bg-accent/5`). Never a decorative fill.
+- Semantic `pos`/`neg`/`warn` (each with a `-soft` tint) appear only inside data and banners. The former "confetti" pop palette is retired — `secondary`/`tertiary`/`quaternary` are remapped to neutral/semantic values for backwards compatibility.
 
 ### Typography
 
-| Role     | Family                              | Weights        | Notes                                  |
-| -------- | ----------------------------------- | -------------- | -------------------------------------- |
-| Headings | `"Outfit", system-ui, sans-serif`   | 700, 800       | Geometric sans with rounded letterforms |
-| Body     | `"Plus Jakarta Sans", system-ui, sans-serif` | 400, 500 | Legible, geometric-humanist            |
+| Role        | Family                                  | Weights      | Notes                                  |
+| ----------- | --------------------------------------- | ------------ | -------------------------------------- |
+| Sans (all)  | `"Geist", ui-sans-serif, system-ui`     | 300–700      | Headings use weight **500** + tight negative tracking |
+| Mono        | `"Geist Mono", ui-monospace`            | 400–600      | Eyebrows, labels, badges, timestamps, tabular numerals |
 
-**Scale ratio**: 1.25 (Major Third).
-
-Example scale at `base: 16px`: 16 → 20 → 25 → 31.25 → 39 → 48.8
+Loaded via `next/font/google` in `src/app/layout.tsx`. Headings are weight 500 (sharp, not heavy), `letter-spacing: -0.02em`. Eyebrow/label = mono, 11px, uppercase, `letter-spacing: 0.08em`, `ink-3` (use the `.eyebrow` helper). Numeric columns use `tabular-nums`.
 
 ### Spacing
 
-Use an 8px base grid. Standard section padding is `py-24` (96px). Generous but not empty — fill negative space with patterns and shapes.
+A 4px ramp: `4 8 12 16 20 24 32 40 56 80`. Density tokens (`--row-h`, `--field-h`, `--pad-y`) default to "regular"; `[data-density]` hooks exist for compact/comfy.
 
 ### Radius
 
-| Token         | Value    | When to use                                |
-| ------------- | -------- | ------------------------------------------ |
-| `radius-sm`   | `8px`    | Small elements (badges, chips)              |
-| `radius-md`   | `16px`   | Inputs, small cards                         |
-| `radius-lg`   | `24px`   | Large cards, modals                         |
-| `radius-full` | `9999px` | Buttons (pill), avatar circles, icon circles |
+| Token         | Value    | When to use                                   |
+| ------------- | -------- | --------------------------------------------- |
+| `radius-sm`   | `4px`    | Buttons, inputs, badges, most elements        |
+| `radius-md`   | `6px`    | Cards-as-panels, tooltips                     |
+| `radius-lg`   | `8px`    | Large cards / surfaces                        |
+| pill          | `9999px` | Avatars and **selection chips only**          |
 
-**Blob radius** (speech-bubble): `rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-none`
-**Arch radius**: `rounded-t-full rounded-b-none`
+Default `border-width` is **1px** (hairline) everywhere.
 
-Default `border-width` is **2px** everywhere — chunky, visible, deliberate.
+### Lines & Shadows
 
-### Shadows
+Elevation comes from hairlines, not lift. There are no hard drop shadows.
 
-All shadows are **hard** — zero blur, solid offset.
-
-| State    | Value                          | Purpose             |
-| -------- | ------------------------------ | ------------------- |
-| Default  | `4px 4px 0 0 #1E293B`         | Resting depth       |
-| Hover    | `6px 6px 0 0 #1E293B`         | Lift (with translate)|
-| Active   | `2px 2px 0 0 #1E293B`         | Press down           |
-| Soft     | `8px 8px 0 0 #E2E8F0`         | Subtle card depth    |
-| Featured | `8px 8px 0 0 #F472B6`         | Pink highlight shadow|
-
-Hover/active states pair shadow changes with matching `translate` shifts so the element appears to physically lift or press.
+| Token             | Value                                   | Purpose                          |
+| ----------------- | --------------------------------------- | -------------------------------- |
+| `--shadow-soft`   | `0 1px 0 0 var(--line)`                 | Faint surface seam               |
+| `--shadow-default`| barely-there ink wash                   | Rare, subtle depth               |
+| `--shadow-accent` | `0 0 0 3px var(--accent-soft)`          | Focused-input halo               |
+| `--line` / `--line-strong` | 1px hairlines                  | Default / hover-emphasis borders |
 
 ---
 
@@ -100,122 +100,86 @@ Hover/active states pair shadow changes with matching `translate` shifts so the 
 
 ### Buttons
 
-**Primary ("Candy Button")**:
-- Background: `accent`
-- Text: white, weight 700
-- Border: 2px solid `foreground`
-- Radius: `radius-full` (pill)
-- Shadow: default hard shadow
-- Hover: translate(-2px, -2px), shadow → 6px 6px
-- Active: translate(2px, 2px), shadow → 2px 2px
-- Optional trailing icon: ArrowRight inside a white circle
+One sharp shape (`radius-sm`); the accent appears only in the focus ring (`outline` 2px `accent`, offset 2px).
 
-**Secondary (Outline)**:
-- Background: transparent
-- Text: `foreground`
-- Border: 2px solid `foreground`
-- Radius: `radius-full`
-- Shadow: none
-- Hover: fills with `tertiary` (#FBBF24)
+- **Primary (`candy`)**: ink background, paper text, 1px ink border; hover darkens slightly. No shadow.
+- **Secondary (`outline`)**: transparent, 1px `line-strong` border, ink text; hover → ink border + `paper-2`.
+- **Ghost**: transparent, `ink-2` text; hover `paper-2`.
+- **Destructive**: transparent, `neg` text + soft border; hover `neg-soft`.
+- Sizes: `sm` 28px · `default` 36px · `lg` 44px · `icon` square.
 
-### Cards ("Sticker Card")
+### Cards
 
-- Background: `card`
-- Border: 2px solid `foreground`
-- Radius: `radius-lg`
-- Shadow: soft hard shadow (or featured pink shadow)
-- Hover: rotate(-1deg) scale(1.02) — subtle wiggle
-- Title: Outfit Bold
-- Optional floating icon: a colored circle sitting half-in / half-out of the top border
+Flat: `card` background, 1px `border` hairline, `radius-lg`, **no shadow, no hover transform**. Emphasis comes from internal hierarchy — eyebrow → title → body — not from a colored border or icon circle. `featured` swaps the border to ink. (The former floating "sticker" icon circle is removed.)
 
 ### Inputs
 
-- Background: `input`
-- Border: 2px solid `#CBD5E1`
-- Radius: `radius-md`
-- Shadow (rest): 4px 4px 0 transparent (invisible)
-- Focus: border → `accent`, shadow → 4px 4px 0 `accent`
-- Label style: bold, uppercase, small size, `tracking-wide`
+`card` background, 1px `line-strong` border, `radius-sm`, 36px tall. Focus is the only place the accent appears: `accent` border + 3px `accent-soft` halo (`--shadow-accent`). Field labels are quiet sentence-case (`ink-2`); use a mono eyebrow where structure needs calling out.
+
+### Badges
+
+Mono, uppercase, tracked tags at `radius-sm` — never colored pills. Semantic tone via `*-soft` background + matching text color (e.g. `bg-pos-soft text-pos`).
+
+### Avatars
+
+Mono initials on `paper-3`, pill (round) for people, `radius-sm` square for brand/project entities.
 
 ---
 
 ## Layout
 
-**Container**: `max-w-6xl`, centered.
-**Grid**: 12-column logic, grouped into large blocks (6/6 or 4/4/4). Avoid single-column walls of text.
+**Container**: `max-w-7xl`, centered. **Shell**: left sidebar (Studio / Tools / Library sections) + content. **Active nav** = a filled ink rectangle (`bg-foreground text-background`); **tabs** use a 2px ink underline — never both styles in one row.
 
-### Section Patterns
-
-| Section   | Layout                     | Decoration                                                         |
-| --------- | -------------------------- | ------------------------------------------------------------------ |
-| Hero      | Text left, image right     | Large yellow circle behind text; dotted pattern behind image; blob clip-path on image |
-| Features  | 3-column card grid         | Dashed SVG connector lines between cards; alternating header colors (violet → pink → yellow) |
-| Pricing   | 3-column, center enlarged  | Middle card at scale(1.1); rotated yellow star badge "MOST POPULAR" at 15deg |
+**Screen header** (`ScreenHead`): mono eyebrow → tight-tracked title → optional right-aligned actions, sitting on a hairline.
 
 ---
 
 ## Motion & Animation
 
-**Overall feel**: Bouncy, elastic, fun.
+**Overall feel**: quiet and quick.
 
-**Timing function**: `cubic-bezier(0.34, 1.56, 0.64, 1)` — overshoot/bounce on all `transition-all duration-300`.
+**Timing function**: `cubic-bezier(0.4, 0, 0.2, 1)` (exposed as `--ease-bounce` for backwards-compat). Typical duration 140ms; transitions animate color/border/box-shadow, not transform.
 
-| Effect    | Behavior                                                                 |
-| --------- | ------------------------------------------------------------------------ |
-| Hover     | Translate + shadow shift with bounce easing                               |
-| Entrance  | Scale 0 → 1 with bounce (pop in), not plain fade                         |
-| Marquee   | Infinite horizontal scroll for logos or keyword strips                     |
-| Wiggle    | Keyframe: 0deg → 3deg → -3deg → 0deg on icon hover                       |
-
-**Reduced motion**: When `prefers-reduced-motion` is active, disable bounce, wiggle, and marquee. Fall back to simple opacity fades or no animation.
+No bounce, no wiggle, no scale-pop. Entrances are simple fades or instant. **Reduced motion**: `prefers-reduced-motion` collapses transitions to ~0.
 
 ---
 
 ## Iconography
 
-**Library**: Lucide React
-
-| Property     | Value                                                |
-| ------------ | ---------------------------------------------------- |
-| Stroke width | `2.5px` (chunky)                                     |
-| Line caps    | Round                                                 |
-| Line joins   | Round                                                 |
-| Presentation | Always enclosed in a colored circle — never floating alone. Example: a checkmark inside a green (#34D399) circle with white icon color. |
+**Library**: Phosphor (`@phosphor-icons/react`), **regular** weight, ~18px. Icons are line glyphs that sit **inline** (next to titles, in nav, in buttons) — never enclosed in a colored circle. Where a glyph needs a container (empty states, section headers), use a neutral `radius-sm` `paper-2` tile with an `ink-3` icon. No fill weights as a rule; emphasis comes from grouping.
 
 ---
 
-## Decorative Elements
+## Charts
 
-These are the background shapes and textures that fill space and create the playful feel. They are **non-functional** — never block or interfere with content.
+Monochrome. Recharts series use the ink ramp `--chart-1..5` (`ink → accent → ink-3 → ink-4 → line-strong`). Heatmaps interpolate `color-mix(in oklab, var(--ink) t%, var(--paper-2))`. A single accent-blue bar/point may mark a highlight. Tooltips are hairlined `popover` panels in mono.
 
-- **Dot grid**: repeating small dots in strict formation as a section background.
-- **Squiggles**: SVG wavy paths used as section dividers or heading underlines.
-- **Confetti shapes**: small absolutely-positioned SVG triangles and circles behind content blocks. Use `secondary`, `tertiary`, `quaternary` colors at low-to-mid opacity.
-- **Pattern fills**: diagonal stripes or polka dots inside large decorative shapes.
+---
 
-Place decorative elements with `absolute` positioning inside a `relative` container. Use `z-index` to keep them behind interactive content. On mobile, hide complex floating shapes that risk overlapping text.
+## Dark mode
+
+Enabled via `next-themes` (`class` strategy; `.dark` on `<html>`). Only the ~20 source-palette tokens are overridden in `.dark` (paper `#0c0c0b`, ink `#f6f5ef`, accent `#7d96ff`, lines `#26251f`/`#3a3933`, plus dark semantics); all semantic aliases follow automatically. Foregrounds that sit on themed colored backgrounds use `var(--paper)`, which is always the opposite of `--ink` across themes. A sun/moon toggle lives in the sidebar footer.
 
 ---
 
 ## Responsive Rules
 
-| Breakpoint | Adjustments                                                        |
-| ---------- | ------------------------------------------------------------------ |
-| Mobile     | Stack all multi-column layouts to single column                     |
-| Mobile     | Reduce hard shadows from 4–8px to 2px                               |
-| Mobile     | Convert horizontal squiggle dividers to vertical                    |
-| Mobile     | Minimum button/tap-target height: 48px                              |
-| Mobile     | Hide complex background floating shapes that overlap text           |
-| Desktop    | Full decorative treatment — shapes, patterns, full shadow depth     |
+| Breakpoint | Adjustments                                                       |
+| ---------- | ----------------------------------------------------------------- |
+| Mobile     | Stack multi-column layouts to single column                        |
+| Mobile     | Left sidebar → bottom tab bar (Overview / Studio / Tools / Library) with slide-up sheets |
+| Tablet     | Sidebar collapses to a 56px icon rail with hairline tooltips        |
+| Mobile     | Minimum button/tap-target height: comfortable (≥44px where touched) |
+| Desktop    | Full sidebar + multi-column content                                 |
 
 ---
 
 ## Accessibility
 
-| Concern     | Rule                                                                        |
-| ----------- | --------------------------------------------------------------------------- |
-| Contrast    | Slate 800 on cream/white = AAA. Always verify accent-on-white combinations. |
-| Color-only  | Never use color alone to convey meaning. Pair with shape + text label.       |
-| Motion      | Respect `prefers-reduced-motion`. Disable bounce, wiggle, marquee.           |
-| Focus       | Thick colored border + hard shadow. Must be visually obvious.                |
-| Touch       | Minimum 48px tap targets on mobile.                                          |
+| Concern     | Rule                                                                         |
+| ----------- | ---------------------------------------------------------------------------- |
+| Contrast    | Ink on paper is high-contrast in both themes. Verify accent and `*-soft` pairings. |
+| Color-only  | Never use color alone to convey meaning. Pair with mono label + icon.         |
+| Motion      | Respect `prefers-reduced-motion`. No bounce/wiggle to begin with.             |
+| Focus       | Accent outline (2px, offset 2px) on controls; accent border + soft halo on inputs. Always visible. |
+| Touch       | Comfortable tap targets on mobile.                                            |

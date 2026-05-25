@@ -372,7 +372,7 @@ export function AudienceFit({
     <>
       {/* Score display */}
       <div className="mb-4 flex items-baseline gap-3">
-        <span className="font-heading text-5xl font-bold">
+        <span className="font-heading text-5xl font-medium">
           {alignment?.score ?? 0}
         </span>
         <span
@@ -449,7 +449,7 @@ export function AudienceFit({
           {recommendations.map((rec) => (
             <div
               key={rec.title}
-              className="rounded-[var(--radius-sm)] border-2 border-tertiary/30 bg-tertiary/10 px-4 py-3"
+              className="rounded-[var(--radius-sm)] border border-tertiary/30 bg-tertiary/10 px-4 py-3"
             >
               <p className="text-sm font-medium">{rec.title}</p>
               <p className="mt-1 text-sm text-muted-foreground">

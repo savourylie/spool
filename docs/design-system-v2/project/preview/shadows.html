@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Hard shadows</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.sbox{ width:140px; height:80px; background:var(--card); border:2px solid var(--foreground); border-radius:16px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px;}
+</style>
+</head>
+<body>
+<div class="card-wrap">
+  <div class="row" style="gap:24px; padding:8px 4px 16px">
+    <div class="col" style="gap:8px;align-items:center">
+      <div class="sbox" style="box-shadow:4px 4px 0 0 #1E293B">Default</div>
+      <div class="lbl">4 4 0</div>
+    </div>
+    <div class="col" style="gap:8px;align-items:center">
+      <div class="sbox" style="box-shadow:6px 6px 0 0 #1E293B">Hover</div>
+      <div class="lbl">6 6 0 · lift</div>
+    </div>
+    <div class="col" style="gap:8px;align-items:center">
+      <div class="sbox" style="box-shadow:2px 2px 0 0 #1E293B">Active</div>
+      <div class="lbl">2 2 0 · press</div>
+    </div>
+    <div class="col" style="gap:8px;align-items:center">
+      <div class="sbox" style="box-shadow:8px 8px 0 0 #E2E8F0">Soft</div>
+      <div class="lbl">card depth</div>
+    </div>
+    <div class="col" style="gap:8px;align-items:center">
+      <div class="sbox" style="box-shadow:8px 8px 0 0 #F472B6">Featured</div>
+      <div class="lbl">pink highlight</div>
+    </div>
+  </div>
+  <div style="font-family:ui-monospace,monospace;font-size:11px;color:var(--muted-foreground)">All shadows are <strong>hard</strong> — zero blur, solid offset. Hover/active pair shadow change with a matching translate.</div>
+</div>
+</body></html>

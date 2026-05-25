@@ -153,7 +153,7 @@ export function BackfillProgress({
         transition={shouldReduceMotion ? { duration: 0.01 } : springBounce}
         className="z-10 flex w-full max-w-md flex-col items-center gap-6"
       >
-        <div className="flex size-16 items-center justify-center rounded-full border-2 border-foreground bg-primary shadow-[var(--shadow-default)]">
+        <div className="flex size-16 items-center justify-center rounded-full border border-foreground bg-primary shadow-[var(--shadow-default)]">
           {status === "failed" ? (
             <WarningCircle weight="bold" className="size-8 text-primary-foreground" />
           ) : status === "complete" ? (
@@ -163,7 +163,7 @@ export function BackfillProgress({
           )}
         </div>
 
-        <h1 className="font-heading text-center text-2xl font-bold">
+        <h1 className="font-heading text-center text-2xl font-medium">
           {status === "failed"
             ? "Something went wrong"
             : status === "complete"
@@ -196,7 +196,7 @@ export function BackfillProgress({
           </AnimatePresence>
         </div>
 
-        <div className="w-full rounded-[var(--radius-md)] border-2 border-foreground/10 bg-background/70 px-4 py-3 text-sm shadow-[var(--shadow-default)]">
+        <div className="w-full rounded-[var(--radius-md)] border border-foreground/10 bg-background/70 px-4 py-3 text-sm shadow-[var(--shadow-default)]">
           <div className="space-y-1">
             <p className="font-semibold text-foreground">
               {stageLabel ?? "Preparing import"}

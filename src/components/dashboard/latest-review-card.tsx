@@ -43,7 +43,7 @@ export function LatestReviewCard({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <BookOpen weight="fill" className="size-5 text-primary" />
-          <h3 className="font-heading text-base font-bold">Latest review</h3>
+          <h3 className="font-heading text-base font-medium">Latest review</h3>
         </div>
         {review && <BandVerdictChip verdict={review.verdict} />}
       </div>
@@ -254,7 +254,7 @@ function DeltaBar({
         />
         <div
           className={cn(
-            "absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background",
+            "absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background",
             style.dot,
           )}
           style={{ left: `${actualPct}%` }}
@@ -342,7 +342,7 @@ function ExpandedRangeBar({
   const actualPct = Math.min(100, (actualViews / max) * 100);
 
   return (
-    <div className="relative h-5 overflow-hidden rounded-[var(--radius-sm)] border-2 border-border bg-muted">
+    <div className="relative h-5 overflow-hidden rounded-[var(--radius-sm)] border border-border bg-muted">
       <div
         className="absolute inset-y-0 bg-primary/20"
         style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
@@ -353,7 +353,7 @@ function ExpandedRangeBar({
       />
       <div
         className={cn(
-          "absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background",
+          "absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background",
           markerClass,
         )}
         style={{ left: `${actualPct}%` }}

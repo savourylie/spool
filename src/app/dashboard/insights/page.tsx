@@ -76,7 +76,7 @@ export default async function InsightsPage() {
   if (topicModel.totalPosts < MIN_POSTS_FOR_INSIGHTS) {
     return (
       <div className="py-8">
-        <h1 className="font-heading text-3xl font-bold">Topics &amp; Patterns</h1>
+        <h1 className="font-heading text-3xl font-medium">Topics &amp; Patterns</h1>
         <p className="mt-2 text-muted-foreground">
           Discover content themes and how they perform with your audience.
         </p>
@@ -96,7 +96,7 @@ export default async function InsightsPage() {
   return (
     <div className="py-8">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h1 className="font-heading text-3xl font-bold">Topics &amp; Patterns</h1>
+        <h1 className="font-heading text-3xl font-medium">Topics &amp; Patterns</h1>
         <ConfidenceBadge sample={topicModel.totalPosts} />
       </div>
       <p className="mt-2 text-muted-foreground">

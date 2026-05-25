@@ -53,10 +53,10 @@ export function GrokTrending({ topics }: GrokTrendingProps) {
   }, [topics, retryCount]);
 
   return (
-    <div className="rounded-[var(--radius-md)] border-2 border-border bg-card p-4">
+    <div className="rounded-[var(--radius-md)] border border-border bg-card p-4">
       {/* Header */}
       <div className="mb-3 flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-full bg-secondary text-white">
+        <div className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] bg-paper-2 text-ink-3">
           <TrendUp weight="bold" className="size-4" />
         </div>
         <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -99,7 +99,7 @@ export function GrokTrending({ topics }: GrokTrendingProps) {
               setError(null);
               setRetryCount((c) => c + 1);
             }}
-            className="inline-flex items-center gap-1.5 rounded-full border-2 border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] hover:bg-tertiary"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] hover:bg-paper-2"
           >
             <ArrowClockwise weight="bold" className="size-3.5" />
             Retry
@@ -149,7 +149,7 @@ export function GrokTrending({ topics }: GrokTrendingProps) {
               {/* Right: compose CTA */}
               <Link
                 href={`/dashboard/create/compose?topic=${encodeURIComponent(trend.title)}`}
-                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-[11px] font-bold text-accent-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--foreground)]"
+                className="inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-sm)] bg-accent px-2.5 py-1 text-[11px] font-medium text-accent-foreground transition-colors duration-150 hover:bg-[color-mix(in_oklab,var(--accent)_88%,var(--ink))]"
               >
                 Compose
                 <ArrowRight weight="bold" className="size-3" />

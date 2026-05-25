@@ -86,7 +86,7 @@ export default async function ReviewsPage({
   return (
     <div className="py-8">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h1 className="font-heading text-3xl font-bold">Prediction Review</h1>
+        <h1 className="font-heading text-3xl font-medium">Prediction Review</h1>
         <ConfidenceBadge sample={totalCount} />
       </div>
       <p className="mt-2 text-muted-foreground">
@@ -113,7 +113,7 @@ export default async function ReviewsPage({
           </div>
 
           <div className="mt-8">
-            <h2 className="font-heading text-xl font-bold">Timeline</h2>
+            <h2 className="font-heading text-xl font-medium">Timeline</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Most recent reviews first. Click a narrative to expand.
             </p>
@@ -129,7 +129,7 @@ export default async function ReviewsPage({
 
       <section className="mt-12">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-heading text-xl font-bold">Freshness log</h2>
+          <h2 className="font-heading text-xl font-medium">Freshness log</h2>
           <Link
             href="/dashboard/create/compose"
             className="text-xs font-semibold text-muted-foreground hover:text-foreground"

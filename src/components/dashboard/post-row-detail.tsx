@@ -174,7 +174,7 @@ export function PostRowDetail({ post, isImporting = false }: { post: PostRow; is
             </span>
             <span className="flex items-center gap-1">
               <span
-                className="inline-block w-3 h-0.5 rounded-full border-t-2 border-dashed"
+                className="inline-block w-3 h-0.5 rounded-full border-t border-dashed"
                 style={{ borderColor: "var(--chart-5)" }}
               />
               Eng. Rate

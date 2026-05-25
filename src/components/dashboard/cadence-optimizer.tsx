@@ -90,7 +90,7 @@ function StatsBar({
       {items.map((item) => (
         <div key={item.label} className="text-center">
           <p className="text-xs text-muted-foreground">{item.label}</p>
-          <p className="font-heading text-xl font-bold">{item.value}</p>
+          <p className="font-heading text-xl font-medium">{item.value}</p>
         </div>
       ))}
     </div>
@@ -99,7 +99,7 @@ function StatsBar({
 
 function RecommendationBanner({ percentageImprovement }: { percentageImprovement: number }) {
   return (
-    <div className="mt-4 rounded-[var(--radius-sm)] border-2 border-tertiary bg-tertiary/10 px-4 py-2 text-sm">
+    <div className="mt-4 rounded-[var(--radius-sm)] border border-tertiary bg-tertiary/10 px-4 py-2 text-sm">
       Posts spaced 18–24+ hours apart get <strong>{Math.round(percentageImprovement)}%</strong> more
       views on average based on your data.
     </div>

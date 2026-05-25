@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Progress bar</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.pbar{
+  height:24px; width:100%;
+  border:2px solid var(--foreground);
+  background: var(--muted);
+  border-radius: 9999px;
+  box-shadow: var(--shadow-default);
+  overflow: hidden;
+}
+.pbar > div { height:100%; background: var(--accent); border-radius: 9999px; transition: width 500ms var(--ease-bounce); }
+.indet > div{ width: 30%; animation: indet 1.4s ease-in-out infinite; }
+@keyframes indet { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
+.stage{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px; border:2px solid var(--border); border-radius:var(--radius-sm);
+  background: var(--muted); font-size:13px;
+}
+.dot{width:8px;height:8px;border-radius:9999px;background:var(--accent);animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+</style>
+</head>
+<body>
+<div class="card-wrap">
+  <div class="col" style="gap:8px">
+    <div class="lbl">55% · Determinate</div>
+    <div class="pbar"><div style="width:55%"></div></div>
+  </div>
+  <div class="col" style="gap:8px">
+    <div class="lbl">Indeterminate (queued)</div>
+    <div class="pbar indet"><div></div></div>
+  </div>
+  <div class="stage">
+    <span class="dot"></span>
+    <strong>Fetching post insights</strong>
+    <span style="color:var(--muted-foreground);margin-left:auto">Last update 30s ago</span>
+  </div>
+</div>
+</body></html>

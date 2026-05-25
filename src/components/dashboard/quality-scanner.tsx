@@ -372,7 +372,7 @@ export function QualityScanner({
               placeholder="Type or paste a draft post to analyze..."
               rows={5}
               aria-label="Draft post text to analyze"
-              className={`relative z-20 w-full resize-y rounded-[var(--radius-md)] border-2 border-[var(--input-border)] px-4 py-3 text-sm placeholder:text-muted-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none ${
+              className={`relative z-20 w-full resize-y rounded-[var(--radius-md)] border border-[var(--input-border)] px-4 py-3 text-sm placeholder:text-muted-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none ${
                 scannerV2 && activeAiMarker
                   ? "bg-transparent text-transparent caret-foreground"
                   : "bg-input text-foreground"
@@ -414,7 +414,7 @@ export function QualityScanner({
                   No posts imported yet.
                 </p>
               ) : (
-                <ul className="mt-2 max-h-60 space-y-1 overflow-y-auto rounded-[var(--radius-md)] border-2 border-border p-2">
+                <ul className="mt-2 max-h-60 space-y-1 overflow-y-auto rounded-[var(--radius-md)] border border-border p-2">
                   {posts.map((post) => (
                     <li key={post.id}>
                       <button
@@ -592,7 +592,7 @@ function DraftHighlightOverlay({
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-[var(--radius-md)] border-2 border-transparent bg-input px-4 py-3 text-sm text-foreground whitespace-pre-wrap break-words"
+      className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-[var(--radius-md)] border border-transparent bg-input px-4 py-3 text-sm text-foreground whitespace-pre-wrap break-words"
     >
       {chunks.map((chunk) =>
         chunk.highlight ? (

@@ -161,7 +161,7 @@ export function DraftCard({
               value={draft.editText}
               onChange={(e) => onEditTextChange(e.target.value)}
               rows={6}
-              className="w-full resize-y rounded-[var(--radius-md)] border-2 border-[var(--input-border)] bg-input px-3 py-2 text-sm text-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none"
+              className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--input-border)] bg-input px-3 py-2 text-sm text-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none"
               onClick={(e) => e.stopPropagation()}
             />
             <p

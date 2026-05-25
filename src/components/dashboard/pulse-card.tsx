@@ -83,7 +83,7 @@ export function PulseCard({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Pulse weight="bold" className="size-5 text-primary" />
-          <h3 className="font-heading text-base font-bold">Pulse (7d)</h3>
+          <h3 className="font-heading text-base font-medium">Pulse (7d)</h3>
         </div>
         {!isLoading && <ConfidenceBadge sample={postCount} compact />}
       </div>
@@ -119,19 +119,19 @@ export function PulseCard({
         <>
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-0.5">
-              <span className={cn("font-heading text-2xl font-bold", followerColor)}>
+              <span className={cn("font-heading text-2xl font-medium", followerColor)}>
                 {followerText}
               </span>
               <span className="text-xs text-muted-foreground">Followers</span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="font-heading text-2xl font-bold text-foreground">
+              <span className="font-heading text-2xl font-medium text-foreground">
                 {postCount}
               </span>
               <span className="text-xs text-muted-foreground">Posts</span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="font-heading text-2xl font-bold text-primary">
+              <span className="font-heading text-2xl font-medium text-primary">
                 {avgEngagementRate.toFixed(1)}%
               </span>
               <span className="text-xs text-muted-foreground">Avg Eng.</span>

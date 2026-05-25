@@ -831,7 +831,7 @@ export function Composer({
             placeholder="What do you want to post about?"
             rows={4}
             disabled={isGenerating}
-            className="w-full resize-y rounded-[var(--radius-md)] border-2 border-[var(--input-border)] bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none disabled:opacity-50"
+            className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--input-border)] bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground transition-all duration-300 [transition-timing-function:var(--ease-bounce)] focus:border-primary focus:shadow-[var(--shadow-accent)] focus:outline-none disabled:opacity-50"
           />
           <p
             className={`text-right text-xs tabular-nums ${
@@ -861,7 +861,7 @@ export function Composer({
                   })
                 }
                 disabled={isGenerating}
-                className={`rounded-full border-2 px-3 py-1 text-xs font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)] disabled:opacity-50 ${
+                className={`rounded-full border px-3 py-1 text-xs font-bold transition-all duration-300 [transition-timing-function:var(--ease-bounce)] disabled:opacity-50 ${
                   state.style === preset
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground"
@@ -1022,9 +1022,9 @@ export function Composer({
 
         {/* Timing recommendation */}
         {bestTimes.length > 0 && (
-          <div className="rounded-[var(--radius-md)] border-2 border-border bg-card p-4">
+          <div className="rounded-[var(--radius-md)] border border-border bg-card p-4">
             <div className="mb-2 flex items-center gap-2">
-              <div className="flex size-7 items-center justify-center rounded-full bg-tertiary text-white">
+              <div className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] bg-paper-2 text-ink-3">
                 <Clock weight="bold" className="size-4" />
               </div>
               <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">

@@ -2,7 +2,6 @@
 
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { TextT, Image, VideoCamera, SquaresFour, X } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -76,22 +75,14 @@ export function PostFilters() {
     <div className="flex flex-col gap-3 mb-4">
       {/* Row 1: Media type toggles + date range */}
       <div className="flex flex-wrap items-center gap-2">
-        {MEDIA_TYPES.map(({ key, label, icon: Icon, color }) => {
+        {MEDIA_TYPES.map(({ key, label, icon: Icon }) => {
           const isActive = selectedTypes.includes(key);
           return (
             <Button
               key={key}
               variant={isActive ? "candy" : "outline"}
               size="sm"
-              className={cn(
-                "gap-1.5",
-                isActive && [
-                  color,
-                  "text-white border-foreground",
-                  // Override candy shadow for a flat active look
-                  "shadow-none hover:shadow-none hover:translate-x-0 hover:translate-y-0",
-                ]
-              )}
+              className="gap-1.5"
               onClick={() => toggleType(key)}
             >
               <Icon weight={isActive ? "fill" : "regular"} className="size-4" />
@@ -101,7 +92,7 @@ export function PostFilters() {
         })}
 
         <div className="w-full sm:ml-auto sm:w-auto flex flex-wrap items-center gap-2">
-          <label htmlFor="filter-date-from" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">From</label>
+          <label htmlFor="filter-date-from" className="font-mono text-[11px] uppercase tracking-[0.08em] text-ink-3">From</label>
           <Input
             id="filter-date-from"
             type="date"
@@ -110,7 +101,7 @@ export function PostFilters() {
             onChange={(e) => navigate({ from: e.target.value || null })}
             className="h-12 w-full sm:w-40 md:h-9"
           />
-          <label htmlFor="filter-date-to" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">To</label>
+          <label htmlFor="filter-date-to" className="font-mono text-[11px] uppercase tracking-[0.08em] text-ink-3">To</label>
           <Input
             id="filter-date-to"
             type="date"
@@ -128,7 +119,7 @@ export function PostFilters() {
           {!allSelected && (
             <button
               onClick={() => navigate({ types: null })}
-              className="inline-flex items-center gap-1 min-h-12 md:min-h-0 rounded-[var(--radius-sm)] border-2 border-foreground bg-muted px-3 py-1 text-xs font-bold transition-colors hover:bg-muted/70"
+              className="inline-flex items-center gap-1 min-h-12 md:min-h-0 rounded-[var(--radius-sm)] border border-line-strong bg-muted px-3 py-1 text-xs font-medium transition-colors hover:bg-paper-2"
             >
               Types: {selectedTypes.map((t) => MEDIA_TYPES.find((m) => m.key === t)?.label).join(", ")}
               <X weight="bold" className="size-3" />
@@ -137,7 +128,7 @@ export function PostFilters() {
           {fromDate && (
             <button
               onClick={() => navigate({ from: null })}
-              className="inline-flex items-center gap-1 min-h-12 md:min-h-0 rounded-[var(--radius-sm)] border-2 border-foreground bg-muted px-3 py-1 text-xs font-bold transition-colors hover:bg-muted/70"
+              className="inline-flex items-center gap-1 min-h-12 md:min-h-0 rounded-[var(--radius-sm)] border border-line-strong bg-muted px-3 py-1 text-xs font-medium transition-colors hover:bg-paper-2"
             >
               From: {formatChipDate(fromDate)}
               <X weight="bold" className="size-3" />
@@ -146,7 +137,7 @@ export function PostFilters() {
           {toDate && (
             <button
               onClick={() => navigate({ to: null })}
-              className="inline-flex items-center gap-1 min-h-12 md:min-h-0 rounded-[var(--radius-sm)] border-2 border-foreground bg-muted px-3 py-1 text-xs font-bold transition-colors hover:bg-muted/70"
+              className="inline-flex items-center gap-1 min-h-12 md:min-h-0 rounded-[var(--radius-sm)] border border-line-strong bg-muted px-3 py-1 text-xs font-medium transition-colors hover:bg-paper-2"
             >
               To: {formatChipDate(toDate)}
               <X weight="bold" className="size-3" />

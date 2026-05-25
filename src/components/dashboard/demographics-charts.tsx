@@ -284,7 +284,7 @@ function GenderDonutChart({
             {chartData.map((entry) => (
               <div key={entry.name} className="flex items-center gap-2">
                 <span
-                  className="inline-block size-3 rounded-full border-2 border-foreground"
+                  className="inline-block size-3 rounded-full border border-foreground"
                   style={{ backgroundColor: entry.fill }}
                 />
                 <span className="text-sm font-medium">
@@ -310,7 +310,7 @@ export function DemographicsCharts({
   if (followersCount !== null && followersCount < 100) {
     return (
       <div className="mt-12 space-y-4">
-        <h2 className="font-heading text-2xl font-bold">Demographics</h2>
+        <h2 className="font-heading text-2xl font-medium">Demographics</h2>
         <StickerCard className="hover:rotate-0 hover:scale-100">
           <StickerCardContent>
             <EmptyState
@@ -331,7 +331,7 @@ export function DemographicsCharts({
 
   return (
     <div className="mt-12 space-y-10">
-      <h2 className="font-heading text-2xl font-bold">Demographics</h2>
+      <h2 className="font-heading text-2xl font-medium">Demographics</h2>
 
       <div className="grid gap-10 pt-4 md:grid-cols-2">
         <BarChartSection

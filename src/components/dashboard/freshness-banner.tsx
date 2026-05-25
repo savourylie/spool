@@ -189,7 +189,7 @@ export function FreshnessBanner({
 
   if (isRateLimited(freshness)) {
     return (
-      <div className="mb-4 rounded-[var(--radius-md)] border-2 border-muted-foreground/30 bg-muted px-4 py-3">
+      <div className="mb-4 rounded-[var(--radius-md)] border border-muted-foreground/30 bg-muted px-4 py-3">
         <div className="flex items-start gap-3">
           <Info
             weight="bold"
@@ -221,7 +221,7 @@ export function FreshnessBanner({
 
   return (
     <div
-      className={`mb-4 rounded-[var(--radius-md)] border-2 ${theme.border} ${theme.bg} px-4 py-3`}
+      className={`mb-4 rounded-[var(--radius-md)] border ${theme.border} ${theme.bg} px-4 py-3`}
     >
       <div className="flex flex-wrap items-start gap-3">
         <Icon

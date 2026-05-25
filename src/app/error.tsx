@@ -23,7 +23,7 @@ export default function RootError({
             <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
               <WarningCircle weight="bold" className="size-7" />
             </div>
-            <h3 className="font-heading text-lg font-bold">
+            <h3 className="font-heading text-lg font-medium">
               Something went wrong
             </h3>
             <p className="max-w-sm text-sm text-muted-foreground">

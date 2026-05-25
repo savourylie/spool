@@ -104,7 +104,7 @@ export function ViralRecoveryCard({
     : "Untitled post";
 
   return (
-    <div className="mb-4 rounded-[var(--radius-md)] border-2 border-tertiary/30 bg-tertiary/10 px-4 py-3 shadow-sm">
+    <div className="mb-4 rounded-[var(--radius-md)] border border-tertiary/30 bg-tertiary/10 px-4 py-3 shadow-sm">
       <div className="flex items-start gap-3">
         <Flame
           weight="bold"
@@ -126,7 +126,7 @@ export function ViralRecoveryCard({
             <button
               type="button"
               onClick={handleDismiss}
-              className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-tertiary/20 hover:text-foreground"
+              className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-paper-2/20 hover:text-foreground"
               aria-label="Dismiss alert"
             >
               <X weight="bold" className="size-4" />

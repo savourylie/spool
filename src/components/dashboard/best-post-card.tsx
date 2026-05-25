@@ -51,7 +51,7 @@ export function BestPostCard({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Star weight="fill" className="size-5 text-tertiary" />
-          <h3 className="font-heading text-base font-bold">Best Post (7d)</h3>
+          <h3 className="font-heading text-base font-medium">Best Post (7d)</h3>
         </div>
         {sampleSize !== undefined && !isLoading && (
           <ConfidenceBadge sample={sampleSize} compact />

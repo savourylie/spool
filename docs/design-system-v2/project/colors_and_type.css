@@ -1,0 +1,224 @@
+/* ============================================================
+   Spool — Colors & Type
+   "Playful Geometric" / "Stable Grid, Wild Decoration"
+   Mirrors spool/src/app/globals.css (light + dark mode)
+   ============================================================ */
+
+/* ----- Fonts ------------------------------------------------- */
+/* Outfit + Plus Jakarta Sans are loaded from fonts.gstatic.com by
+   default. To self-host, run `bash fonts/download.sh` then swap the
+   commented "local first" src lines for the gstatic ones.
+
+   Noto Sans TC is added for Traditional Chinese support; the CSS
+   endpoint takes care of subsetting (each glyph range is downloaded
+   on demand so the initial payload stays small). */
+
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&display=swap");
+
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  /* local first */
+  /* src: url("fonts/Outfit-700.woff2") format("woff2"); */
+  src: url("https://fonts.gstatic.com/s/outfit/v11/QGYvz_MVcBeNP4NjuGObqx1XmO1I4TC1O4a0Eg.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  /* local first */
+  /* src: url("fonts/Outfit-800.woff2") format("woff2"); */
+  src: url("https://fonts.gstatic.com/s/outfit/v11/QGYvz_MVcBeNP4NjuGObqx1XmO1I4TC1O4a0Eg.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 400 700;     /* variable axis */
+  font-display: swap;
+  /* local first */
+  /* src: url("fonts/PlusJakartaSans.woff2") format("woff2"); */
+  src: url("https://fonts.gstatic.com/s/plusjakartasans/v9/LDIbaomQNQcsA88c7O9yZ4KMCoOg4IA6-91aHEjcWuA_qU79TQ.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ----- Light mode tokens (default) --------------------------- */
+:root {
+  color-scheme: light;
+
+  /* Surface */
+  --background: #FFFDF5;
+  --foreground: #1E293B;
+  --card: #FFFFFF;
+  --card-foreground: #1E293B;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --border: #E2E8F0;
+  --input: #FFFFFF;
+  --input-border: #CBD5E1;
+  --sidebar: #FFFDF5;
+
+  /* Pop / Confetti palette
+     accent = primary actions only.
+     secondary, tertiary, quaternary rotate across decoration. */
+  --accent:      #8B5CF6;
+  --secondary:   #F472B6;
+  --tertiary:    #FBBF24;
+  --quaternary:  #34D399;
+  --destructive: #EF4444;
+  --ring:        #8B5CF6;
+
+  --accent-foreground:      #FFFFFF;
+  --secondary-foreground:   #1E293B;
+  --tertiary-foreground:    #1E293B;
+  --quaternary-foreground:  #FFFFFF;
+
+  /* Chart */
+  --chart-1: #8B5CF6;
+  --chart-2: #F472B6;
+  --chart-3: #FBBF24;
+  --chart-4: #34D399;
+  --chart-5: #64748B;
+
+  /* Type — Latin fonts first so ASCII renders in Outfit / PJS;
+     CJK glyphs cascade through to Noto Sans TC. */
+  --font-heading: "Outfit", "Noto Sans TC", system-ui, sans-serif;
+  --font-sans:    "Plus Jakarta Sans", "Noto Sans TC", system-ui, sans-serif;
+
+  /* Scale (Major Third, 1.25) */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 25px;
+  --text-2xl: 31.25px;
+  --text-3xl: 39.06px;
+  --text-4xl: 48.83px;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows — hard, zero blur */
+  --shadow-default:  4px 4px 0 0 #1E293B;
+  --shadow-hover:    6px 6px 0 0 #1E293B;
+  --shadow-active:   2px 2px 0 0 #1E293B;
+  --shadow-soft:     8px 8px 0 0 #E2E8F0;
+  --shadow-featured: 8px 8px 0 0 #F472B6;
+  --shadow-accent:   4px 4px 0 0 #8B5CF6;
+
+  /* Borders */
+  --border-width: 2px;
+
+  /* Motion */
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration: 300ms;
+}
+
+/* ----- Dark mode tokens -------------------------------------- */
+/* Activated either via `[data-theme="dark"]` (manual toggle) or
+   the system `prefers-color-scheme: dark`. */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #14121C;       /* deep slate-purple */
+  --foreground: #F8FAFC;       /* Slate 50 */
+  --card: #1E1B2E;             /* slightly lifted card */
+  --card-foreground: #F8FAFC;
+  --muted: #2A2740;            /* hover / zebra */
+  --muted-foreground: #94A3B8; /* Slate 400 */
+  --border: #3A3556;
+  --input: #1E1B2E;
+  --input-border: #4A4566;
+  --sidebar: #14121C;
+
+  --accent:      #A78BFA;      /* Violet 400 — slightly brighter */
+  --secondary:   #F9A8D4;      /* Pink 300 */
+  --tertiary:    #FBBF24;      /* unchanged — amber stays warm */
+  --quaternary:  #6EE7B7;      /* Emerald 300 */
+  --destructive: #F87171;
+  --ring:        #A78BFA;
+
+  --accent-foreground:     #14121C;
+  --secondary-foreground:  #14121C;
+  --tertiary-foreground:   #14121C;
+  --quaternary-foreground: #14121C;
+
+  --chart-1: #A78BFA;
+  --chart-2: #F9A8D4;
+  --chart-3: #FBBF24;
+  --chart-4: #6EE7B7;
+  --chart-5: #94A3B8;
+
+  /* Hard shadows in dark mode are lighter, not darker — keeps the
+     "sticker on paper" feel but inverted: shadow is a soft white
+     offset, the sticker itself a darker card. */
+  --shadow-default:  4px 4px 0 0 #000000;
+  --shadow-hover:    6px 6px 0 0 #000000;
+  --shadow-active:   2px 2px 0 0 #000000;
+  --shadow-soft:     8px 8px 0 0 #2A2740;
+  --shadow-featured: 8px 8px 0 0 #F9A8D4;
+  --shadow-accent:   4px 4px 0 0 #A78BFA;
+}
+
+/* ----- Base elements ----------------------------------------- */
+
+html, body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+  margin: 0;
+}
+h1 { font-size: var(--text-4xl); line-height: 1.05; font-weight: 800; }
+h2 { font-size: var(--text-3xl); line-height: 1.1;  font-weight: 700; }
+h3 { font-size: var(--text-2xl); line-height: 1.15; font-weight: 700; }
+h4 { font-size: var(--text-xl);  line-height: 1.2;  font-weight: 700; }
+h5 { font-size: var(--text-lg);  line-height: 1.25; font-weight: 700; }
+h6 { font-size: var(--text-base);line-height: 1.3;  font-weight: 700; }
+
+p     { font-size: var(--text-base); line-height: 1.55; margin: 0; }
+small { font-size: var(--text-sm); color: var(--muted-foreground); }
+
+.eyebrow,
+label.field-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+}
+
+code, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root, [data-theme="dark"] { --ease-bounce: ease; --duration: 1ms; }
+}
+
+@media (max-width: 767px) {
+  :root, [data-theme="dark"] {
+    --shadow-default:  2px 2px 0 0 #1E293B;
+    --shadow-hover:    3px 3px 0 0 #1E293B;
+    --shadow-active:   1px 1px 0 0 #1E293B;
+    --shadow-soft:     2px 2px 0 0 #E2E8F0;
+    --shadow-featured: 2px 2px 0 0 #F472B6;
+    --shadow-accent:   2px 2px 0 0 #8B5CF6;
+  }
+}

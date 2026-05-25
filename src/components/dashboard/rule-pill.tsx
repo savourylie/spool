@@ -19,7 +19,7 @@ export function RulePill({ rule }: RulePillProps) {
     <span
       title={summary}
       aria-label={summary}
-      className="inline-flex items-center rounded-full border-2 border-foreground/60 bg-muted px-2 py-0.5 font-mono text-[0.7rem] font-bold leading-none text-foreground"
+      className="inline-flex items-center rounded-full border border-foreground/60 bg-muted px-2 py-0.5 font-mono text-[0.7rem] font-bold leading-none text-foreground"
     >
       {rule}
     </span>

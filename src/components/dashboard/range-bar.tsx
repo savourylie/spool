@@ -27,7 +27,7 @@ export function RangeBar({ p25, p50, p75, label }: RangeBarProps) {
         </p>
       )}
 
-      <div className="relative h-6 overflow-hidden rounded-[var(--radius-sm)] border-2 border-border bg-muted">
+      <div className="relative h-6 overflow-hidden rounded-[var(--radius-sm)] border border-border bg-muted">
         <div
           className="absolute inset-y-0 bg-primary/20 transition-all duration-300 [transition-timing-function:var(--ease-bounce)]"
           style={{ left: `${leftPct}%`, width: `${widthPct}%` }}

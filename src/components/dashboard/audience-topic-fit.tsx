@@ -96,7 +96,7 @@ export function AudienceTopicFit({
           <div className="space-y-6">
             {/* Total posts stat */}
             <div className="flex items-baseline gap-2">
-              <span className="font-heading text-4xl font-bold">
+              <span className="font-heading text-4xl font-medium">
                 {totalPosts}
               </span>
               <span className="text-sm text-muted-foreground">Posts total</span>
@@ -118,7 +118,7 @@ export function AudienceTopicFit({
                   {coreTopics.map((topic) => (
                     <span
                       key={topic.name}
-                      className="inline-flex items-center gap-1.5 rounded-full border-2 border-foreground px-3 py-1 text-xs font-medium"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-foreground px-3 py-1 text-xs font-medium"
                       style={{ backgroundColor: `${topic.color}30` }}
                     >
                       <span
