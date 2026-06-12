@@ -17,6 +17,8 @@ import {
   getPostsTotalPages,
 } from "@/lib/posts-pagination";
 import { getVelocityMapForRecentPosts } from "@/lib/velocity-scoring";
+import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple";
+import { buttonVariants } from "@/components/ui/button-variants";
 
 export const metadata: Metadata = { title: "Posts — Spool" };
 
@@ -134,6 +136,16 @@ export default async function PostsPage({
             {totalCount.toLocaleString()} posts
             <ConfidenceBadge sample={totalCount} compact />
           </span>
+        }
+        actions={
+          <a
+            href="/api/export/posts"
+            download
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <DownloadSimple weight="bold" className="size-3.5" />
+            Export CSV
+          </a>
         }
       />
 
