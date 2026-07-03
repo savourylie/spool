@@ -8,6 +8,7 @@ import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import { ScreenHead } from "@/components/dashboard/screen-head";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 import { PostFilters } from "@/components/dashboard/post-filters";
+import { PostSyncButton } from "@/components/dashboard/post-sync-button";
 import { ReselectionAlert } from "@/components/dashboard/reselection-alert";
 import { detectReselectedPosts } from "@/lib/reselection-detection";
 import { isImportingBackfillStatus } from "@/lib/backfill-job";
@@ -138,14 +139,17 @@ export default async function PostsPage({
           </span>
         }
         actions={
-          <a
-            href="/api/export/posts"
-            download
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            <DownloadSimple weight="bold" className="size-3.5" />
-            Export CSV
-          </a>
+          <>
+            <PostSyncButton />
+            <a
+              href="/api/export/posts"
+              download
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              <DownloadSimple weight="bold" className="size-3.5" />
+              Export CSV
+            </a>
+          </>
         }
       />
 
