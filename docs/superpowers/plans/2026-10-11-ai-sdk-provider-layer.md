@@ -2315,4 +2315,18 @@ These follow the spec's rollout section and are done by the human partner:
 
 ## Completion notes
 
-_To be filled in during Task 9: live targets run, results, and anything not verified._
+Recorded 2026-10-11, branch `feat/ai-sdk-provider-layer`.
+
+**Verified live, through the running app** (dev server, local Supabase, seed user's saved BYOK: OpenAI-compatible at DashScope, model `deepseek-v4-pro`):
+- Settings → **Test Connection**: `POST /api/settings/test` 200, UI shows "Connection OK". This exercises `AiSdkLLMClient.generate` → `createOpenAICompatible` with the user's saved key. Log: `[llm-client:generate] cache_creation=0 cache_read=0 input=11 output=10`.
+- Compose → **Generate Drafts**: `POST /api/compose` 200 in 22.4s. Three drafts streamed, scored, and rendered. This exercises `generateStreamIterator` against the same endpoint.
+- Settings form: the xAI (Grok) card renders with `Grok (grok-4.7)`. Selecting it switches the base URL placeholder (`https://api.x.ai/v1`), help text, model placeholder (`grok-4.7`), and examples. Nothing was saved.
+
+**Opt-in smoke test:** `npx vitest run src/lib/__tests__/llm-live.smoke.test.ts` → 8 skipped by default.
+
+**Not verified live** (needs keys the human partner supplies; commands in Task 9 Step 2):
+- AI Gateway server default (`SPOOL_DEFAULT_MODEL` + `AI_GATEWAY_API_KEY`). No Gateway key exists yet.
+- Direct Anthropic (`LLM_API_KEY`), including real cache-breakpoint hits.
+- BYOK OpenAI Responses API and BYOK xAI, including the settings Test Connection with an xAI key.
+
+**Observation for review:** OpenAI-compatible streams log `[llm-client:stream] … input=0 output=0`, because those servers omit usage in streams unless asked. The replaced OpenAI client logged no usage at all.
