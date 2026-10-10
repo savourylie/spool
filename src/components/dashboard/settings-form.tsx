@@ -5,8 +5,9 @@ import { Key, CheckCircle, Warning, CircleNotch } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PROVIDER_DEFAULTS, type LLMProvider } from "@/lib/llm-provider";
 
-type Provider = "anthropic" | "openai" | null;
+type Provider = LLMProvider | null;
 
 interface SettingsFormProps {
   initialProvider: Provider;
@@ -31,7 +32,50 @@ const PROVIDER_OPTIONS = [
     label: "OpenAI-compatible",
     description: "OpenAI, Ollama, LM Studio, Together AI, and more",
   },
+  {
+    value: "xai" as Provider,
+    label: "xAI (Grok)",
+    description: `Grok (${PROVIDER_DEFAULTS.xai})`,
+  },
 ];
+
+const PROVIDER_COPY: Record<
+  LLMProvider,
+  {
+    keyOptional: boolean;
+    keyPlaceholder: string;
+    keyHelp: string;
+    baseUrlPlaceholder: string;
+    baseUrlHelp: string;
+    modelExamples: string;
+  }
+> = {
+  anthropic: {
+    keyOptional: false,
+    keyPlaceholder: "sk-ant-...",
+    keyHelp: "Get your key from console.anthropic.com/settings/keys",
+    baseUrlPlaceholder: "https://api.anthropic.com",
+    baseUrlHelp: "Leave blank for Anthropic's default API endpoint.",
+    modelExamples: "claude-sonnet-4-6, claude-sonnet-5-5, claude-haiku-5-5",
+  },
+  openai: {
+    keyOptional: true,
+    keyPlaceholder: "sk-...",
+    keyHelp: "Your API key from OpenAI or your provider",
+    baseUrlPlaceholder: "https://api.openai.com/v1",
+    baseUrlHelp:
+      "Leave blank for OpenAI. Set for Ollama (http://localhost:11434/v1), LM Studio, Together AI, etc.",
+    modelExamples: "gpt-6.1-sol, gpt-6-luna, llama3.1, mistral",
+  },
+  xai: {
+    keyOptional: false,
+    keyPlaceholder: "xai-...",
+    keyHelp: "Get your key from console.x.ai",
+    baseUrlPlaceholder: "https://api.x.ai/v1",
+    baseUrlHelp: "Leave blank for xAI's default API endpoint.",
+    modelExamples: "grok-4.7, grok-4.5, grok-4.3",
+  },
+};
 
 export function SettingsForm({
   initialProvider,
@@ -55,6 +99,7 @@ export function SettingsForm({
   const [testMessage, setTestMessage] = useState("");
 
   const needsKey = provider !== null;
+  const copy = provider ? PROVIDER_COPY[provider] : null;
   const isDirty =
     provider !== initialProvider ||
     (needsKey && isChangingKey && apiKey.length > 0) ||
@@ -242,7 +287,7 @@ export function SettingsForm({
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-wide text-foreground">
             API Key{" "}
-            {provider === "openai" && (
+            {copy?.keyOptional && (
               <span className="font-normal normal-case text-muted-foreground">
                 (optional for local models)
               </span>
@@ -267,11 +312,7 @@ export function SettingsForm({
             <div className="space-y-1.5">
               <Input
                 type="password"
-                placeholder={
-                  provider === "openai"
-                    ? "sk-..."
-                    : "sk-ant-..."
-                }
+                placeholder={copy?.keyPlaceholder}
                 value={apiKey}
                 onChange={(e) => {
                   setApiKey(e.target.value);
@@ -282,9 +323,7 @@ export function SettingsForm({
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                {provider === "openai"
-                  ? "Your API key from OpenAI or your provider"
-                  : "Get your key from console.anthropic.com/settings/keys"}
+                {copy?.keyHelp}
               </p>
             </div>
           )}
@@ -302,11 +341,7 @@ export function SettingsForm({
           </label>
           <Input
             type="url"
-            placeholder={
-              provider === "openai"
-                ? "https://api.openai.com/v1"
-                : "https://api.anthropic.com"
-            }
+            placeholder={copy?.baseUrlPlaceholder}
             value={baseUrl}
             onChange={(e) => {
               setBaseUrl(e.target.value);
@@ -317,9 +352,7 @@ export function SettingsForm({
             }}
           />
           <p className="text-xs text-muted-foreground">
-            {provider === "openai"
-              ? "Leave blank for OpenAI. Set for Ollama (http://localhost:11434/v1), LM Studio, Together AI, etc."
-              : "Leave blank for Anthropic's default API endpoint."}
+            {copy?.baseUrlHelp}
           </p>
         </div>
       )}
@@ -335,11 +368,7 @@ export function SettingsForm({
           </label>
           <Input
             type="text"
-            placeholder={
-              provider === "openai"
-                ? "gpt-4o"
-                : "claude-sonnet-4-6"
-            }
+            placeholder={provider ? PROVIDER_DEFAULTS[provider] : undefined}
             value={model}
             onChange={(e) => {
               setModel(e.target.value);
@@ -351,9 +380,7 @@ export function SettingsForm({
           />
           <p className="text-xs text-muted-foreground">
             Leave blank to use the default. Examples:{" "}
-            {provider === "openai"
-              ? "gpt-4o, llama3.1, mistral, deepseek-r1"
-              : "claude-sonnet-4-6, claude-haiku-4-5-20251001"}
+            {copy?.modelExamples}
           </p>
         </div>
       )}

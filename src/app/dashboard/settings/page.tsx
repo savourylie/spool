@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { SettingsForm } from "@/components/dashboard/settings-form";
+import type { LLMProvider } from "@/lib/llm-provider";
 
 export const metadata: Metadata = { title: "Settings — Spool" };
 
@@ -31,7 +32,7 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsForm
-        initialProvider={(user?.llm_provider as "anthropic" | "openai") ?? null}
+        initialProvider={(user?.llm_provider as LLMProvider | null) ?? null}
         initialHasKey={!!user?.llm_api_key_encrypted}
         initialBaseUrl={user?.llm_base_url ?? ""}
         initialModel={user?.llm_model ?? ""}
