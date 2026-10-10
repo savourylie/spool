@@ -2329,4 +2329,6 @@ Recorded 2026-10-11, branch `feat/ai-sdk-provider-layer`.
 - Direct Anthropic (`LLM_API_KEY`), including real cache-breakpoint hits.
 - BYOK OpenAI Responses API and BYOK xAI, including the settings Test Connection with an xAI key.
 
+**After the final-review fix pass** (commits fc14cdc..e0d4196), re-checked live against the same DashScope BYOK: Test Connection OK (`POST /api/settings/test` 200 in 1.8s), and Compose streamed three drafts (`POST /api/compose` 200 in 23.2s). Both requests now go through `timeoutFetch`.
+
 **Observation for review:** OpenAI-compatible streams log `[llm-client:stream] … input=0 output=0`, because those servers omit usage in streams unless asked. The replaced OpenAI client logged no usage at all.
