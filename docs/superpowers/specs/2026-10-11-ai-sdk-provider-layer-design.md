@@ -43,7 +43,7 @@ TICKET-084 (signed sessions) must land before sub-project 1, because the assista
 | `src/lib/ai-sdk-llm-client.ts` | **New.** `AiSdkLLMClient implements ILLMClient`, wrapping one AI SDK `LanguageModel` plus a small capability descriptor (Anthropic cache support, reasoning-model flag). |
 | `src/lib/llm-models.ts` | **New.** Builds the `LanguageModel` and descriptor for the server default and for each BYOK provider. Holds the model capability map. |
 | `src/lib/llm-resolver.ts` | Uses `llm-models.ts` and returns `AiSdkLLMClient`. Branch semantics below. |
-| `src/lib/llm-client.ts` | Keeps the shared types (`LLMMessage`, `SystemBlock`, `LLMGenerateOptions`, `LLMStreamOptions`, `flattenSystemBlocks`) and the error classes (`LLMError`, `LLMRateLimitError`, `LLMAuthError`, `LLMServerError`, `LLMTimeoutError`). The Anthropic-SDK `LLMClient` class is removed, so existing imports of types and errors keep working. |
+| `src/lib/llm-client.ts` | Drops the unused per-call `model` override option (no caller passes it). Keeps the shared types (`LLMMessage`, `SystemBlock`, `LLMGenerateOptions`, `LLMStreamOptions`, `flattenSystemBlocks`) and the error classes (`LLMError`, `LLMRateLimitError`, `LLMAuthError`, `LLMServerError`, `LLMTimeoutError`). The Anthropic-SDK `LLMClient` class is removed, so existing imports of types and errors keep working. |
 | `src/lib/openai-client.ts` | **Removed.** |
 | `src/lib/llm-provider.ts` | `LLMProvider` gains `"xai"`. `PROVIDER_DEFAULTS` gains an `xai` entry and updated defaults (see Models). |
 | `src/app/api/settings/route.ts`, `src/app/api/settings/test/route.ts` | Build the key-validation client through `llm-models.ts` and `AiSdkLLMClient`. Accept `xai`. |
@@ -69,7 +69,7 @@ Unchanged in this sub-project: a BYOK key that fails to decrypt still falls back
 
 | Variable | Purpose |
 |---|---|
-| `SPOOL_DEFAULT_MODEL` | Turns on Gateway routing for the server default and names its model, for example `anthropic/<model>`, `openai/<model>`, or `xai/<model>`. An explicit switch, so the app never guesses whether OIDC is available. |
+| `SPOOL_DEFAULT_MODEL` | Turns on Gateway routing for the server default and names its model, for example `anthropic/<model>`, `openai/<model>`, or `spacexai/<model>` (AI Gateway lists xAI models under `spacexai/`). An explicit switch, so the app never guesses whether OIDC is available. |
 | `AI_GATEWAY_API_KEY` | Gateway auth for local development and self-hosting. On Vercel, OIDC is used automatically once AI Gateway is enabled for the project. |
 | `LLM_API_KEY` | Existing Anthropic key. Used only when `SPOOL_DEFAULT_MODEL` is unset. |
 
@@ -87,13 +87,13 @@ The adapter must behave like today's clients, so feature code and its tests stay
 ### Models
 
 - **Server default:** `claude-sonnet-4-6`, today's model, kept through this migration so outputs don't shift together with the transport. Upgrading it (for example to Claude Sonnet 5.5) is a separate step: change `SPOOL_DEFAULT_MODEL` after checking feature outputs.
-- **BYOK defaults:** `anthropic` stays `claude-sonnet-4-6`. `openai` moves from `gpt-4o` to OpenAI's current general-purpose production model. `xai` defaults to xAI's current general-purpose model (`grok-4.5` per July 2026 sources).
+- **BYOK defaults:** `anthropic` stays `claude-sonnet-4-6`. `openai` moves from `gpt-4o` to `gpt-6.1-sol`. `xai` defaults to `grok-4.7`. Both were checked against the AI Gateway model list on 2026-10-11.
 - **Verifying identifiers.** The implementation plan records exact model IDs and Gateway slugs taken from `gateway.getAvailableModels()` and the providers' model docs on the day of implementation. Users who saved an explicit model keep it.
 
 ## Settings and data
 
-- **Migration** `supabase/migrations/20261011000000_llm_provider_xai.sql`: replace the `users.llm_provider` CHECK constraint (`IN ('anthropic', 'openai')`) with `IN ('anthropic', 'openai', 'xai')`. Existing rows are unaffected.
-- **Settings form:** an "xAI (Grok)" card with a required API key and an optional model (placeholder shows the default). The Server Default card description becomes "Spool's shared AI (via AI Gateway)". The OpenAI-compatible card is unchanged.
+- **Migration** `supabase/migrations/20261011000001_llm_provider_xai.sql` (`20261011000000` is the `post_replies` RLS fix): replace the `users.llm_provider` CHECK constraint (`IN ('anthropic', 'openai')`) with `IN ('anthropic', 'openai', 'xai')`. Existing rows are unaffected.
+- **Settings form:** an "xAI (Grok)" card with a required API key and an optional model (placeholder shows the default). The Server Default card keeps "Use Spool's shared AI key", which is accurate whether or not the Gateway is enabled. The OpenAI-compatible card is unchanged.
 - **Settings API:** `VALID_PROVIDERS` includes `xai`, and xAI keys are validated with one short `generate` through the new adapter, like Anthropic and OpenAI today.
 - **Regenerated types:** `npm run db:types` after the migration.
 
