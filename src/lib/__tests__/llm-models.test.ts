@@ -134,6 +134,18 @@ describe("createByokModel", () => {
     });
   });
 
+  it.each(["https://api.openai.com/v1", "https://api.openai.com/v1/"])(
+    "treats the official OpenAI URL %s as OpenAI, not an OpenAI-compatible server",
+    (baseURL) => {
+      expect(info(createByokModel({ provider: "openai", apiKey: "sk-openai", baseURL }))).toEqual({
+        provider: "openai.responses",
+        modelId: PROVIDER_DEFAULTS.openai,
+        family: "openai",
+        alwaysReasons: true,
+      });
+    },
+  );
+
   it("builds a direct xAI model", () => {
     expect(info(createByokModel({ provider: "xai", apiKey: "xai-key", model: "grok-4.7" }))).toEqual({
       provider: "xai.responses",

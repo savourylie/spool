@@ -125,6 +125,15 @@ function anthropicBaseURL(baseURL: string): string {
   return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
 }
 
+/** The settings form shows OpenAI's own URL as the base URL placeholder. */
+function isOfficialOpenAIURL(baseURL: string): boolean {
+  try {
+    return new URL(baseURL).hostname === "api.openai.com";
+  } catch {
+    return false;
+  }
+}
+
 /** A user's bring-your-own-key model, called directly at the provider. */
 export function createByokModel({
   provider,
@@ -152,7 +161,7 @@ export function createByokModel({
         ...describeModel("xai", modelId),
       };
     case "openai":
-      if (baseURL) {
+      if (baseURL && !isOfficialOpenAIURL(baseURL)) {
         return {
           model: createOpenAICompatible({
             name: "openai-compatible",
