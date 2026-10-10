@@ -174,4 +174,24 @@ describe("createByokModel requests", () => {
     expect(sent).toHaveLength(1);
     expect(sent[0]).not.toContain("server-secret");
   });
+
+  it.each([
+    "https://proxy.example.test",
+    "https://proxy.example.test/",
+    "https://proxy.example.test/v1",
+  ])("sends Anthropic requests for the saved base URL %s to its /v1/messages path", async (baseURL) => {
+    const urls: string[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      urls.push(String(input));
+      return unauthorized();
+    });
+
+    await generateText({
+      model: createByokModel({ provider: "anthropic", apiKey: "sk-ant", baseURL }).model,
+      prompt: "Hi",
+      maxRetries: 0,
+    }).catch(() => {});
+
+    expect(urls).toEqual(["https://proxy.example.test/v1/messages"]);
+  });
 });

@@ -116,6 +116,15 @@ export interface ByokModelInput {
   model?: string;
 }
 
+/**
+ * Saved Anthropic base URLs predate the AI SDK: the old SDK posted to
+ * `${baseURL}/v1/messages`, while @ai-sdk/anthropic posts to `${baseURL}/messages`.
+ */
+function anthropicBaseURL(baseURL: string): string {
+  const trimmed = baseURL.replace(/\/+$/, "");
+  return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
+}
+
 /** A user's bring-your-own-key model, called directly at the provider. */
 export function createByokModel({
   provider,
@@ -131,7 +140,10 @@ export function createByokModel({
   switch (provider) {
     case "anthropic":
       return {
-        model: createAnthropic({ apiKey: userKey, ...(baseURL ? { baseURL } : {}) })(modelId),
+        model: createAnthropic({
+          apiKey: userKey,
+          ...(baseURL ? { baseURL: anthropicBaseURL(baseURL) } : {}),
+        })(modelId),
         ...describeModel("anthropic", modelId),
       };
     case "xai":
