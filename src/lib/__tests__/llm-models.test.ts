@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { generateText } from "ai";
 
 import { createByokModel, describeModel, resolveServerDefaultModel, type ResolvedModel } from "../llm-models";
 import { LLMAuthError } from "../llm-client";
@@ -140,5 +141,37 @@ describe("createByokModel", () => {
       family: "xai",
       alwaysReasons: true,
     });
+  });
+});
+
+function unauthorized() {
+  return new Response(JSON.stringify({ error: { message: "bad key" } }), {
+    status: 401,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+describe("createByokModel requests", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    ["anthropic", "ANTHROPIC_API_KEY", "x-api-key"],
+    ["openai", "OPENAI_API_KEY", "authorization"],
+    ["xai", "XAI_API_KEY", "authorization"],
+  ] as const)("never sends the server's own key for a %s user without one (%s)", async (provider, envName, header) => {
+    vi.stubEnv(envName, "server-secret");
+    const sent: string[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input, init) => {
+      sent.push(new Headers(init?.headers).get(header) ?? "");
+      return unauthorized();
+    });
+
+    await generateText({ model: createByokModel({ provider }).model, prompt: "Hi", maxRetries: 0 }).catch(() => {});
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).not.toContain("server-secret");
   });
 });

@@ -124,16 +124,19 @@ export function createByokModel({
   model,
 }: ByokModelInput): ResolvedModel {
   const modelId = model ?? PROVIDER_DEFAULTS[provider];
+  // An undefined key makes the provider read the server's own env key
+  // (ANTHROPIC_API_KEY, OPENAI_API_KEY, XAI_API_KEY). An empty one gets a 401.
+  const userKey = apiKey ?? "";
 
   switch (provider) {
     case "anthropic":
       return {
-        model: createAnthropic({ apiKey, ...(baseURL ? { baseURL } : {}) })(modelId),
+        model: createAnthropic({ apiKey: userKey, ...(baseURL ? { baseURL } : {}) })(modelId),
         ...describeModel("anthropic", modelId),
       };
     case "xai":
       return {
-        model: createXai({ apiKey, ...(baseURL ? { baseURL } : {}) })(modelId),
+        model: createXai({ apiKey: userKey, ...(baseURL ? { baseURL } : {}) })(modelId),
         ...describeModel("xai", modelId),
       };
     case "openai":
@@ -148,7 +151,7 @@ export function createByokModel({
         };
       }
       return {
-        model: createOpenAI({ apiKey })(modelId),
+        model: createOpenAI({ apiKey: userKey })(modelId),
         ...describeModel("openai", modelId),
       };
   }
