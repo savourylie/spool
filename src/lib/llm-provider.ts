@@ -1,7 +1,7 @@
 /**
  * LLM Provider Abstraction
  *
- * Shared interface for all LLM providers (Anthropic, OpenAI).
+ * Shared interface for all LLM providers (Anthropic, OpenAI, xAI).
  * Enables BYOK (Bring Your Own Key) multi-provider support.
  */
 
@@ -13,7 +13,7 @@ export type LLMProvider = "anthropic" | "openai" | "xai";
 
 export const PROVIDER_DEFAULTS: Record<LLMProvider, string> = {
   anthropic: "claude-sonnet-4-6",
-  openai: "gpt-4o",
+  openai: "gpt-6.1-sol",
   xai: "grok-4.7",
 };
 
