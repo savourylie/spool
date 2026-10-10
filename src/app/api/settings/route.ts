@@ -3,11 +3,16 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
 import { encrypt } from "@/lib/crypto";
-import { LLMClient, LLMAuthError } from "@/lib/llm-client";
-import { OpenAILLMClient } from "@/lib/openai-client";
+import { LLMAuthError } from "@/lib/llm-client";
+import { AiSdkLLMClient } from "@/lib/ai-sdk-llm-client";
+import { createByokModel } from "@/lib/llm-models";
 import type { LLMProvider } from "@/lib/llm-provider";
 
-const VALID_PROVIDERS = new Set<string>(["anthropic", "openai"]);
+const VALID_PROVIDERS = new Set<string>(["anthropic", "openai", "xai"]);
+const KEY_REQUIRED: Partial<Record<LLMProvider, string>> = {
+  anthropic: "Anthropic",
+  xai: "xAI",
+};
 
 // ── GET — retrieve current settings ──────────────────────────────────
 
@@ -56,7 +61,7 @@ export async function PUT(request: NextRequest): Promise<Response> {
   // Validate provider value
   if (provider !== null && !VALID_PROVIDERS.has(provider)) {
     return NextResponse.json(
-      { error: "Invalid provider. Must be 'anthropic', 'openai', or null." },
+      { error: "Invalid provider. Must be 'anthropic', 'openai', 'xai', or null." },
       { status: 400 },
     );
   }
@@ -76,10 +81,11 @@ export async function PUT(request: NextRequest): Promise<Response> {
   const baseUrl = typeof body.baseUrl === "string" ? body.baseUrl.trim() || null : null;
   const model = typeof body.model === "string" ? body.model.trim() || null : null;
 
-  // Anthropic always requires an API key. OpenAI-compatible may not (e.g. Ollama).
-  if (provider === "anthropic" && !apiKey) {
+  // Anthropic and xAI always require an API key. OpenAI-compatible may not (e.g. Ollama).
+  const keyRequiredFor = KEY_REQUIRED[provider as LLMProvider];
+  if (keyRequiredFor && !apiKey) {
     return NextResponse.json(
-      { error: "API key is required for Anthropic" },
+      { error: `API key is required for ${keyRequiredFor}` },
       { status: 400 },
     );
   }
@@ -89,11 +95,13 @@ export async function PUT(request: NextRequest): Promise<Response> {
   // so we skip the test call and trust the user's configuration.
   if (apiKey && !baseUrl) {
     try {
-      const clientOpts = model ? { defaultModel: model } : undefined;
-      const testClient =
-        provider === "openai"
-          ? new OpenAILLMClient(apiKey, clientOpts)
-          : new LLMClient(apiKey, clientOpts);
+      const testClient = new AiSdkLLMClient(
+        createByokModel({
+          provider: provider as LLMProvider,
+          apiKey,
+          model: model ?? undefined,
+        }),
+      );
 
       await testClient.generate({
         messages: [{ role: "user", content: "Say OK" }],

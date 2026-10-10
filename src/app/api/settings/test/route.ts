@@ -4,17 +4,17 @@ import { getSession } from "@/lib/session";
 import { createAdminClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
 import {
-  LLMClient,
   LLMAuthError,
   LLMRateLimitError,
   LLMServerError,
   LLMTimeoutError,
   LLMError,
 } from "@/lib/llm-client";
-import { OpenAILLMClient } from "@/lib/openai-client";
+import { AiSdkLLMClient } from "@/lib/ai-sdk-llm-client";
+import { createByokModel } from "@/lib/llm-models";
 import type { LLMProvider } from "@/lib/llm-provider";
 
-const VALID_PROVIDERS = new Set<string>(["anthropic", "openai"]);
+const VALID_PROVIDERS = new Set<string>(["anthropic", "openai", "xai"]);
 const TEST_TIMEOUT_MS = 15_000;
 
 type ErrorType =
@@ -111,27 +111,21 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
   }
 
-  if (typedProvider === "anthropic" && !apiKey) {
+  if ((typedProvider === "anthropic" || typedProvider === "xai") && !apiKey) {
     return NextResponse.json(
       {
         ok: false,
         errorType: "config",
-        error: "Anthropic requires an API key.",
+        error: `${typedProvider === "xai" ? "xAI" : "Anthropic"} requires an API key.`,
       },
       { status: 400 },
     );
   }
 
-  const clientOpts = {
-    ...(baseUrl ? { baseURL: baseUrl } : {}),
-    ...(model ? { defaultModel: model } : {}),
-  };
-
   try {
-    const client =
-      typedProvider === "openai"
-        ? new OpenAILLMClient(apiKey, clientOpts)
-        : new LLMClient(apiKey, clientOpts);
+    const client = new AiSdkLLMClient(
+      createByokModel({ provider: typedProvider, apiKey, baseURL: baseUrl, model }),
+    );
 
     const response = await client.generate({
       messages: [{ role: "user", content: "Reply with the single word: OK" }],
