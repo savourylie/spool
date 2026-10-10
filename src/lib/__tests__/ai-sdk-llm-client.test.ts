@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { APICallError, LoadAPIKeyError, RetryError } from "ai";
+import { APICallError, LoadAPIKeyError, RetryError, simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 
 import { AiSdkLLMClient, mapAiSdkError } from "../ai-sdk-llm-client";
@@ -242,5 +242,129 @@ describe("mapAiSdkError", () => {
   it("wraps unknown values in LLMError", () => {
     const mapped = mapAiSdkError("boom");
     expect([mapped.name, mapped.message]).toEqual(["LLMError", "boom"]);
+  });
+});
+
+function streamOf(chunks: unknown[]) {
+  return new MockLanguageModelV4({
+    doStream: async () => ({ stream: simulateReadableStream({ chunks }) as never }),
+  });
+}
+
+const FINISH = {
+  type: "finish",
+  finishReason: { unified: "stop", raw: undefined },
+  logprobs: undefined,
+  usage: USAGE,
+};
+
+async function collect(iterable: AsyncIterable<string>) {
+  const chunks: string[] = [];
+  for await (const chunk of iterable) chunks.push(chunk);
+  return chunks;
+}
+
+describe("AiSdkLLMClient streaming", () => {
+  it("yields text deltas in order and logs stream usage", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const model = streamOf([
+      { type: "text-start", id: "t" },
+      { type: "text-delta", id: "t", delta: "Hel" },
+      { type: "text-delta", id: "t", delta: "lo" },
+      { type: "text-end", id: "t" },
+      FINISH,
+    ]);
+    const client = new AiSdkLLMClient(resolved(model, "anthropic", "claude-sonnet-4-6"));
+
+    expect(await collect(client.generateStreamIterator({ messages: HI }))).toEqual(["Hel", "lo"]);
+    expect(log).toHaveBeenCalledWith(
+      "[llm-client:stream] cache_creation=10 cache_read=90 input=20 output=7",
+    );
+  });
+
+  it("sends the same request settings as generate", async () => {
+    const model = streamOf([FINISH]);
+    const client = new AiSdkLLMClient(resolved(model, "openai", "gpt-6.1-sol"));
+    vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await collect(client.generateStreamIterator({ systemPrompt: "Be brief.", messages: HI, maxTokens: 100 }));
+
+    const call = model.doStreamCalls[0];
+    expect([call.prompt[0], call.maxOutputTokens, call.reasoning]).toEqual([
+      { role: "system", content: "Be brief." },
+      4196,
+      "low",
+    ]);
+  });
+
+  it("throws a mapped error when the provider fails before streaming", async () => {
+    const model = new MockLanguageModelV4({
+      doStream: async () => {
+        throw apiError(401);
+      },
+    });
+    const client = new AiSdkLLMClient(resolved(model, "anthropic", "claude-sonnet-4-6"));
+
+    await expect(collect(client.generateStreamIterator({ messages: HI }))).rejects.toBeInstanceOf(LLMAuthError);
+  });
+
+  it("throws after the partial text when the provider fails mid-stream", async () => {
+    const model = streamOf([
+      { type: "text-start", id: "t" },
+      { type: "text-delta", id: "t", delta: "partial" },
+      { type: "error", error: apiError(529) },
+    ]);
+    const client = new AiSdkLLMClient(resolved(model, "anthropic", "claude-sonnet-4-6"));
+    const received: string[] = [];
+
+    await expect(
+      (async () => {
+        for await (const chunk of client.generateStreamIterator({ messages: HI })) received.push(chunk);
+      })(),
+    ).rejects.toBeInstanceOf(LLMServerError);
+    expect(received).toEqual(["partial"]);
+  });
+
+  it("throws LLMTimeoutError when the stream times out", async () => {
+    const model = new MockLanguageModelV4({
+      doStream: ({ abortSignal }) =>
+        new Promise<never>((_resolve, reject) => {
+          abortSignal?.addEventListener("abort", () => reject(abortSignal.reason));
+        }),
+    });
+    const client = new AiSdkLLMClient(resolved(model, "anthropic", "claude-sonnet-4-6"));
+
+    await expect(
+      collect(client.generateStreamIterator({ messages: HI, timeout: 20 })),
+    ).rejects.toBeInstanceOf(LLMTimeoutError);
+  });
+
+  it("frames chunks as SSE and ends with [DONE]", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const model = streamOf([
+      { type: "text-start", id: "t" },
+      { type: "text-delta", id: "t", delta: "Hel" },
+      { type: "text-delta", id: "t", delta: "lo" },
+      { type: "text-end", id: "t" },
+      FINISH,
+    ]);
+    const client = new AiSdkLLMClient(resolved(model, "anthropic", "claude-sonnet-4-6"));
+
+    const body = await new Response(client.generateStream({ messages: HI })).text();
+
+    expect(body).toBe('data: "Hel"\n\ndata: "lo"\n\ndata: [DONE]\n\n');
+  });
+
+  it("ends with an error frame instead of [DONE] when the stream fails mid-way", async () => {
+    const model = streamOf([
+      { type: "text-start", id: "t" },
+      { type: "text-delta", id: "t", delta: "partial" },
+      { type: "error", error: apiError(529) },
+    ]);
+    const client = new AiSdkLLMClient(resolved(model, "anthropic", "claude-sonnet-4-6"));
+
+    const body = await new Response(client.generateStream({ messages: HI })).text();
+
+    expect(body).toBe('data: "partial"\n\ndata: {"error":"status 529"}\n\n');
   });
 });

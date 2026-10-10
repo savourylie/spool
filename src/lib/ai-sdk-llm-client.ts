@@ -11,6 +11,7 @@ import {
   LoadAPIKeyError,
   RetryError,
   generateText,
+  streamText,
   type LanguageModel,
   type LanguageModelUsage,
   type ModelMessage,
@@ -180,13 +181,60 @@ export class AiSdkLLMClient implements ILLMClient {
     }
   }
 
-  // Implemented in Task 3. Plain methods (not generators) so lint's
-  // require-yield rule passes while they only throw.
-  generateStreamIterator(options: LLMStreamOptions): AsyncIterable<string> {
-    throw new LLMError(`streaming not implemented (${options.messages.length})`);
+  /**
+   * Streams raw text chunks. Reads the full event stream because
+   * `textStream` swallows provider errors (it ends empty or partial).
+   */
+  async *generateStreamIterator(options: LLMStreamOptions): AsyncIterable<string> {
+    try {
+      const result = streamText({
+        ...this.callSettings(options, DEFAULT_STREAM_TIMEOUT_MS),
+        onError: () => {},
+      });
+
+      for await (const part of result.stream) {
+        if (part.type === "text-delta") {
+          yield part.text;
+        } else if (part.type === "error") {
+          throw mapAiSdkError(part.error);
+        } else if (part.type === "abort") {
+          throw new LLMTimeoutError(
+            `LLM request timed out: ${String(part.reason ?? "stream aborted")}`,
+          );
+        } else if (part.type === "finish") {
+          logUsage("stream", part.totalUsage);
+        }
+      }
+    } catch (error) {
+      throw mapAiSdkError(error);
+    }
   }
 
+  /**
+   * Streams SSE frames: one JSON-encoded text chunk per frame, then [DONE],
+   * or a final {"error": message} frame on failure.
+   */
   generateStream(options: LLMStreamOptions): ReadableStream<Uint8Array> {
-    throw new LLMError(`streaming not implemented (${options.messages.length})`);
+    const iterator = this.generateStreamIterator(options);
+    const encoder = new TextEncoder();
+
+    return new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          for await (const text of iterator) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(text)}\n\n`));
+          }
+
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        } catch (error) {
+          const mapped = mapAiSdkError(error);
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ error: mapped.message })}\n\n`),
+          );
+          controller.close();
+        }
+      },
+    });
   }
 }
