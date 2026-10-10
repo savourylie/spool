@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { describeModel } from "../llm-models";
+import { createByokModel, describeModel, resolveServerDefaultModel, type ResolvedModel } from "../llm-models";
+import { LLMAuthError } from "../llm-client";
+import { PROVIDER_DEFAULTS } from "../llm-provider";
 
 describe("describeModel", () => {
   it.each([
@@ -44,5 +46,99 @@ describe("describeModel", () => {
       describeModel("openai-compatible", "any-model", "https://api.inceptionlabs.ai/v1")
         .acceptsReasoningEffort,
     ).toBe(true);
+  });
+});
+
+function info(resolved: ResolvedModel) {
+  const model = resolved.model as unknown as { provider: string; modelId: string };
+  return {
+    provider: model.provider,
+    modelId: model.modelId,
+    family: resolved.family,
+    alwaysReasons: resolved.alwaysReasons,
+  };
+}
+
+describe("resolveServerDefaultModel", () => {
+  it("calls Anthropic directly with LLM_API_KEY when no Gateway model is set", () => {
+    expect(info(resolveServerDefaultModel({ LLM_API_KEY: "sk-ant-server" }))).toEqual({
+      provider: "anthropic.messages",
+      modelId: "claude-sonnet-4-6",
+      family: "anthropic",
+      alwaysReasons: false,
+    });
+  });
+
+  it("throws LLMAuthError when neither a Gateway model nor LLM_API_KEY is set", () => {
+    expect(() => resolveServerDefaultModel({})).toThrow(LLMAuthError);
+  });
+
+  it("treats a whitespace-only SPOOL_DEFAULT_MODEL as unset", () => {
+    expect(
+      info(resolveServerDefaultModel({ SPOOL_DEFAULT_MODEL: "   ", LLM_API_KEY: "sk-ant-server" })).provider,
+    ).toBe("anthropic.messages");
+  });
+
+  it.each([
+    ["anthropic/claude-sonnet-4.6", "anthropic", false],
+    ["openai/gpt-6.1-sol", "openai", true],
+    ["spacexai/grok-4.7", "xai", true],
+    ["google/gemini-3.8-flash", "other", false],
+  ] as const)("routes %s through AI Gateway as family %s", (gatewayModel, family, reasons) => {
+    expect(info(resolveServerDefaultModel({ SPOOL_DEFAULT_MODEL: gatewayModel }))).toEqual({
+      provider: "gateway",
+      modelId: gatewayModel,
+      family,
+      alwaysReasons: reasons,
+    });
+  });
+});
+
+describe("createByokModel", () => {
+  it("uses the provider default when no model is saved", () => {
+    expect(info(createByokModel({ provider: "anthropic", apiKey: "sk-ant" })).modelId).toBe(
+      PROVIDER_DEFAULTS.anthropic,
+    );
+    expect(info(createByokModel({ provider: "xai", apiKey: "xai-key" })).modelId).toBe(
+      PROVIDER_DEFAULTS.xai,
+    );
+  });
+
+  it("builds a direct Anthropic model with the saved model", () => {
+    expect(info(createByokModel({ provider: "anthropic", apiKey: "sk-ant", model: "claude-sonnet-5-5" }))).toEqual({
+      provider: "anthropic.messages",
+      modelId: "claude-sonnet-5-5",
+      family: "anthropic",
+      alwaysReasons: true,
+    });
+  });
+
+  it("uses the OpenAI Responses API when no base URL is set", () => {
+    expect(info(createByokModel({ provider: "openai", apiKey: "sk-openai", model: "gpt-6.1-sol" }))).toEqual({
+      provider: "openai.responses",
+      modelId: "gpt-6.1-sol",
+      family: "openai",
+      alwaysReasons: true,
+    });
+  });
+
+  it("treats an OpenAI provider with a base URL as an OpenAI-compatible endpoint", () => {
+    expect(
+      info(createByokModel({ provider: "openai", baseURL: "http://localhost:11434/v1", model: "llama3.1" })),
+    ).toEqual({
+      provider: "openai-compatible.chat",
+      modelId: "llama3.1",
+      family: "openai-compatible",
+      alwaysReasons: false,
+    });
+  });
+
+  it("builds a direct xAI model", () => {
+    expect(info(createByokModel({ provider: "xai", apiKey: "xai-key", model: "grok-4.7" }))).toEqual({
+      provider: "xai.responses",
+      modelId: "grok-4.7",
+      family: "xai",
+      alwaysReasons: true,
+    });
   });
 });
