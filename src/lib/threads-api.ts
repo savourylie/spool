@@ -4,6 +4,7 @@ import type {
   ThreadsPost,
   ThreadsPostInsights,
   ThreadsReply,
+  ThreadsUserReply,
   ThreadsUserInsightValue,
   ThreadsDemographicBreakdown,
   ThreadsTokenRefreshResult,
@@ -383,6 +384,66 @@ export class ThreadsAPI {
       }
 
       if (!page.paging?.cursors?.after) break;
+      cursor = page.paging.cursors.after;
+    }
+
+    return allReplies;
+  }
+
+  async getUserReplies(since?: Date): Promise<ThreadsUserReply[]> {
+    const allReplies: ThreadsUserReply[] = [];
+    let cursor: string | undefined;
+
+    const fields = [
+      "id",
+      "text",
+      "timestamp",
+      "permalink",
+      "shortcode",
+      "media_type",
+      "root_post",
+      "replied_to",
+      "is_reply",
+      "is_reply_owned_by_me",
+    ].join(",");
+
+    const lowerBound = since && since > THREADS_API_LAUNCH
+      ? since
+      : THREADS_API_LAUNCH;
+
+    for (;;) {
+      const params: Record<string, string> = { fields };
+      if (cursor) params.after = cursor;
+      if (since) {
+        params.since = String(Math.floor(since.getTime() / 1000));
+      }
+
+      const page = await this.request<ThreadsPaginatedResponse<ThreadsUserReply>>(
+        `/${this.userId}/replies`,
+        params,
+      );
+
+      let shouldStop = false;
+
+      for (const reply of page.data) {
+        // Filter out repost facades (CLAUDE.md #4)
+        if (reply.media_type === "REPOST_FACADE") continue;
+
+        const repliedAt = new Date(reply.timestamp);
+
+        if (repliedAt < lowerBound) {
+          shouldStop = true;
+          break;
+        }
+
+        if (reply.is_reply_owned_by_me === false) {
+          continue;
+        }
+
+        allReplies.push(reply);
+      }
+
+      if (shouldStop || !page.paging?.cursors?.after) break;
       cursor = page.paging.cursors.after;
     }
 

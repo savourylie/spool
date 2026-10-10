@@ -172,6 +172,130 @@ describe("ThreadsAPI", () => {
     });
   });
 
+  describe("getUserReplies", () => {
+    it("retrieves authored replies from the user replies endpoint with pagination", async () => {
+      fetchSpy
+        .mockResolvedValueOnce(
+          jsonResponse({
+            data: [
+              {
+                id: "reply-1",
+                text: "First reply",
+                timestamp: "2025-01-01T00:00:00Z",
+                permalink: "https://threads.net/@user/reply1",
+                shortcode: "r1",
+                media_type: "TEXT_POST",
+                root_post: { id: "root-1" },
+                replied_to: { id: "parent-1" },
+                is_reply: true,
+                is_reply_owned_by_me: true,
+              },
+            ],
+            paging: { cursors: { after: "cursor-1" } },
+          }),
+        )
+        .mockResolvedValueOnce(
+          jsonResponse({
+            data: [
+              {
+                id: "reply-2",
+                text: "Second reply",
+                timestamp: "2024-12-01T00:00:00Z",
+                permalink: "https://threads.net/@user/reply2",
+                shortcode: "r2",
+                media_type: "TEXT_POST",
+                root_post: { id: "root-2" },
+                replied_to: { id: "parent-2" },
+                is_reply: true,
+                is_reply_owned_by_me: true,
+              },
+            ],
+          }),
+        );
+
+      const replies = await api.getUserReplies();
+
+      expect(replies.map((reply) => reply.id)).toEqual(["reply-1", "reply-2"]);
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+
+      const firstUrl = new URL(fetchSpy.mock.calls[0][0] as string);
+      expect(firstUrl.pathname).toBe("/v1.0/user-123/replies");
+      expect(firstUrl.searchParams.get("fields")).toContain("root_post");
+      expect(firstUrl.searchParams.get("fields")).toContain("replied_to");
+      expect(firstUrl.searchParams.get("fields")).toContain("is_reply_owned_by_me");
+
+      const secondUrl = new URL(fetchSpy.mock.calls[1][0] as string);
+      expect(secondUrl.searchParams.get("after")).toBe("cursor-1");
+    });
+
+    it("sends a since timestamp and stops when replies are older than the lower bound", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          data: [
+            {
+              id: "reply-new",
+              text: "new",
+              timestamp: "2024-12-10T00:00:00Z",
+              media_type: "TEXT_POST",
+              is_reply: true,
+              is_reply_owned_by_me: true,
+            },
+            {
+              id: "reply-old",
+              text: "old",
+              timestamp: "2024-11-01T00:00:00Z",
+              media_type: "TEXT_POST",
+              is_reply: true,
+              is_reply_owned_by_me: true,
+            },
+          ],
+          paging: { cursors: { after: "cursor-older" } },
+        }),
+      );
+
+      const replies = await api.getUserReplies(new Date("2024-12-01T00:00:00Z"));
+
+      expect(replies.map((reply) => reply.id)).toEqual(["reply-new"]);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      const url = new URL(fetchSpy.mock.calls[0][0] as string);
+      expect(url.searchParams.get("since")).toBe("1733011200");
+    });
+
+    it("skips repost facades returned by the replies endpoint", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          data: [
+            {
+              id: "repost-1",
+              timestamp: "2025-01-02T00:00:00Z",
+              permalink: "https://threads.net/@user/repost1",
+              shortcode: "rp1",
+              media_type: "REPOST_FACADE",
+              is_reply: false,
+              is_reply_owned_by_me: true,
+            },
+            {
+              id: "reply-1",
+              text: "Real reply",
+              timestamp: "2025-01-01T00:00:00Z",
+              permalink: "https://threads.net/@user/reply1",
+              shortcode: "r1",
+              media_type: "TEXT_POST",
+              root_post: { id: "root-1" },
+              replied_to: { id: "parent-1" },
+              is_reply: true,
+              is_reply_owned_by_me: true,
+            },
+          ],
+        }),
+      );
+
+      const replies = await api.getUserReplies();
+
+      expect(replies.map((reply) => reply.id)).toEqual(["reply-1"]);
+    });
+  });
+
   describe("getPostInsights", () => {
     it("transforms nested response to flat object with defaults for missing metrics", async () => {
       fetchSpy.mockResolvedValueOnce(

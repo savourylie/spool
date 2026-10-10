@@ -61,6 +61,19 @@ export interface ThreadsReply {
   timestamp: string;
 }
 
+export interface ThreadsUserReply {
+  id: string;
+  text?: string | null;
+  timestamp: string;
+  permalink?: string | null;
+  shortcode?: string | null;
+  media_type?: ThreadsMediaType | "TEXT_POST" | "AUDIO";
+  root_post?: { id: string } | string | null;
+  replied_to?: { id: string } | string | null;
+  is_reply?: boolean;
+  is_reply_owned_by_me?: boolean;
+}
+
 export interface ThreadsPaginatedResponse<T> {
   data: T[];
   paging?: {

@@ -587,6 +587,71 @@ export type Database = {
           },
         ]
       }
+      user_replies: {
+        Row: {
+          fetched_at: string
+          id: string
+          media_type: string | null
+          permalink: string | null
+          replied_at: string
+          replied_to_id: string | null
+          review_status: string
+          risk_analyzed_at: string | null
+          risk_categories: string[]
+          risk_level: string
+          risk_summary: string | null
+          root_post_id: string | null
+          shortcode: string | null
+          text: string | null
+          threads_reply_id: string
+          user_id: string
+        }
+        Insert: {
+          fetched_at?: string
+          id?: string
+          media_type?: string | null
+          permalink?: string | null
+          replied_at: string
+          replied_to_id?: string | null
+          review_status?: string
+          risk_analyzed_at?: string | null
+          risk_categories?: string[]
+          risk_level?: string
+          risk_summary?: string | null
+          root_post_id?: string | null
+          shortcode?: string | null
+          text?: string | null
+          threads_reply_id: string
+          user_id: string
+        }
+        Update: {
+          fetched_at?: string
+          id?: string
+          media_type?: string | null
+          permalink?: string | null
+          replied_at?: string
+          replied_to_id?: string | null
+          review_status?: string
+          risk_analyzed_at?: string | null
+          risk_categories?: string[]
+          risk_level?: string
+          risk_summary?: string | null
+          root_post_id?: string | null
+          shortcode?: string | null
+          text?: string | null
+          threads_reply_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_replies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           access_token: string
@@ -631,6 +696,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      export_posts_with_latest_metrics: {
+        Args: { p_user_id: string }
+        Returns: {
+          fetched_at: string
+          likes: number
+          media_type: string
+          permalink: string
+          published_at: string
+          quotes: number
+          replies: number
+          reposts: number
+          shares: number
+          text_full: string
+          text_preview: string
+          threads_media_id: string
+          topic_tag: string
+          views: number
+        }[]
+      }
       get_posts_with_metrics:
         | {
             Args: {
