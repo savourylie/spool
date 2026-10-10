@@ -1,27 +1,32 @@
 /**
  * LLM Client Resolver
  *
- * Factory function that resolves the correct LLM client for a user
- * based on their BYOK settings. Falls back to the server-side
- * Anthropic key when no user key is configured.
+ * Resolves the LLM client for a user from their BYOK settings, falling back
+ * to the server default (AI Gateway when SPOOL_DEFAULT_MODEL is set,
+ * otherwise Anthropic with LLM_API_KEY).
  */
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
-import { LLMClient } from "@/lib/llm-client";
-import { OpenAILLMClient } from "@/lib/openai-client";
+import { AiSdkLLMClient } from "@/lib/ai-sdk-llm-client";
+import { createByokModel, resolveServerDefaultModel } from "@/lib/llm-models";
 import type { ILLMClient, LLMProvider } from "@/lib/llm-provider";
+
+const BYOK_PROVIDERS = new Set<string>(["anthropic", "openai", "xai"]);
+const KEY_REQUIRED = new Set<string>(["anthropic", "xai"]);
+
+function serverDefaultClient(): ILLMClient {
+  return new AiSdkLLMClient(resolveServerDefaultModel());
+}
 
 /**
  * Resolve the LLM client for a given user.
  *
  * 1. Looks up the user's llm_provider, llm_api_key_encrypted, llm_base_url, and llm_model.
- * 2. If configured, decrypts the key and returns the matching client.
- * 3. Otherwise, returns a default LLMClient using the server's LLM_API_KEY.
+ * 2. If configured, decrypts the key and returns a client for that provider.
+ * 3. Otherwise (or if the key can't be decrypted), returns the server default.
  */
-export async function resolveLLMClient(
-  userId: string,
-): Promise<ILLMClient> {
+export async function resolveLLMClient(userId: string): Promise<ILLMClient> {
   const supabase = createAdminClient();
 
   const { data: user } = await supabase
@@ -30,8 +35,8 @@ export async function resolveLLMClient(
     .eq("id", userId)
     .single();
 
-  if (!user?.llm_provider) {
-    return new LLMClient();
+  if (!user?.llm_provider || !BYOK_PROVIDERS.has(user.llm_provider)) {
+    return serverDefaultClient();
   }
 
   const provider = user.llm_provider as LLMProvider;
@@ -42,27 +47,21 @@ export async function resolveLLMClient(
     try {
       apiKey = decrypt(user.llm_api_key_encrypted);
     } catch {
-      // If decryption fails (corrupted data, key rotation), fall back to server key
-      return new LLMClient();
+      // If decryption fails (corrupted data, key rotation), fall back to the server default
+      return serverDefaultClient();
     }
   }
 
-  // Anthropic always needs a key
-  if (provider === "anthropic" && !apiKey) {
-    return new LLMClient();
+  if (KEY_REQUIRED.has(provider) && !apiKey) {
+    return serverDefaultClient();
   }
 
-  const clientOptions = {
-    ...(user.llm_base_url ? { baseURL: user.llm_base_url } : {}),
-    ...(user.llm_model ? { defaultModel: user.llm_model } : {}),
-  };
-
-  switch (provider) {
-    case "anthropic":
-      return new LLMClient(apiKey, clientOptions);
-    case "openai":
-      return new OpenAILLMClient(apiKey, clientOptions);
-    default:
-      return new LLMClient();
-  }
+  return new AiSdkLLMClient(
+    createByokModel({
+      provider,
+      apiKey,
+      baseURL: user.llm_base_url ?? undefined,
+      model: user.llm_model ?? undefined,
+    }),
+  );
 }
