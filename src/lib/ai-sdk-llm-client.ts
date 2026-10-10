@@ -101,6 +101,11 @@ const ANTHROPIC_CACHE_BREAKPOINT = {
   anthropic: { cacheControl: { type: "ephemeral" as const } },
 };
 
+// @ai-sdk/openai asks for a "detailed" reasoning summary whenever an effort is
+// set. Spool only reads the answer text, so don't pay for (or need
+// verification for) summaries.
+const OPENAI_NO_REASONING_SUMMARY = { openai: { reasoningSummary: null } };
+
 function toInstructions(
   systemPrompt: string | SystemBlock[] | undefined,
   family: ModelFamily,
@@ -131,6 +136,7 @@ interface CallSettings {
   messages: ModelMessage[];
   maxOutputTokens: number;
   reasoning?: "low" | "medium" | "high";
+  providerOptions?: typeof OPENAI_NO_REASONING_SUMMARY;
   timeout: number;
   maxRetries: number;
 }
@@ -174,6 +180,7 @@ export class AiSdkLLMClient implements ILLMClient {
       messages: messages.map(toModelMessage),
       maxOutputTokens: maxTokens + (alwaysReasons ? REASONING_TOKEN_ALLOWANCE : 0),
       ...(reasoning ? { reasoning } : {}),
+      ...(family === "openai" ? { providerOptions: OPENAI_NO_REASONING_SUMMARY } : {}),
       timeout,
       maxRetries: MAX_RETRIES,
     };

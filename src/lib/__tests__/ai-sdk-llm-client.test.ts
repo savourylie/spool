@@ -11,7 +11,7 @@ import {
   LLMTimeoutError,
   type SystemBlock,
 } from "../llm-client";
-import { describeModel, type ModelFamily, type ResolvedModel } from "../llm-models";
+import { createByokModel, describeModel, type ModelFamily, type ResolvedModel } from "../llm-models";
 
 const USAGE = {
   inputTokens: { total: 120, noCache: 20, cacheRead: 90, cacheWrite: 10 },
@@ -387,5 +387,26 @@ describe("AiSdkLLMClient streaming", () => {
     const body = await new Response(client.generateStream({ messages: HI })).text();
 
     expect(body).toBe('data: "partial"\n\ndata: {"error":"status 529"}\n\n');
+  });
+});
+
+describe("AiSdkLLMClient requests to OpenAI", () => {
+  it("does not ask OpenAI for reasoning summaries it never reads", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const bodies: Array<Record<string, unknown>> = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input, init) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      return new Response(JSON.stringify({ error: { message: "bad key" } }), {
+        status: 401,
+        headers: { "content-type": "application/json" },
+      });
+    });
+
+    await new AiSdkLLMClient(createByokModel({ provider: "openai", apiKey: "sk-openai", model: "gpt-6.1-sol" }))
+      .generate({ messages: HI })
+      .catch(() => {});
+
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0].reasoning).toEqual({ effort: "low" });
   });
 });
