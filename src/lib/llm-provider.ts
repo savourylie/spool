@@ -9,11 +9,12 @@ import type { LLMGenerateOptions, LLMStreamOptions } from "@/lib/llm-client";
 
 // ── Types ────────────────────────────────────────────────────────────
 
-export type LLMProvider = "anthropic" | "openai";
+export type LLMProvider = "anthropic" | "openai" | "xai";
 
 export const PROVIDER_DEFAULTS: Record<LLMProvider, string> = {
   anthropic: "claude-sonnet-4-6",
   openai: "gpt-4o",
+  xai: "grok-4.7",
 };
 
 // ── Interface ────────────────────────────────────────────────────────
