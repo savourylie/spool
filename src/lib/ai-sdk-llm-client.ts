@@ -63,6 +63,12 @@ function retryAfterOf(error: unknown): number | undefined {
   return Number.isFinite(seconds) ? seconds : undefined;
 }
 
+// generateText rewraps AI Gateway auth failures without a status code: an
+// Error named "GatewayAuthenticationError" (with ANSI-colored text) outside
+// production, an AISDKError named "GatewayError" in production.
+const GATEWAY_AUTH_ERROR_NAMES = new Set(["GatewayAuthenticationError", "GatewayError"]);
+const ANSI_ESCAPE = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
+
 export function mapAiSdkError(error: unknown): LLMError {
   if (error instanceof LLMError) return error;
   if (RetryError.isInstance(error)) return mapAiSdkError(error.lastError);
@@ -72,6 +78,10 @@ export function mapAiSdkError(error: unknown): LLMError {
     (error.name === "TimeoutError" || error.name === "AbortError")
   ) {
     return new LLMTimeoutError(`LLM request timed out: ${error.message}`);
+  }
+
+  if (error instanceof Error && GATEWAY_AUTH_ERROR_NAMES.has(error.name)) {
+    return new LLMAuthError(error.message.replace(ANSI_ESCAPE, "").trim());
   }
 
   const message = error instanceof Error ? error.message : String(error);

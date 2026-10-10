@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { APICallError, LoadAPIKeyError, RetryError, simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
+import { GatewayAuthenticationError } from "@ai-sdk/gateway";
 
 import { AiSdkLLMClient, mapAiSdkError } from "../ai-sdk-llm-client";
 import {
@@ -50,6 +51,7 @@ const HI = [{ role: "user" as const, content: "Hi" }];
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 
 describe("AiSdkLLMClient.generate", () => {
@@ -176,6 +178,25 @@ describe("AiSdkLLMClient.generate", () => {
     );
   });
 
+  it.each(["production", "development"])(
+    "reports an AI Gateway authentication failure as LLMAuthError (NODE_ENV=%s)",
+    async (nodeEnv) => {
+      vi.stubEnv("NODE_ENV", nodeEnv);
+      const model = new MockLanguageModelV4({
+        doGenerate: async () => {
+          throw new GatewayAuthenticationError({ message: "Invalid API key", statusCode: 401 });
+        },
+      });
+
+      const error = await new AiSdkLLMClient(resolved(model, "anthropic", "claude-sonnet-4-6"))
+        .generate({ messages: HI })
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(LLMAuthError);
+      expect((error as Error).message).not.toContain(String.fromCharCode(27));
+    },
+  );
+
   it("rejects with a mapped error when the provider fails", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: async () => {
@@ -214,8 +235,8 @@ describe("mapAiSdkError", () => {
     expect((mapped as LLMRateLimitError).retryAfter).toBe(12);
   });
 
-  it("maps a Gateway-style error by its statusCode", () => {
-    const gatewayAuth = Object.assign(new Error("Invalid API key"), { statusCode: 401 });
+  it("maps a streamed AI Gateway authentication error by its statusCode", () => {
+    const gatewayAuth = new GatewayAuthenticationError({ message: "Invalid API key", statusCode: 401 });
     expect(mapAiSdkError(gatewayAuth)).toBeInstanceOf(LLMAuthError);
   });
 
