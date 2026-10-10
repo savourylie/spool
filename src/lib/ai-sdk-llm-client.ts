@@ -19,6 +19,7 @@ import {
 } from "ai";
 
 import type { ILLMClient } from "@/lib/llm-provider";
+import { REQUEST_TIMEOUT_HEADER } from "@/lib/llm-fetch";
 import type { ModelFamily, ResolvedModel } from "@/lib/llm-models";
 import {
   LLMAuthError,
@@ -137,7 +138,8 @@ interface CallSettings {
   maxOutputTokens: number;
   reasoning?: "low" | "medium" | "high";
   providerOptions?: typeof OPENAI_NO_REASONING_SUMMARY;
-  timeout: number;
+  /** Carries the per-attempt timeout to timeoutFetch (see llm-fetch.ts). */
+  headers: Record<string, string>;
   maxRetries: number;
 }
 
@@ -181,7 +183,9 @@ export class AiSdkLLMClient implements ILLMClient {
       maxOutputTokens: maxTokens + (alwaysReasons ? REASONING_TOKEN_ALLOWANCE : 0),
       ...(reasoning ? { reasoning } : {}),
       ...(family === "openai" ? { providerOptions: OPENAI_NO_REASONING_SUMMARY } : {}),
-      timeout,
+      // Not AI SDK's `timeout`, which caps the whole call (streaming and retries
+      // included). The old SDKs bounded each attempt until its response started.
+      headers: { [REQUEST_TIMEOUT_HEADER]: String(timeout) },
       maxRetries: MAX_RETRIES,
     };
   }

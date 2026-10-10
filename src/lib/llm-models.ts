@@ -6,13 +6,14 @@
  * tokens), and whether a caller's reasoning effort may be forwarded.
  */
 
-import { gateway, type LanguageModel } from "ai";
+import { createGateway, type LanguageModel } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createXai } from "@ai-sdk/xai";
 
 import { LLMAuthError } from "@/lib/llm-client";
+import { timeoutFetch } from "@/lib/llm-fetch";
 import { PROVIDER_DEFAULTS, type LLMProvider } from "@/lib/llm-provider";
 
 export type ModelFamily =
@@ -90,7 +91,7 @@ export function resolveServerDefaultModel(
     const prefix = slash > 0 ? gatewayModel.slice(0, slash) : "";
     const modelId = slash > 0 ? gatewayModel.slice(slash + 1) : gatewayModel;
     return {
-      model: gateway(gatewayModel),
+      model: createGateway({ fetch: timeoutFetch })(gatewayModel),
       ...describeModel(GATEWAY_FAMILIES[prefix] ?? "other", modelId),
     };
   }
@@ -104,7 +105,7 @@ export function resolveServerDefaultModel(
 
   const modelId = PROVIDER_DEFAULTS.anthropic;
   return {
-    model: createAnthropic({ apiKey })(modelId),
+    model: createAnthropic({ apiKey, fetch: timeoutFetch })(modelId),
     ...describeModel("anthropic", modelId),
   };
 }
@@ -151,13 +152,18 @@ export function createByokModel({
       return {
         model: createAnthropic({
           apiKey: userKey,
+          fetch: timeoutFetch,
           ...(baseURL ? { baseURL: anthropicBaseURL(baseURL) } : {}),
         })(modelId),
         ...describeModel("anthropic", modelId),
       };
     case "xai":
       return {
-        model: createXai({ apiKey: userKey, ...(baseURL ? { baseURL } : {}) })(modelId),
+        model: createXai({
+          apiKey: userKey,
+          fetch: timeoutFetch,
+          ...(baseURL ? { baseURL } : {}),
+        })(modelId),
         ...describeModel("xai", modelId),
       };
     case "openai":
@@ -166,13 +172,14 @@ export function createByokModel({
           model: createOpenAICompatible({
             name: "openai-compatible",
             baseURL,
+            fetch: timeoutFetch,
             ...(apiKey ? { apiKey } : {}),
           }).chatModel(modelId),
           ...describeModel("openai-compatible", modelId, baseURL),
         };
       }
       return {
-        model: createOpenAI({ apiKey: userKey })(modelId),
+        model: createOpenAI({ apiKey: userKey, fetch: timeoutFetch })(modelId),
         ...describeModel("openai", modelId),
       };
   }

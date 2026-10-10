@@ -346,20 +346,6 @@ describe("AiSdkLLMClient streaming", () => {
     expect(received).toEqual(["partial"]);
   });
 
-  it("throws LLMTimeoutError when the stream times out", async () => {
-    const model = new MockLanguageModelV4({
-      doStream: ({ abortSignal }) =>
-        new Promise<never>((_resolve, reject) => {
-          abortSignal?.addEventListener("abort", () => reject(abortSignal.reason));
-        }),
-    });
-    const client = new AiSdkLLMClient(resolved(model, "anthropic", "claude-sonnet-4-6"));
-
-    await expect(
-      collect(client.generateStreamIterator({ messages: HI, timeout: 20 })),
-    ).rejects.toBeInstanceOf(LLMTimeoutError);
-  });
-
   it("frames chunks as SSE and ends with [DONE]", async () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const model = streamOf([
@@ -409,4 +395,110 @@ describe("AiSdkLLMClient requests to OpenAI", () => {
     expect(bodies).toHaveLength(1);
     expect(bodies[0].reasoning).toEqual({ effort: "low" });
   });
+});
+
+describe("AiSdkLLMClient timeouts against a real provider", () => {
+  const encoder = new TextEncoder();
+
+  function compatClient() {
+    return new AiSdkLLMClient(
+      createByokModel({
+        provider: "openai",
+        apiKey: "sk-test",
+        baseURL: "https://llm.example.test/v1",
+        model: "test-model",
+      }),
+    );
+  }
+
+  function chunk(delta: Record<string, string>, finishReason: string | null = null) {
+    const payload = {
+      id: "c1",
+      object: "chat.completion.chunk",
+      created: 1,
+      model: "test-model",
+      choices: [{ index: 0, delta, finish_reason: finishReason }],
+    };
+    return encoder.encode(`data: ${JSON.stringify(payload)}\n\n`);
+  }
+
+  /** An SSE response sending each text `gapMs` apart; like real fetch, it dies if the request is aborted. */
+  function slowStream(texts: string[], gapMs: number, signal?: AbortSignal | null) {
+    const body = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        signal?.addEventListener("abort", () => controller.error(signal.reason));
+        for (const [index, text] of texts.entries()) {
+          if (index > 0) await new Promise((resolve) => setTimeout(resolve, gapMs));
+          if (signal?.aborted) return;
+          controller.enqueue(chunk({ content: text }));
+        }
+        controller.enqueue(chunk({}, "stop"));
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+    return new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } });
+  }
+
+  function chatCompletion(text: string) {
+    return new Response(
+      JSON.stringify({
+        id: "c1",
+        object: "chat.completion",
+        created: 1,
+        model: "test-model",
+        choices: [{ index: 0, message: { role: "assistant", content: text }, finish_reason: "stop" }],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }
+
+  function hangUntilAborted(_input: unknown, init?: RequestInit) {
+    return new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+    });
+  }
+
+  it("times out a stream whose response never starts", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(globalThis, "fetch").mockImplementation(hangUntilAborted);
+
+    await expect(
+      collect(compatClient().generateStreamIterator({ messages: HI, timeout: 50 })),
+    ).rejects.toBeInstanceOf(LLMTimeoutError);
+  });
+
+  it("times out a generate call whose response never starts", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(hangUntilAborted);
+
+    await expect(compatClient().generate({ messages: HI, timeout: 50 })).rejects.toBeInstanceOf(
+      LLMTimeoutError,
+    );
+  });
+
+  it("keeps streaming past the timeout while the provider keeps sending", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input, init) =>
+      slowStream(["one ", "two ", "three"], 80, init?.signal),
+    );
+
+    const chunks = await collect(compatClient().generateStreamIterator({ messages: HI, timeout: 100 }));
+
+    expect(chunks.join("")).toBe("one two three");
+  });
+
+  it("retries a retryable provider error even when the backoff outlasts the timeout", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: { message: "upstream overloaded" } }), {
+          status: 500,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(chatCompletion("OK"));
+
+    await expect(compatClient().generate({ messages: HI, timeout: 500 })).resolves.toBe("OK");
+  }, 10_000);
 });
