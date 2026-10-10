@@ -1,0 +1,145 @@
+/* Shared bits used across preview cards */
+@import url("../colors_and_type.css");
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 24px;
+  background: var(--background);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 100vh;
+}
+
+.card-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Sticker card (matches StickerCard primitive) */
+.sticker {
+  position: relative;
+  background: var(--card);
+  border: 2px solid var(--foreground);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 20px;
+}
+.sticker.featured { box-shadow: var(--shadow-featured); }
+
+/* Candy button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--foreground);
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: var(--shadow-default);
+  cursor: pointer;
+  transition: all var(--duration) var(--ease-bounce);
+}
+.btn:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow-hover); }
+.btn:active { transform: translate(2px,2px); box-shadow: var(--shadow-active); }
+
+.btn.outline {
+  background: transparent;
+  color: var(--foreground);
+  box-shadow: none;
+}
+.btn.outline:hover { background: var(--tertiary); transform: none; }
+
+.btn.ghost {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--foreground);
+}
+.btn.ghost:hover { background: var(--muted); transform: none; }
+
+.btn.sm { height: 36px; padding: 0 14px; font-size: 13px; }
+.btn.lg { height: 56px; padding: 0 28px; font-size: 16px; }
+
+/* Trailing icon circle (per primary spec) */
+.btn .iconchip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.3);
+}
+.btn .iconchip svg { width: 12px; height: 12px; }
+
+/* Tiny utility row */
+.row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.col { display: flex; flex-direction: column; gap: 12px; }
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.swatch .chip {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border: 2px solid var(--foreground);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-default);
+}
+.swatch .name {
+  font-weight: 700;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.swatch .hex {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+/* Eyebrow label inside a card */
+.lbl {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+}
+
+/* Icon circle (the brand's signature icon container) */
+.icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  color: white;
+}
+.icon-circle.lg { width: 56px; height: 56px; }
+.icon-circle.sm { width: 28px; height: 28px; }
+
+.bg-accent      { background: var(--accent); }
+.bg-secondary   { background: var(--secondary); }
+.bg-tertiary    { background: var(--tertiary); color: var(--foreground); }
+.bg-quaternary  { background: var(--quaternary); }
+.bg-muted       { background: var(--muted); color: var(--foreground); }
+
+/* Dot grid decoration */
+.dotgrid {
+  background-image: radial-gradient(circle, #E2E8F0 1.2px, transparent 1.2px);
+  background-size: 14px 14px;
+}

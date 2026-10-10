@@ -1,0 +1,917 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  public: {
+    Tables: {
+      backfill_job_events: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          job_id: string
+          level: string
+          message: string
+          stage: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          job_id: string
+          level: string
+          message: string
+          stage: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          job_id?: string
+          level?: string
+          message?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backfill_job_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "backfill_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      backfill_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          current_post_id: string | null
+          id: string
+          last_error_message: string | null
+          last_error_payload: Json | null
+          last_error_status: number | null
+          last_heartbeat_at: string
+          processed_posts: number | null
+          stage: string
+          started_at: string | null
+          status: string
+          total_posts: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_post_id?: string | null
+          id?: string
+          last_error_message?: string | null
+          last_error_payload?: Json | null
+          last_error_status?: number | null
+          last_heartbeat_at?: string
+          processed_posts?: number | null
+          stage?: string
+          started_at?: string | null
+          status?: string
+          total_posts?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_post_id?: string | null
+          id?: string
+          last_error_message?: string | null
+          last_error_payload?: Json | null
+          last_error_status?: number | null
+          last_heartbeat_at?: string
+          processed_posts?: number | null
+          stage?: string
+          started_at?: string | null
+          status?: string
+          total_posts?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backfill_jobs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_voice_profiles: {
+        Row: {
+          confidence_tier: string
+          profile: Json
+          source_post_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence_tier: string
+          profile: Json
+          source_post_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence_tier?: string
+          profile?: Json
+          source_post_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_voice_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      concept_ledger: {
+        Row: {
+          analogy: string | null
+          concept: string
+          created_at: string
+          id: string
+          post_id: string
+          seen_at: string
+          user_id: string
+        }
+        Insert: {
+          analogy?: string | null
+          concept: string
+          created_at?: string
+          id?: string
+          post_id: string
+          seen_at: string
+          user_id: string
+        }
+        Update: {
+          analogy?: string | null
+          concept?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          seen_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concept_ledger_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "concept_ledger_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_stats: {
+        Row: {
+          date: string
+          followers_count: number | null
+          id: string
+          user_id: string
+          views: number | null
+        }
+        Insert: {
+          date: string
+          followers_count?: number | null
+          id?: string
+          user_id: string
+          views?: number | null
+        }
+        Update: {
+          date?: string
+          followers_count?: number | null
+          id?: string
+          user_id?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demographics: {
+        Row: {
+          dimension: string
+          fetched_at: string | null
+          id: string
+          key: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          dimension: string
+          fetched_at?: string | null
+          id?: string
+          key: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          dimension?: string
+          fetched_at?: string | null
+          id?: string
+          key?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demographics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demographics_history: {
+        Row: {
+          dimension: string
+          fetched_at: string | null
+          id: string
+          key: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          dimension: string
+          fetched_at?: string | null
+          id?: string
+          key: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          dimension?: string
+          fetched_at?: string | null
+          id?: string
+          key?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demographics_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drafts: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          predicted_engagement: Json | null
+          quality_score: number | null
+          share_trigger: string | null
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          predicted_engagement?: Json | null
+          quality_score?: number | null
+          share_trigger?: string | null
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          predicted_engagement?: Json | null
+          quality_score?: number | null
+          share_trigger?: string | null
+          topic?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drafts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freshness_checks: {
+        Row: {
+          created_at: string
+          external_signal: Json | null
+          id: string
+          run_id: string
+          self_repetition_risk: Json | null
+          sources: Json | null
+          topic: string
+          user_id: string
+          verdict: string
+        }
+        Insert: {
+          created_at?: string
+          external_signal?: Json | null
+          id?: string
+          run_id: string
+          self_repetition_risk?: Json | null
+          sources?: Json | null
+          topic: string
+          user_id: string
+          verdict: string
+        }
+        Update: {
+          created_at?: string
+          external_signal?: Json | null
+          id?: string
+          run_id?: string
+          self_repetition_risk?: Json | null
+          sources?: Json | null
+          topic?: string
+          user_id?: string
+          verdict?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freshness_checks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_metrics: {
+        Row: {
+          fetched_at: string | null
+          id: string
+          likes: number | null
+          post_id: string
+          quotes: number | null
+          replies: number | null
+          reposts: number | null
+          shares: number | null
+          views: number | null
+        }
+        Insert: {
+          fetched_at?: string | null
+          id?: string
+          likes?: number | null
+          post_id: string
+          quotes?: number | null
+          replies?: number | null
+          reposts?: number | null
+          shares?: number | null
+          views?: number | null
+        }
+        Update: {
+          fetched_at?: string | null
+          id?: string
+          likes?: number | null
+          post_id?: string
+          quotes?: number | null
+          replies?: number | null
+          reposts?: number | null
+          shares?: number | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_metrics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_predictions: {
+        Row: {
+          actual_windowed_metrics: Json | null
+          draft_text: string | null
+          draft_text_hash: string
+          driver_factors: Json
+          id: string
+          narrative: string | null
+          post_id: string | null
+          predicted_at: string
+          ranges: Json
+          review_state: string
+          reviewed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_windowed_metrics?: Json | null
+          draft_text?: string | null
+          draft_text_hash: string
+          driver_factors?: Json
+          id?: string
+          narrative?: string | null
+          post_id?: string | null
+          predicted_at?: string
+          ranges: Json
+          review_state?: string
+          reviewed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_windowed_metrics?: Json | null
+          draft_text?: string | null
+          draft_text_hash?: string
+          driver_factors?: Json
+          id?: string
+          narrative?: string | null
+          post_id?: string | null
+          predicted_at?: string
+          ranges?: Json
+          review_state?: string
+          reviewed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_predictions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_predictions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_replies: {
+        Row: {
+          fetched_at: string | null
+          id: string
+          post_id: string
+          replied_at: string | null
+          text: string | null
+          threads_reply_id: string
+          word_count: number | null
+        }
+        Insert: {
+          fetched_at?: string | null
+          id?: string
+          post_id: string
+          replied_at?: string | null
+          text?: string | null
+          threads_reply_id: string
+          word_count?: number | null
+        }
+        Update: {
+          fetched_at?: string | null
+          id?: string
+          post_id?: string
+          replied_at?: string | null
+          text?: string | null
+          threads_reply_id?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_replies_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          concept_extracted_at: string | null
+          created_at: string | null
+          id: string
+          media_type: string
+          permalink: string | null
+          published_at: string
+          text_full: string | null
+          text_preview: string | null
+          threads_media_id: string
+          topic_tag: string | null
+          user_id: string
+        }
+        Insert: {
+          concept_extracted_at?: string | null
+          created_at?: string | null
+          id?: string
+          media_type: string
+          permalink?: string | null
+          published_at: string
+          text_full?: string | null
+          text_preview?: string | null
+          threads_media_id: string
+          topic_tag?: string | null
+          user_id: string
+        }
+        Update: {
+          concept_extracted_at?: string | null
+          created_at?: string | null
+          id?: string
+          media_type?: string
+          permalink?: string | null
+          published_at?: string
+          text_full?: string | null
+          text_preview?: string | null
+          threads_media_id?: string
+          topic_tag?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_replies: {
+        Row: {
+          fetched_at: string
+          id: string
+          media_type: string | null
+          permalink: string | null
+          replied_at: string
+          replied_to_id: string | null
+          review_status: string
+          risk_analyzed_at: string | null
+          risk_categories: string[]
+          risk_level: string
+          risk_summary: string | null
+          root_post_id: string | null
+          shortcode: string | null
+          text: string | null
+          threads_reply_id: string
+          user_id: string
+        }
+        Insert: {
+          fetched_at?: string
+          id?: string
+          media_type?: string | null
+          permalink?: string | null
+          replied_at: string
+          replied_to_id?: string | null
+          review_status?: string
+          risk_analyzed_at?: string | null
+          risk_categories?: string[]
+          risk_level?: string
+          risk_summary?: string | null
+          root_post_id?: string | null
+          shortcode?: string | null
+          text?: string | null
+          threads_reply_id: string
+          user_id: string
+        }
+        Update: {
+          fetched_at?: string
+          id?: string
+          media_type?: string | null
+          permalink?: string | null
+          replied_at?: string
+          replied_to_id?: string | null
+          review_status?: string
+          risk_analyzed_at?: string | null
+          risk_categories?: string[]
+          risk_level?: string
+          risk_summary?: string | null
+          root_post_id?: string | null
+          shortcode?: string | null
+          text?: string | null
+          threads_reply_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_replies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          id: string
+          llm_api_key_encrypted: string | null
+          llm_base_url: string | null
+          llm_model: string | null
+          llm_provider: string | null
+          threads_user_id: string
+          token_expires_at: string
+          username: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          id?: string
+          llm_api_key_encrypted?: string | null
+          llm_base_url?: string | null
+          llm_model?: string | null
+          llm_provider?: string | null
+          threads_user_id: string
+          token_expires_at: string
+          username?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          id?: string
+          llm_api_key_encrypted?: string | null
+          llm_base_url?: string | null
+          llm_model?: string | null
+          llm_provider?: string | null
+          threads_user_id?: string
+          token_expires_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      export_posts_with_latest_metrics: {
+        Args: { p_user_id: string }
+        Returns: {
+          fetched_at: string
+          likes: number
+          media_type: string
+          permalink: string
+          published_at: string
+          quotes: number
+          replies: number
+          reposts: number
+          shares: number
+          text_full: string
+          text_preview: string
+          threads_media_id: string
+          topic_tag: string
+          views: number
+        }[]
+      }
+      get_posts_with_metrics:
+        | {
+            Args: {
+              p_limit: number
+              p_offset: number
+              p_sort_column: string
+              p_sort_order: string
+              p_user_id: string
+            }
+            Returns: {
+              engagement_rate: number
+              id: string
+              likes: number
+              media_type: string
+              permalink: string
+              published_at: string
+              quotes: number
+              replies: number
+              reposts: number
+              shares: number
+              text_preview: string
+              total_count: number
+              views: number
+            }[]
+          }
+        | {
+            Args: {
+              p_date_from?: string
+              p_date_to?: string
+              p_limit: number
+              p_media_types?: string[]
+              p_offset: number
+              p_sort_column: string
+              p_sort_order: string
+              p_user_id: string
+            }
+            Returns: {
+              engagement_rate: number
+              id: string
+              likes: number
+              media_type: string
+              permalink: string
+              published_at: string
+              quotes: number
+              replies: number
+              reposts: number
+              shares: number
+              text_preview: string
+              total_count: number
+              views: number
+            }[]
+          }
+      get_timing_heatmap_data: {
+        Args: { p_user_id: string }
+        Returns: {
+          likes: number
+          published_at: string
+          quotes: number
+          replies: number
+          reposts: number
+          shares: number
+          views: number
+        }[]
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+} as const
+

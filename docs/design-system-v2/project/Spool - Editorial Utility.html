@@ -1,0 +1,1635 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-density="regular">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Spool — Editorial Utility</title>
+<link rel="stylesheet" href="system.css" />
+<style>
+  /* Page-level scaffold (system tokens live in system.css) */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--s-7);
+  }
+
+  /* Top bar */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: color-mix(in oklab, var(--paper) 92%, transparent);
+    backdrop-filter: saturate(140%) blur(10px);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    border-bottom: var(--bw) solid var(--line);
+  }
+  .topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font: 600 var(--t-md)/1 var(--font-sans);
+    letter-spacing: -0.02em;
+  }
+  .brand .glyph {
+    width: 20px; height: 20px;
+    background: var(--ink);
+    border-radius: var(--r-1);
+    position: relative;
+  }
+  .brand .glyph::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1.5px solid var(--paper);
+    border-radius: 0;
+    border-top: 0; border-right: 0;
+  }
+  .topnav {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    font: 500 var(--t-sm)/1 var(--font-sans);
+    color: var(--ink-3);
+  }
+  .topnav a {
+    color: inherit;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: var(--r-2);
+  }
+  .topnav a:hover { color: var(--ink); background: var(--paper-2); border: 0; }
+  .topnav .v { color: var(--ink-4); font-family: var(--font-mono); font-size: var(--t-mono); margin-left: var(--s-2); padding-left: var(--s-2); border-left: var(--bw) solid var(--line); }
+
+  /* Hero */
+  .hero {
+    padding: var(--s-10) 0 var(--s-9);
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: var(--s-8);
+    align-items: end;
+  }
+  .hero .meta { color: var(--ink-3); }
+  .hero .meta .row { gap: 6px; margin-bottom: var(--s-2); }
+  .hero h1 {
+    font-size: var(--t-display);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    font-weight: 500;
+    max-width: 12ch;
+  }
+  .hero .sub {
+    margin-top: var(--s-5);
+    font-size: var(--t-lg);
+    line-height: 1.4;
+    color: var(--ink-2);
+    max-width: 64ch;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .hero .meta2 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--s-6);
+    margin-top: var(--s-8);
+    padding-top: var(--s-6);
+    border-top: var(--bw) solid var(--line);
+    max-width: 720px;
+  }
+  .hero .meta2 .k { font-family: var(--font-mono); font-size: var(--t-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); margin-bottom: 6px; }
+  .hero .meta2 .v { font-size: var(--t-sm); color: var(--ink); }
+
+  /* Subsection card grid */
+  .grid {
+    display: grid;
+    gap: var(--s-4);
+  }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-6 { grid-template-columns: repeat(6, 1fr); }
+  @media (max-width: 900px) {
+    .grid-3, .grid-4, .grid-6 { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Swatch card */
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    padding: 0;
+    border: var(--bw) solid var(--line);
+    border-radius: var(--r-base);
+    overflow: hidden;
+    background: var(--card);
+  }
+  .swatch .chip {
+    height: 96px;
+    border-bottom: var(--bw) solid var(--line);
+  }
+  .swatch .body {
+    padding: var(--s-3) var(--s-4) var(--s-4);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .swatch .name { font-weight: 500; font-size: var(--t-sm); letter-spacing: -0.005em; }
+  .swatch .meta { font-family: var(--font-mono); font-size: var(--t-mono); color: var(--ink-3); }
+
+  /* Type specimen */
+  .specimen {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: var(--s-6);
+    padding: var(--s-5) 0;
+    border-top: var(--bw) solid var(--line);
+    align-items: baseline;
+  }
+  .specimen:last-child { border-bottom: var(--bw) solid var(--line); }
+  .specimen .desc {
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+    color: var(--ink-3);
+  }
+  .specimen .desc .role { color: var(--ink); display: block; margin-bottom: 4px; }
+  .specimen .sample { line-height: 1.1; letter-spacing: -0.025em; }
+
+  /* Spacing visualizer */
+  .ruler {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--s-3);
+    padding: var(--s-5);
+    background: var(--paper-2);
+    border-radius: var(--r-base);
+  }
+  .ruler .tick {
+    background: var(--ink);
+    border-radius: var(--r-1);
+    min-width: 24px;
+    color: var(--paper);
+    font: 500 var(--t-mono)/1 var(--font-mono);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 4px;
+  }
+
+  /* Radius visualizer */
+  .radius-box {
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper-2);
+    border: var(--bw) solid var(--line);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+  }
+
+  /* Components row */
+  .demo-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    align-items: center;
+    padding: var(--s-5);
+    background: var(--paper-2);
+    border-radius: var(--r-base);
+    border: var(--bw) solid var(--line);
+  }
+  .demo-block {
+    padding: var(--s-5);
+    background: var(--paper-2);
+    border-radius: var(--r-base);
+    border: var(--bw) solid var(--line);
+  }
+  .demo-label {
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    margin-bottom: var(--s-3);
+  }
+
+  /* Icon grid */
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    border: var(--bw) solid var(--line);
+    border-radius: var(--r-base);
+    background: var(--card);
+    overflow: hidden;
+  }
+  .icon-grid .cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--ink);
+    border-right: var(--bw) solid var(--line);
+    border-bottom: var(--bw) solid var(--line);
+    transition: background var(--dur) var(--ease);
+  }
+  .icon-grid .cell:hover { background: var(--paper-2); }
+  .icon-grid .cell:nth-child(8n) { border-right: 0; }
+  .icon-grid .cell .ico { width: 22px; height: 22px; }
+  .icon-grid .cell .nm { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); }
+  @media (max-width: 900px) {
+    .icon-grid { grid-template-columns: repeat(4, 1fr); }
+    .icon-grid .cell:nth-child(8n) { border-right: var(--bw) solid var(--line); }
+    .icon-grid .cell:nth-child(4n) { border-right: 0; }
+  }
+
+  /* Avatar stack */
+  .stack-avatars { display: inline-flex; }
+  .stack-avatars .avatar { margin-left: -8px; box-shadow: 0 0 0 2px var(--paper); }
+  .stack-avatars .avatar:first-child { margin-left: 0; }
+
+  /* Conversation thread */
+  .thread {
+    background: var(--card);
+    border: var(--bw) solid var(--line);
+    border-radius: var(--r-base);
+    overflow: hidden;
+  }
+  .post {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: var(--s-3);
+    padding: var(--s-5);
+    border-bottom: var(--bw) solid var(--line);
+    position: relative;
+  }
+  .post:last-child { border-bottom: 0; }
+  .post .gutter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .post .gutter .line {
+    flex: 1;
+    width: var(--bw);
+    background: var(--line);
+    min-height: var(--s-4);
+  }
+  .post .gutter .avatar { margin: 0; }
+  .post-header {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .post-header .name { font-weight: 600; font-size: var(--t-sm); color: var(--ink); }
+  .post-header .handle { color: var(--ink-3); font-family: var(--font-mono); font-size: var(--t-mono); }
+  .post-header .time { color: var(--ink-3); font-family: var(--font-mono); font-size: var(--t-mono); margin-left: auto; }
+  .post-body { font-size: var(--t-sm); color: var(--ink-2); line-height: 1.55; max-width: 60ch; }
+  .post-actions {
+    margin-top: var(--s-3);
+    display: flex;
+    align-items: center;
+    gap: var(--s-5);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+  }
+  .post-actions .act { display: inline-flex; align-items: center; gap: 6px; cursor: default; }
+  .post-actions .act:hover { color: var(--ink); }
+
+  /* Sample screens */
+  .screen {
+    background: var(--paper);
+    border: var(--bw) solid var(--line);
+    border-radius: var(--r-base);
+    overflow: hidden;
+    box-shadow: 0 1px 0 var(--line);
+  }
+  .screen-chrome {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: 10px 14px;
+    background: var(--paper-2);
+    border-bottom: var(--bw) solid var(--line);
+    font: 500 var(--t-mono)/1 var(--font-mono);
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .screen-chrome .dots { display: flex; gap: 6px; }
+  .screen-chrome .dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); border: var(--bw) solid var(--line); }
+  .screen-body { display: grid; grid-template-columns: 220px 1fr; min-height: 540px; }
+
+  /* Sidebar */
+  .sidebar {
+    border-right: var(--bw) solid var(--line);
+    padding: var(--s-5) var(--s-3);
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+  .sidebar .sect {
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    padding: var(--s-3) 10px var(--s-1);
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--r-2);
+    color: var(--ink-2);
+    font: 500 var(--t-sm)/1 var(--font-sans);
+    letter-spacing: -0.005em;
+    cursor: default;
+  }
+  .nav-item:hover { background: var(--paper-2); color: var(--ink); }
+  .nav-item.active { background: var(--ink); color: var(--paper); }
+  .nav-item.active .ico { stroke: var(--paper); }
+  .nav-item .count {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+    color: var(--ink-3);
+  }
+  .nav-item.active .count { color: color-mix(in oklab, var(--paper) 60%, transparent); }
+
+  /* Screen content area */
+  .screen-content {
+    padding: var(--s-6);
+    overflow: auto;
+  }
+  .screen-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    padding-bottom: var(--s-4);
+    border-bottom: var(--bw) solid var(--line);
+    margin-bottom: var(--s-5);
+  }
+  .screen-title { font-size: var(--t-2xl); letter-spacing: -0.025em; font-weight: 500; }
+  .screen-eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    margin-bottom: 6px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: var(--s-1);
+    border-bottom: var(--bw) solid var(--line);
+    margin: -16px 0 var(--s-5);
+  }
+  .tab {
+    padding: 10px 14px;
+    font: 500 var(--t-sm)/1 var(--font-sans);
+    color: var(--ink-3);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    cursor: default;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* Table */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--t-sm);
+  }
+  .table th, .table td {
+    padding: 12px var(--s-3);
+    text-align: left;
+    border-bottom: var(--bw) solid var(--line);
+  }
+  .table th {
+    font: 500 var(--t-mono)/1 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    border-bottom: var(--bw) solid var(--line-strong);
+  }
+  .table td.num, .table th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+  .table tbody tr:hover { background: var(--paper-2); }
+
+  /* Metric tiles */
+  .metric {
+    padding: var(--s-5);
+    border: var(--bw) solid var(--line);
+    border-radius: var(--r-base);
+    background: var(--card);
+  }
+  .metric .k {
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    margin-bottom: 10px;
+  }
+  .metric .v {
+    font-size: var(--t-3xl);
+    letter-spacing: -0.025em;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .metric .delta {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+  }
+  .metric .delta.up { color: var(--pos); }
+  .metric .delta.down { color: var(--neg); }
+
+  /* Bar chart */
+  .bars {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--s-2);
+    align-items: end;
+    height: 160px;
+    padding: var(--s-3) 0;
+  }
+  .bars .bar {
+    background: var(--ink);
+    border-radius: 1px 1px 0 0;
+    min-height: 4px;
+    position: relative;
+  }
+  .bars .bar::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: var(--t-mono);
+    color: var(--ink-3);
+  }
+  .bars .bar.hi { background: var(--accent); }
+
+  /* Heatmap */
+  .heatmap {
+    display: grid;
+    grid-template-columns: 40px repeat(7, 1fr);
+    gap: 2px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-3);
+  }
+  .heatmap .h, .heatmap .d {
+    text-align: center;
+    padding: 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .heatmap .d { text-align: right; padding-right: 6px; }
+  .heatmap .cell {
+    aspect-ratio: 1;
+    background: var(--paper-2);
+    border-radius: 1px;
+  }
+  .heatmap .cell[data-v="1"] { background: color-mix(in oklab, var(--ink) 8%, var(--paper-2)); }
+  .heatmap .cell[data-v="2"] { background: color-mix(in oklab, var(--ink) 18%, var(--paper-2)); }
+  .heatmap .cell[data-v="3"] { background: color-mix(in oklab, var(--ink) 35%, var(--paper-2)); }
+  .heatmap .cell[data-v="4"] { background: color-mix(in oklab, var(--ink) 55%, var(--paper-2)); }
+  .heatmap .cell[data-v="5"] { background: var(--ink); }
+
+  /* Composer */
+  .composer { background: var(--card); border: var(--bw) solid var(--line); border-radius: var(--r-base); }
+  .composer-head { padding: var(--s-4); border-bottom: var(--bw) solid var(--line); display: flex; align-items: center; gap: var(--s-3); }
+  .composer-area { padding: var(--s-5); }
+  .composer-area textarea {
+    width: 100%; border: 0; outline: 0; background: transparent;
+    font: 400 var(--t-lg)/1.5 var(--font-sans);
+    color: var(--ink); resize: none; min-height: 120px;
+    letter-spacing: -0.01em;
+  }
+  .composer-foot {
+    padding: var(--s-3) var(--s-4);
+    border-top: var(--bw) solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--paper-2);
+  }
+  .composer-foot .icons { display: flex; gap: 4px; color: var(--ink-3); }
+  .composer-foot .icons .btn-icon { width: 28px; height: 28px; }
+  .composer-foot .count { font-family: var(--font-mono); font-size: var(--t-mono); color: var(--ink-3); }
+
+  /* Quality bar */
+  .quality {
+    margin-top: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    border-top: var(--bw) dashed var(--line);
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: var(--s-3);
+    align-items: center;
+  }
+  .quality .label { font-family: var(--font-mono); font-size: var(--t-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); }
+  .quality .meter { height: 6px; background: var(--paper-3); border-radius: 1px; overflow: hidden; }
+  .quality .meter > span { display: block; height: 100%; background: var(--ink); }
+  .quality .val { font-family: var(--font-mono); font-size: var(--t-sm); color: var(--ink); }
+
+  /* Banners */
+  .banner {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    border: var(--bw) solid var(--line);
+    border-radius: var(--r-base);
+    background: var(--card);
+  }
+  .banner .ico { color: var(--ink-3); }
+  .banner.warn  { background: var(--warn-soft); border-color: color-mix(in oklab, var(--warn) 30%, transparent); }
+  .banner.warn .ico  { color: var(--warn); }
+  .banner.pos   { background: var(--pos-soft);  border-color: color-mix(in oklab, var(--pos) 30%, transparent); }
+  .banner.pos .ico { color: var(--pos); }
+  .banner.neg   { background: var(--neg-soft);  border-color: color-mix(in oklab, var(--neg) 30%, transparent); }
+  .banner .body { flex: 1; font-size: var(--t-sm); color: var(--ink); }
+  .banner .body small { color: var(--ink-3); display: block; margin-top: 2px; font-size: var(--t-xs); }
+
+  /* Footer */
+  .foot {
+    margin-top: var(--s-10);
+    padding: var(--s-7) 0 var(--s-9);
+    border-top: var(--bw) solid var(--line);
+    display: grid;
+    grid-template-columns: 180px 1fr 1fr 1fr;
+    gap: var(--s-7);
+    font-size: var(--t-sm);
+    color: var(--ink-3);
+  }
+  .foot h6 { font-family: var(--font-mono); font-size: var(--t-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 500; margin-bottom: var(--s-3); }
+  .foot ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .foot li { color: var(--ink-2); }
+
+  /* Misc */
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-4);
+  }
+  @media (max-width: 760px) {
+    .pair, .hero, .screen-body, .foot { grid-template-columns: 1fr; }
+    .hero h1 { font-size: var(--t-4xl); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ ICON SPRITE (simple line glyphs) ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-feed" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V8M10 20V4M16 20v-8M22 20H2"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.5"/><circle cx="17" cy="10" r="2.5"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5M15 19c0-2 2-3.5 4-3.5s3 1.5 3 3.5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20l4-1L20 7l-3-3L5 16zM14 7l3 3"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3v6M12 15v6M3 12h6M15 12h6M6 6l3.5 3.5M14.5 14.5L18 18M18 6l-3.5 3.5M9.5 14.5L6 18"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+    <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-arrow-tr" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></symbol>
+    <symbol id="i-reply" viewBox="0 0 24 24"><path d="M10 7L4 12l6 5M4 12h11a5 5 0 0 1 5 5v2"/></symbol>
+    <symbol id="i-repost" viewBox="0 0 24 24"><path d="M7 4L4 7l3 3M4 7h11a4 4 0 0 1 4 4v2M17 20l3-3-3-3M20 17H9a4 4 0 0 1-4-4v-2"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9-9a4.5 4.5 0 0 1 8-3 4.5 4.5 0 0 1 8 3c-2 4.5-9 9-9 9z"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4-6 4z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-5 16-4-7z"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14"/><circle cx="9" cy="11" r="1.5"/><path d="M5 18l5-5 4 4 2-2 3 3"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 6h14M12 6v14"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12"/><path d="M16 10l5-3v10l-5-3z"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 1 0-6l3-3a4 4 0 0 1 6 6l-1 1M14 10a4 4 0 0 1 0 6l-3 3a4 4 0 0 1-6-6l1-1"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4zM10 21a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12l2-1-1-3-2 1-2-1v-2h-4v2l-2 1-2-1-1 3 2 1v2l-2 1 1 3 2-1 2 1v2h4v-2l2-1 2 1 1-3-2-1z"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M6 14l6-6 6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 10l6 6 6-6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 8v6l-4-2v-4z"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ TOPBAR ============ -->
+<div class="topbar" data-screen-label="Topbar">
+  <div class="page topbar-inner">
+    <div class="brand">
+      <span class="glyph"></span>
+      <span>Spool</span>
+      <span class="mono-tag">design system</span>
+    </div>
+    <nav class="topnav">
+      <a href="#tokens">Tokens</a>
+      <a href="#components">Components</a>
+      <a href="#patterns">Patterns</a>
+      <a href="#screens">Screens</a>
+      <span class="v">v2.0 · 2026.05</span>
+    </nav>
+  </div>
+</div>
+
+<main class="page">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" data-screen-label="01 Hero">
+    <div class="meta eyebrow">
+      <div>SPL/2.0</div>
+      <div style="margin-top:4px;color:var(--ink-2)">Editorial Utility</div>
+      <div style="margin-top:4px">Originally "Playful Geometric"</div>
+    </div>
+    <div>
+      <h1>A quieter system for reading the algorithm.</h1>
+      <p class="sub">
+        Spool 2.0 trades the sticker-book for an editorial utility — one typeface in five weights, paper-and-ink contrast, monospace where structure matters, and a single muted accent that gets out of the way. Everything is sharp, hairline-bordered, and tabular by default.
+      </p>
+      <div class="meta2">
+        <div><div class="k">Type</div><div class="v">Geist · Geist Mono</div></div>
+        <div><div class="k">Palette</div><div class="v">Paper + ink + 1 accent</div></div>
+        <div><div class="k">Shape</div><div class="v">2 / 4 / 8 px radii</div></div>
+        <div><div class="k">Density</div><div class="v">Comfortable default</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOUNDATIONS ============ -->
+  <section id="tokens" data-screen-label="02 Foundations">
+
+    <div class="section-head">
+      <div class="label">F.01 · Color</div>
+      <div>
+        <h2>Paper and ink, plus one accent.</h2>
+        <p>The previous "confetti" palette has been collapsed to a high-contrast neutral foundation on warm paper. A single muted electric blue carries links, focus rings, and selections — never decorative fills. Semantic colors (positive / negative / warning) appear only inside data and banners.</p>
+      </div>
+    </div>
+
+    <div class="demo-label">Surface</div>
+    <div class="grid grid-4">
+      <div class="swatch"><div class="chip" style="background:var(--paper)"></div><div class="body"><div class="name">Paper</div><div class="meta">--paper · #fafaf7</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--paper-2)"></div><div class="body"><div class="name">Paper 2</div><div class="meta">--paper-2 · #f3f2ed</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--paper-3)"></div><div class="body"><div class="name">Paper 3</div><div class="meta">--paper-3 · #ebeae3</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--card);border-bottom:var(--bw) solid var(--line)"></div><div class="body"><div class="name">Card</div><div class="meta">--card · #ffffff</div></div></div>
+    </div>
+
+    <div style="height:var(--s-4)"></div>
+    <div class="demo-label">Ink</div>
+    <div class="grid grid-4">
+      <div class="swatch"><div class="chip" style="background:var(--ink)"></div><div class="body"><div class="name">Ink</div><div class="meta">--ink · #0a0a09</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--ink-2)"></div><div class="body"><div class="name">Ink 2</div><div class="meta">--ink-2 · #3a3a36</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--ink-3)"></div><div class="body"><div class="name">Ink 3</div><div class="meta">--ink-3 · #6e6e66</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--ink-4)"></div><div class="body"><div class="name">Ink 4</div><div class="meta">--ink-4 · #a8a89e</div></div></div>
+    </div>
+
+    <div style="height:var(--s-4)"></div>
+    <div class="demo-label">Accent & semantic (used sparingly)</div>
+    <div class="grid grid-6">
+      <div class="swatch"><div class="chip" style="background:var(--accent)"></div><div class="body"><div class="name">Accent</div><div class="meta">--accent</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--accent-soft)"></div><div class="body"><div class="name">Accent soft</div><div class="meta">--accent-soft</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--pos)"></div><div class="body"><div class="name">Positive</div><div class="meta">--pos</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--neg)"></div><div class="body"><div class="name">Negative</div><div class="meta">--neg</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--warn)"></div><div class="body"><div class="name">Warning</div><div class="meta">--warn</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--line)"></div><div class="body"><div class="name">Line</div><div class="meta">--line · #e6e4dd</div></div></div>
+    </div>
+
+    <!-- TYPE -->
+    <div class="section-head">
+      <div class="label">F.02 · Type</div>
+      <div>
+        <h2>One sans, five weights, mono for structure.</h2>
+        <p>Geist replaces the Outfit / Plus Jakarta pairing. Headings use weight 500 with a tight negative track — sharp, not heavy. Geist Mono carries eyebrow labels, timestamps, tabular numerals, and any structural metadata where columns need to align.</p>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="desc"><span class="role">Display</span>88 / 500 / -0.045em</div>
+      <div class="sample" style="font-size:var(--t-display);font-weight:500;letter-spacing:-0.045em">Read the room.</div>
+    </div>
+    <div class="specimen">
+      <div class="desc"><span class="role">H1</span>44 / 500 / -0.03em</div>
+      <div class="sample" style="font-size:var(--t-4xl);font-weight:500;letter-spacing:-0.03em">Analytics that understand the algorithm.</div>
+    </div>
+    <div class="specimen">
+      <div class="desc"><span class="role">H2</span>32 / 500 / -0.025em</div>
+      <div class="sample" style="font-size:var(--t-3xl);font-weight:500;letter-spacing:-0.025em">What's working, when, and what to do next.</div>
+    </div>
+    <div class="specimen">
+      <div class="desc"><span class="role">H3</span>24 / 500 / -0.02em</div>
+      <div class="sample" style="font-size:var(--t-2xl);font-weight:500;letter-spacing:-0.02em">Weighted Engagement Score</div>
+    </div>
+    <div class="specimen">
+      <div class="desc"><span class="role">Lead</span>20 / 400 / -0.01em</div>
+      <div class="sample" style="font-size:var(--t-lg);font-weight:400;letter-spacing:-0.01em;color:var(--ink-2);max-width:60ch">A measure that weights shares above comments above likes — the order the algorithm itself appears to use.</div>
+    </div>
+    <div class="specimen">
+      <div class="desc"><span class="role">Body</span>14 / 400 / 0</div>
+      <div class="sample" style="font-size:var(--t-base);font-weight:400;line-height:1.55;color:var(--ink-2);max-width:60ch">Type or paste a draft post to analyze. Spool checks for patterns the algorithm demotes and suggests improvements — without changing your voice.</div>
+    </div>
+    <div class="specimen">
+      <div class="desc"><span class="role">Eyebrow</span>11 / mono / +0.08em</div>
+      <div class="sample eyebrow" style="font-size:var(--t-mono)">POSTED · TUE 09:14 · 4.2K REACH</div>
+    </div>
+    <div class="specimen">
+      <div class="desc"><span class="role">Tabular</span>13 / mono / -</div>
+      <div class="sample mono tabular" style="font-size:var(--t-sm);color:var(--ink)">2,314 · 1,209 · 487 · 92 · 12.4%</div>
+    </div>
+
+    <!-- SPACING -->
+    <div class="section-head">
+      <div class="label">F.03 · Space</div>
+      <div>
+        <h2>Ten steps, no surprises.</h2>
+        <p>A pure 4-pixel ramp. The system avoids 6 and 10 — column rhythm comes from <code>4 8 12 16 20 24 32 40 56 80</code> and that's it.</p>
+      </div>
+    </div>
+    <div class="ruler">
+      <div class="tick" style="height:4px">4</div>
+      <div class="tick" style="height:8px">8</div>
+      <div class="tick" style="height:12px">12</div>
+      <div class="tick" style="height:16px">16</div>
+      <div class="tick" style="height:20px">20</div>
+      <div class="tick" style="height:24px">24</div>
+      <div class="tick" style="height:32px">32</div>
+      <div class="tick" style="height:40px">40</div>
+      <div class="tick" style="height:56px">56</div>
+      <div class="tick" style="height:80px">80</div>
+    </div>
+
+    <!-- RADII -->
+    <div class="section-head">
+      <div class="label">F.04 · Radii</div>
+      <div>
+        <h2>Architectural corners.</h2>
+        <p>The system tops out at 8 pixels. The pill radius is reserved for avatars and selection chips — never buttons or cards. Sharp corners do the heavy lifting; small radii soften only what would otherwise feel brutal.</p>
+      </div>
+    </div>
+    <div class="grid grid-6">
+      <div><div class="radius-box" style="border-radius:0">0</div><div class="mono-tag" style="margin-top:8px">--r-0</div></div>
+      <div><div class="radius-box" style="border-radius:2px">2</div><div class="mono-tag" style="margin-top:8px">--r-1</div></div>
+      <div><div class="radius-box" style="border-radius:4px">4</div><div class="mono-tag" style="margin-top:8px">--r-2 / base</div></div>
+      <div><div class="radius-box" style="border-radius:6px">6</div><div class="mono-tag" style="margin-top:8px">--r-3</div></div>
+      <div><div class="radius-box" style="border-radius:8px">8</div><div class="mono-tag" style="margin-top:8px">--r-4</div></div>
+      <div><div class="radius-box" style="border-radius:9999px">pill</div><div class="mono-tag" style="margin-top:8px">--r-pill</div></div>
+    </div>
+
+    <!-- LINES -->
+    <div class="section-head">
+      <div class="label">F.05 · Lines</div>
+      <div>
+        <h2>Hairlines, not shadows.</h2>
+        <p>The previous system depended on 4-pixel hard drop-shadows. This one depends on a single 1px hairline at three depths. Elevation is communicated through tone and weight, not lift.</p>
+      </div>
+    </div>
+    <div class="grid grid-3">
+      <div class="demo-block"><div class="demo-label">Line</div><div style="height:1px;background:var(--line)"></div><div class="mono-tag" style="margin-top:8px">--line · default hairline</div></div>
+      <div class="demo-block"><div class="demo-label">Line strong</div><div style="height:1px;background:var(--line-strong)"></div><div class="mono-tag" style="margin-top:8px">--line-strong · hover / emphasis</div></div>
+      <div class="demo-block"><div class="demo-label">Line ink</div><div style="height:1px;background:var(--line-ink)"></div><div class="mono-tag" style="margin-top:8px">--line-ink · max contrast</div></div>
+    </div>
+  </section>
+
+  <!-- ============ COMPONENTS ============ -->
+  <section id="components" data-screen-label="03 Components">
+
+    <div class="section-head">
+      <div class="label">C.01 · Buttons</div>
+      <div>
+        <h2>Two intents, one shape.</h2>
+        <p>Primary is ink on paper; everything else is hairlined. No gradient fills, no hard drop shadows, no inverted color states. The accent appears only in the focus ring.</p>
+      </div>
+    </div>
+    <div class="demo-row">
+      <button class="btn">Continue<span class="kbd">↵</span></button>
+      <button class="btn btn-secondary">Save draft</button>
+      <button class="btn btn-ghost">Skip for now</button>
+      <button class="btn btn-danger">Delete post</button>
+      <button class="btn btn-icon" aria-label="Add"><svg class="ico"><use href="#i-plus"/></svg></button>
+      <button class="btn btn-secondary btn-icon" aria-label="Settings"><svg class="ico"><use href="#i-settings"/></svg></button>
+    </div>
+    <div style="height:var(--s-3)"></div>
+    <div class="demo-row">
+      <button class="btn btn-sm">Compact</button>
+      <button class="btn btn-secondary btn-sm">Compact</button>
+      <button class="btn btn-ghost btn-sm">Compact</button>
+      <span class="mono-tag" style="margin-left:auto">+ btn-lg variant</span>
+      <button class="btn btn-lg">Generate draft<svg class="ico"><use href="#i-arrow-r"/></svg></button>
+    </div>
+
+    <!-- Inputs -->
+    <div class="section-head">
+      <div class="label">C.02 · Inputs</div>
+      <div>
+        <h2>Quiet at rest, ink-blue when focused.</h2>
+        <p>One field shape. The focus state is the only place the accent appears — a 3px soft tint plus a 1px ink-blue border.</p>
+      </div>
+    </div>
+    <div class="grid grid-2">
+      <div>
+        <label class="field-label">Account handle</label>
+        <div class="field"><span class="mono" style="color:var(--ink-3)">@</span><input value="annaliese.t" /></div>
+        <div class="field-helper">Used as your public identity in Threads.</div>
+      </div>
+      <div>
+        <label class="field-label">Search posts</label>
+        <div class="field"><svg class="ico ico-sm" style="color:var(--ink-3)"><use href="#i-search"/></svg><input placeholder="filter by keyword, hashtag, or @mention" /></div>
+        <div class="field-helper">Press <span class="mono">⌘K</span> to open globally.</div>
+      </div>
+      <div>
+        <label class="field-label">Email</label>
+        <div class="field" style="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)"><input value="anna@studio.so" /></div>
+        <div class="field-helper">Focused state — 1px accent border, 3px accent-soft halo.</div>
+      </div>
+      <div>
+        <label class="field-label">Bio</label>
+        <textarea class="field" placeholder="What people read first.">Writer · plant nerd · slowly building a quiet newsletter about urban gardens.</textarea>
+      </div>
+    </div>
+
+    <!-- Badges -->
+    <div class="section-head">
+      <div class="label">C.03 · Badges & status</div>
+      <div>
+        <h2>Mono labels, semantic tints.</h2>
+        <p>Every badge is a monospace, uppercase, tracked tag — never a colored pill. Status is communicated by tone, not saturation.</p>
+      </div>
+    </div>
+    <div class="demo-row">
+      <span class="badge">DRAFT</span>
+      <span class="badge badge-outline">SCHEDULED</span>
+      <span class="badge badge-solid">LIVE</span>
+      <span class="badge badge-pos"><i class="dot"></i>VIRAL · TOP 5%</span>
+      <span class="badge badge-warn"><i class="dot"></i>BACKFILL PENDING</span>
+      <span class="badge badge-neg"><i class="dot"></i>FLAGGED</span>
+      <span class="badge badge-accent">NEW</span>
+    </div>
+
+    <!-- Avatars -->
+    <div class="section-head">
+      <div class="label">C.04 · Avatars</div>
+      <div>
+        <h2>Initials in mono, on paper.</h2>
+        <p>Avatars are paper-3 chips with mono initials. They acquire a portrait only when a real image is loaded. Square avatars are reserved for brand and project entities; round for people.</p>
+      </div>
+    </div>
+    <div class="demo-row">
+      <span class="avatar avatar-sm">AT</span>
+      <span class="avatar">AT</span>
+      <span class="avatar avatar-lg">AT</span>
+      <span class="avatar avatar-xl">AT</span>
+      <span class="vr" style="height:80px;margin:0 var(--s-3)"></span>
+      <span class="avatar avatar-sq">SP</span>
+      <span class="avatar avatar-sq" style="background:var(--ink);color:var(--paper)">SP</span>
+      <span class="vr" style="height:80px;margin:0 var(--s-3)"></span>
+      <span class="stack-avatars">
+        <span class="avatar avatar-sm">AT</span>
+        <span class="avatar avatar-sm">MK</span>
+        <span class="avatar avatar-sm">JR</span>
+        <span class="avatar avatar-sm">+9</span>
+      </span>
+    </div>
+
+    <!-- Cards -->
+    <div class="section-head">
+      <div class="label">C.05 · Cards & list items</div>
+      <div>
+        <h2>Hairlined cards, no chrome.</h2>
+        <p>Cards are flat: paper or card background, 1px hairline, 4px radius. Emphasis comes from internal hierarchy — eyebrow, title, body — not from a colored border or icon circle.</p>
+      </div>
+    </div>
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="eyebrow">F.01 · Algorithm</div>
+        <h4 style="margin-top:10px">Weighted Performance</h4>
+        <p style="margin-top:8px;font-size:var(--t-sm)">See how the algorithm scores your posts. Shares and comments matter far more than likes.</p>
+        <div class="row" style="gap:8px;margin-top:var(--s-4)">
+          <a href="#screens" class="mono-tag" style="color:var(--accent)">Open scorecard <svg class="ico ico-sm" style="vertical-align:-2px"><use href="#i-arrow-tr"/></svg></a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="eyebrow">F.02 · Timing</div>
+        <h4 style="margin-top:10px">When your audience is awake</h4>
+        <p style="margin-top:8px;font-size:var(--t-sm)">A 7×24 heatmap built from your last 60 days, not a generic recommendation.</p>
+        <div class="row" style="gap:8px;margin-top:var(--s-4)">
+          <a href="#screens" class="mono-tag" style="color:var(--accent)">Open heatmap <svg class="ico ico-sm" style="vertical-align:-2px"><use href="#i-arrow-tr"/></svg></a>
+        </div>
+      </div>
+      <div class="card" style="border-color:var(--ink)">
+        <div class="row" style="justify-content:space-between"><div class="eyebrow">F.03 · Compose</div><span class="badge badge-solid">NEW</span></div>
+        <h4 style="margin-top:10px">Scan before you post</h4>
+        <p style="margin-top:8px;font-size:var(--t-sm)">Paste a draft. Spool checks for demotion patterns and rewrites without changing voice.</p>
+        <div class="row" style="gap:8px;margin-top:var(--s-4)">
+          <a href="#screens" class="mono-tag" style="color:var(--accent)">Open composer <svg class="ico ico-sm" style="vertical-align:-2px"><use href="#i-arrow-tr"/></svg></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Icons -->
+    <div class="section-head">
+      <div class="label">C.06 · Icons</div>
+      <div>
+        <h2>1.5-stroke, square caps.</h2>
+        <p>Geometric line icons drawn on a 24px grid. Square caps and miter joins reinforce the architectural feel. No fill weights — emphasis comes from grouping, not from a solid alternate.</p>
+      </div>
+    </div>
+    <div class="icon-grid">
+      <div class="cell"><svg class="ico"><use href="#i-home"/></svg><div class="nm">home</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-feed"/></svg><div class="nm">feed</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-chart"/></svg><div class="nm">chart</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-clock"/></svg><div class="nm">clock</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-users"/></svg><div class="nm">users</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-search"/></svg><div class="nm">search</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-pencil"/></svg><div class="nm">pencil</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-sparkle"/></svg><div class="nm">sparkle</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-plus"/></svg><div class="nm">plus</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-arrow-r"/></svg><div class="nm">arrow</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-arrow-tr"/></svg><div class="nm">external</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-reply"/></svg><div class="nm">reply</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-repost"/></svg><div class="nm">repost</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-heart"/></svg><div class="nm">heart</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-bookmark"/></svg><div class="nm">bookmark</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-send"/></svg><div class="nm">send</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-image"/></svg><div class="nm">image</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-video"/></svg><div class="nm">video</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-text"/></svg><div class="nm">text</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-link"/></svg><div class="nm">link</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-bell"/></svg><div class="nm">bell</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-settings"/></svg><div class="nm">settings</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-flag"/></svg><div class="nm">flag</div></div>
+      <div class="cell"><svg class="ico"><use href="#i-eye"/></svg><div class="nm">eye</div></div>
+    </div>
+
+    <!-- Banners -->
+    <div class="section-head">
+      <div class="label">C.07 · Banners</div>
+      <div>
+        <h2>Quiet system messages.</h2>
+        <p>Banners adopt the matching semantic tint at low saturation and lean on a small leading glyph. They never use a full-width colored bar, only an inset hairlined card.</p>
+      </div>
+    </div>
+    <div class="stack" style="gap:var(--s-3)">
+      <div class="banner warn">
+        <svg class="ico"><use href="#i-clock"/></svg>
+        <div class="body">Threads token expires in 3 days. <small>Reconnect to keep your backfill running.</small></div>
+        <button class="btn btn-sm">Reconnect</button>
+      </div>
+      <div class="banner pos">
+        <svg class="ico"><use href="#i-check"/></svg>
+        <div class="body">Backfill complete — 1,247 posts indexed. <small>You can now use timing and audience analyses.</small></div>
+        <button class="btn btn-secondary btn-sm">View</button>
+      </div>
+      <div class="banner neg">
+        <svg class="ico"><use href="#i-flag"/></svg>
+        <div class="body">Two of your last five posts were demoted for repetition. <small>Open Scanner to see why and rewrite.</small></div>
+        <button class="btn btn-sm">Open Scanner</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PATTERNS ============ -->
+  <section id="patterns" data-screen-label="04 Patterns">
+
+    <div class="section-head">
+      <div class="label">P.01 · Conversation</div>
+      <div>
+        <h2>Threaded by hairline.</h2>
+        <p>Replies are connected by a 1px gutter line that runs from one avatar to the next. There is no indentation, no nested cards, no rounded "speech bubble" — only the line.</p>
+      </div>
+    </div>
+    <div class="thread">
+      <article class="post">
+        <div class="gutter">
+          <span class="avatar">AT</span>
+          <div class="line"></div>
+        </div>
+        <div>
+          <div class="post-header">
+            <span class="name">annaliese tovar</span>
+            <span class="handle">@annaliese.t</span>
+            <span class="time">2H</span>
+          </div>
+          <div class="post-body">
+            building a tiny urban garden on a balcony that gets 4 hours of direct sun. honest question — has anyone made greens actually thrive in those conditions, or am i about to spend a summer learning the hard way?
+          </div>
+          <div class="post-actions">
+            <span class="act"><svg class="ico ico-sm"><use href="#i-reply"/></svg>14</span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-repost"/></svg>3</span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-heart"/></svg>112</span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-send"/></svg></span>
+          </div>
+        </div>
+        <div class="muted mono-tag">10:14 AM</div>
+      </article>
+
+      <article class="post">
+        <div class="gutter">
+          <span class="avatar">MK</span>
+          <div class="line"></div>
+        </div>
+        <div>
+          <div class="post-header">
+            <span class="name">maris kö</span>
+            <span class="handle">@marisko</span>
+            <span class="time">1H</span>
+          </div>
+          <div class="post-body">
+            4 hours is enough for lettuces, kale, and most herbs. avoid tomatoes and peppers — they'll grow but they won't fruit. start with one pot of mizuna; if that works, scale up.
+          </div>
+          <div class="post-actions">
+            <span class="act"><svg class="ico ico-sm"><use href="#i-reply"/></svg>2</span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-repost"/></svg></span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-heart"/></svg>38</span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-send"/></svg></span>
+          </div>
+        </div>
+        <div class="muted mono-tag">11:02 AM</div>
+      </article>
+
+      <article class="post">
+        <div class="gutter">
+          <span class="avatar">JR</span>
+          <div class="line"></div>
+        </div>
+        <div>
+          <div class="post-header">
+            <span class="name">jude r.</span>
+            <span class="handle">@jude</span>
+            <span class="time">48M</span>
+          </div>
+          <div class="post-body">
+            seconding mizuna. also pak choi — grows fast, harvests cut-and-come-again, and forgives a forgetful waterer. take a photo of the balcony at noon and 3pm so you know where the sun actually lands.
+          </div>
+          <div class="post-actions">
+            <span class="act"><svg class="ico ico-sm"><use href="#i-reply"/></svg></span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-repost"/></svg></span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-heart"/></svg>21</span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-send"/></svg></span>
+          </div>
+        </div>
+        <div class="muted mono-tag">11:34 AM</div>
+      </article>
+
+      <article class="post">
+        <div class="gutter">
+          <span class="avatar">AT</span>
+        </div>
+        <div>
+          <div class="post-header">
+            <span class="name">annaliese tovar</span>
+            <span class="handle">@annaliese.t</span>
+            <span class="time">12M</span>
+          </div>
+          <div class="post-body">
+            ok pak choi + mizuna it is. balcony sun map underway. will report back with either a salad or a cautionary tale.
+          </div>
+          <div class="post-actions">
+            <span class="act"><svg class="ico ico-sm"><use href="#i-reply"/></svg></span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-repost"/></svg></span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-heart"/></svg>9</span>
+            <span class="act"><svg class="ico ico-sm"><use href="#i-send"/></svg></span>
+          </div>
+        </div>
+        <div class="muted mono-tag">12:10 PM</div>
+      </article>
+    </div>
+
+    <!-- Navigation -->
+    <div class="section-head">
+      <div class="label">P.02 · Navigation</div>
+      <div>
+        <h2>Sidebar of intent, tabs of context.</h2>
+        <p>The sidebar lists what you do (verbs and nouns). Tabs underneath each surface partition the same data different ways. The active state is a filled ink rectangle in the sidebar and an underline in the tabs — never both styles in the same row.</p>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="card card-flush" style="overflow:hidden">
+        <div class="sidebar" style="border-right:0;height:100%">
+          <div class="sect">Studio</div>
+          <a class="nav-item active" href="#"><svg class="ico ico-sm"><use href="#i-home"/></svg>Overview</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-feed"/></svg>Posts<span class="count">142</span></a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-chart"/></svg>Performance</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-clock"/></svg>Timing</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-users"/></svg>Audience</a>
+          <div class="sect">Tools</div>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-search"/></svg>Scanner</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-pencil"/></svg>Compose<span class="count">3</span></a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-sparkle"/></svg>Voice</a>
+        </div>
+      </div>
+      <div class="card" style="padding:0">
+        <div style="padding:var(--s-5)">
+          <div class="screen-eyebrow">Posts · last 30 days</div>
+          <div class="screen-title">142 posts</div>
+        </div>
+        <div class="tabs" style="margin:0 var(--s-5)">
+          <div class="tab active">All</div>
+          <div class="tab">Original</div>
+          <div class="tab">Replies</div>
+          <div class="tab">Reposts</div>
+          <div class="tab">Drafts <span class="mono-tag" style="margin-left:6px">3</span></div>
+        </div>
+        <div style="padding:var(--s-5)">
+          <p class="muted" style="font-size:var(--t-sm)">Tabs sit under the title block and share a hairline border. The active tab carries a 2px ink underline only.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREENS ============ -->
+  <section id="screens" data-screen-label="05 Sample screens">
+    <div class="section-head">
+      <div class="label">S · Screens</div>
+      <div>
+        <h2>The system, in use.</h2>
+        <p>Four representative surfaces from the Spool product, restated in the new vocabulary.</p>
+      </div>
+    </div>
+
+    <!-- Screen 1: Overview / Dashboard -->
+    <div class="screen" data-screen-label="S.01 Overview">
+      <div class="screen-chrome">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span>spool.app / overview</span>
+      </div>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand" style="padding:0 10px var(--s-3)">
+            <span class="glyph"></span><span>Spool</span>
+          </div>
+          <div class="sect">Studio</div>
+          <a class="nav-item active" href="#"><svg class="ico ico-sm"><use href="#i-home"/></svg>Overview</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-feed"/></svg>Posts<span class="count">142</span></a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-chart"/></svg>Performance</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-clock"/></svg>Timing</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-users"/></svg>Audience</a>
+          <div class="sect">Tools</div>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-search"/></svg>Scanner</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-pencil"/></svg>Compose<span class="count">3</span></a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-sparkle"/></svg>Voice</a>
+          <div style="flex:1"></div>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-settings"/></svg>Settings</a>
+        </aside>
+        <div class="screen-content">
+          <div class="screen-head">
+            <div>
+              <div class="screen-eyebrow">Overview · LAST 30 DAYS</div>
+              <div class="screen-title">Hi annaliese — here's where you are.</div>
+            </div>
+            <div class="row" style="gap:8px">
+              <button class="btn btn-secondary btn-sm"><svg class="ico ico-sm"><use href="#i-filter"/></svg>30 DAYS</button>
+              <button class="btn btn-sm"><svg class="ico ico-sm"><use href="#i-pencil"/></svg>New post</button>
+            </div>
+          </div>
+
+          <div class="banner warn" style="margin-bottom:var(--s-5)">
+            <svg class="ico"><use href="#i-clock"/></svg>
+            <div class="body">Threads token expires in 3 days. <small>Reconnect to keep your backfill running.</small></div>
+            <button class="btn btn-sm">Reconnect</button>
+          </div>
+
+          <div class="grid grid-4">
+            <div class="metric"><div class="k">WES · weighted</div><div class="v">2.31</div><div class="delta up"><svg class="ico ico-sm"><use href="#i-up"/></svg>0.42 vs prev</div></div>
+            <div class="metric"><div class="k">Engagement rate</div><div class="v">4.2%</div><div class="delta up"><svg class="ico ico-sm"><use href="#i-up"/></svg>0.8 pts</div></div>
+            <div class="metric"><div class="k">Reach · 30d</div><div class="v">128K</div><div class="delta down"><svg class="ico ico-sm"><use href="#i-down"/></svg>4.1%</div></div>
+            <div class="metric"><div class="k">Posts</div><div class="v">142</div><div class="delta up"><svg class="ico ico-sm"><use href="#i-up"/></svg>12 vs prev</div></div>
+          </div>
+
+          <div class="pair" style="margin-top:var(--s-5)">
+            <div class="card">
+              <div class="row" style="justify-content:space-between">
+                <div>
+                  <div class="screen-eyebrow">WES · by day</div>
+                  <h5 style="margin-top:4px">Performance shape</h5>
+                </div>
+                <span class="badge badge-outline">7 D</span>
+              </div>
+              <div class="bars" style="margin-top:var(--s-4)">
+                <div class="bar" data-label="MON" style="height:48%"></div>
+                <div class="bar hi" data-label="TUE" style="height:88%"></div>
+                <div class="bar" data-label="WED" style="height:60%"></div>
+                <div class="bar" data-label="THU" style="height:42%"></div>
+                <div class="bar" data-label="FRI" style="height:70%"></div>
+                <div class="bar" data-label="SAT" style="height:32%"></div>
+                <div class="bar" data-label="SUN" style="height:55%"></div>
+              </div>
+              <div style="height:var(--s-5)"></div>
+              <p class="muted" style="font-size:var(--t-xs);max-width:48ch">Tuesday morning continues to be your peak — and you continue to post almost exclusively then. Spread the next 7 days across two new windows to test better times.</p>
+            </div>
+
+            <div class="card">
+              <div class="row" style="justify-content:space-between">
+                <div>
+                  <div class="screen-eyebrow">Best windows</div>
+                  <h5 style="margin-top:4px">When you should post</h5>
+                </div>
+                <span class="mono-tag">7 × 24</span>
+              </div>
+              <div class="heatmap" style="margin-top:var(--s-4)">
+                <div></div>
+                <div class="h">M</div><div class="h">T</div><div class="h">W</div><div class="h">T</div><div class="h">F</div><div class="h">S</div><div class="h">S</div>
+                <div class="d">6A</div><div class="cell" data-v="1"></div><div class="cell" data-v="2"></div><div class="cell" data-v="1"></div><div class="cell" data-v="1"></div><div class="cell" data-v="0"></div><div class="cell" data-v="0"></div><div class="cell" data-v="0"></div>
+                <div class="d">9A</div><div class="cell" data-v="3"></div><div class="cell" data-v="5"></div><div class="cell" data-v="3"></div><div class="cell" data-v="2"></div><div class="cell" data-v="3"></div><div class="cell" data-v="1"></div><div class="cell" data-v="1"></div>
+                <div class="d">12P</div><div class="cell" data-v="2"></div><div class="cell" data-v="4"></div><div class="cell" data-v="2"></div><div class="cell" data-v="3"></div><div class="cell" data-v="2"></div><div class="cell" data-v="2"></div><div class="cell" data-v="2"></div>
+                <div class="d">3P</div><div class="cell" data-v="1"></div><div class="cell" data-v="3"></div><div class="cell" data-v="2"></div><div class="cell" data-v="4"></div><div class="cell" data-v="2"></div><div class="cell" data-v="3"></div><div class="cell" data-v="3"></div>
+                <div class="d">6P</div><div class="cell" data-v="2"></div><div class="cell" data-v="2"></div><div class="cell" data-v="3"></div><div class="cell" data-v="2"></div><div class="cell" data-v="4"></div><div class="cell" data-v="4"></div><div class="cell" data-v="4"></div>
+                <div class="d">9P</div><div class="cell" data-v="1"></div><div class="cell" data-v="1"></div><div class="cell" data-v="2"></div><div class="cell" data-v="1"></div><div class="cell" data-v="3"></div><div class="cell" data-v="2"></div><div class="cell" data-v="2"></div>
+              </div>
+              <p class="muted" style="font-size:var(--t-xs);margin-top:var(--s-4);max-width:48ch">Darker cells = higher historical WES for posts in that hour-bucket. Hover for sample size.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Posts table -->
+    <div class="screen" data-screen-label="S.02 Posts" style="margin-top:var(--s-5)">
+      <div class="screen-chrome">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span>spool.app / posts</span>
+      </div>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand" style="padding:0 10px var(--s-3)"><span class="glyph"></span><span>Spool</span></div>
+          <div class="sect">Studio</div>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-home"/></svg>Overview</a>
+          <a class="nav-item active" href="#"><svg class="ico ico-sm"><use href="#i-feed"/></svg>Posts<span class="count">142</span></a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-chart"/></svg>Performance</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-clock"/></svg>Timing</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-users"/></svg>Audience</a>
+          <div class="sect">Tools</div>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-search"/></svg>Scanner</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-pencil"/></svg>Compose<span class="count">3</span></a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-sparkle"/></svg>Voice</a>
+        </aside>
+        <div class="screen-content">
+          <div class="screen-head">
+            <div>
+              <div class="screen-eyebrow">All · LAST 30 DAYS</div>
+              <div class="screen-title">142 posts</div>
+            </div>
+            <div class="row" style="gap:8px">
+              <div class="field" style="width:280px"><svg class="ico ico-sm" style="color:var(--ink-3)"><use href="#i-search"/></svg><input placeholder="filter posts" /></div>
+              <button class="btn btn-secondary btn-sm"><svg class="ico ico-sm"><use href="#i-filter"/></svg>Filters</button>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <div class="tab active">All</div>
+            <div class="tab">Original</div>
+            <div class="tab">Replies</div>
+            <div class="tab">Reposts</div>
+            <div class="tab">Drafts <span class="mono-tag" style="margin-left:6px">3</span></div>
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width:40%">Post</th>
+                <th>Posted</th>
+                <th class="num">WES</th>
+                <th class="num">Reach</th>
+                <th class="num">Likes</th>
+                <th class="num">Replies</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="row" style="gap:10px">
+                    <svg class="ico ico-sm" style="color:var(--ink-3)"><use href="#i-text"/></svg>
+                    <span>balcony garden, 4 hrs of sun — has anyone made greens actually thrive?</span>
+                  </div>
+                </td>
+                <td><span class="mono-tag">TUE 09:14</span></td>
+                <td class="num">3.81</td>
+                <td class="num">12.4K</td>
+                <td class="num">1,204</td>
+                <td class="num">112</td>
+                <td><span class="badge badge-pos"><i class="dot"></i>VIRAL</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="row" style="gap:10px">
+                    <svg class="ico ico-sm" style="color:var(--ink-3)"><use href="#i-image"/></svg>
+                    <span>before / after of the seedling tray, week 3</span>
+                  </div>
+                </td>
+                <td><span class="mono-tag">MON 18:42</span></td>
+                <td class="num">2.47</td>
+                <td class="num">8.1K</td>
+                <td class="num">612</td>
+                <td class="num">38</td>
+                <td><span class="badge badge-outline">STRONG</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="row" style="gap:10px">
+                    <svg class="ico ico-sm" style="color:var(--ink-3)"><use href="#i-text"/></svg>
+                    <span>quiet brag: mizuna survived a 38°C week</span>
+                  </div>
+                </td>
+                <td><span class="mono-tag">SUN 11:08</span></td>
+                <td class="num">2.10</td>
+                <td class="num">6.4K</td>
+                <td class="num">488</td>
+                <td class="num">22</td>
+                <td><span class="badge badge-outline">STRONG</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="row" style="gap:10px">
+                    <svg class="ico ico-sm" style="color:var(--ink-3)"><use href="#i-video"/></svg>
+                    <span>15s timelapse of pak choi over 9 days</span>
+                  </div>
+                </td>
+                <td><span class="mono-tag">FRI 19:30</span></td>
+                <td class="num">1.62</td>
+                <td class="num">3.9K</td>
+                <td class="num">311</td>
+                <td class="num">14</td>
+                <td><span class="badge">AVG</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="row" style="gap:10px">
+                    <svg class="ico ico-sm" style="color:var(--ink-3)"><use href="#i-text"/></svg>
+                    <span>controversial: i think compost tea is mostly placebo</span>
+                  </div>
+                </td>
+                <td><span class="mono-tag">WED 14:22</span></td>
+                <td class="num">0.81</td>
+                <td class="num">1.2K</td>
+                <td class="num">94</td>
+                <td class="num">61</td>
+                <td><span class="badge badge-warn"><i class="dot"></i>FLAGGED</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="row" style="gap:10px">
+                    <svg class="ico ico-sm" style="color:var(--ink-3)"><use href="#i-text"/></svg>
+                    <span>weekend reading: three soil books that changed my mind</span>
+                  </div>
+                </td>
+                <td><span class="mono-tag">SAT 08:00</span></td>
+                <td class="num">0.42</td>
+                <td class="num">820</td>
+                <td class="num">44</td>
+                <td class="num">3</td>
+                <td><span class="badge badge-neg"><i class="dot"></i>DEMOTED</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Composer -->
+    <div class="screen" data-screen-label="S.03 Composer" style="margin-top:var(--s-5)">
+      <div class="screen-chrome">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span>spool.app / compose</span>
+      </div>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand" style="padding:0 10px var(--s-3)"><span class="glyph"></span><span>Spool</span></div>
+          <div class="sect">Studio</div>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-home"/></svg>Overview</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-feed"/></svg>Posts<span class="count">142</span></a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-chart"/></svg>Performance</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-clock"/></svg>Timing</a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-users"/></svg>Audience</a>
+          <div class="sect">Tools</div>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-search"/></svg>Scanner</a>
+          <a class="nav-item active" href="#"><svg class="ico ico-sm"><use href="#i-pencil"/></svg>Compose<span class="count">3</span></a>
+          <a class="nav-item" href="#"><svg class="ico ico-sm"><use href="#i-sparkle"/></svg>Voice</a>
+        </aside>
+        <div class="screen-content">
+          <div class="screen-head">
+            <div>
+              <div class="screen-eyebrow">Compose · NEW DRAFT</div>
+              <div class="screen-title">Untitled draft</div>
+            </div>
+            <div class="row" style="gap:8px">
+              <button class="btn btn-ghost btn-sm">Discard</button>
+              <button class="btn btn-secondary btn-sm">Save draft</button>
+              <button class="btn btn-sm"><svg class="ico ico-sm"><use href="#i-send"/></svg>Publish</button>
+            </div>
+          </div>
+
+          <div class="composer">
+            <div class="composer-head">
+              <span class="avatar avatar-sm">AT</span>
+              <div class="grow">
+                <div style="font-weight:600;font-size:var(--t-sm)">annaliese tovar</div>
+                <div class="mono-tag">@annaliese.t · POSTING TO THREADS</div>
+              </div>
+              <span class="badge badge-outline">DRAFT</span>
+            </div>
+            <div class="composer-area">
+              <textarea>balcony garden update: pak choi survived the 38°C week, mizuna mostly survived, basil decisively did not. lesson — if you only have 4 hours of sun, choose greens that don't mind heat as much as they mind shade.</textarea>
+              <div class="row" style="gap:8px;margin-top:var(--s-3);flex-wrap:wrap">
+                <span class="badge badge-outline"><svg class="ico ico-sm" style="margin-right:4px"><use href="#i-image"/></svg>1 IMAGE</span>
+                <span class="badge badge-outline">#URBANGARDEN</span>
+                <span class="badge badge-outline">#BALCONYFARM</span>
+              </div>
+            </div>
+            <div class="quality">
+              <div class="label">Scan · quality</div>
+              <div class="meter"><span style="width:82%"></span></div>
+              <div class="val tabular">82 / 100</div>
+            </div>
+            <div class="quality" style="border-top:0;padding-top:0">
+              <div class="label">Voice match</div>
+              <div class="meter"><span style="width:94%"></span></div>
+              <div class="val tabular">94 / 100</div>
+            </div>
+            <div class="composer-foot">
+              <div class="icons">
+                <button class="btn btn-ghost btn-icon"><svg class="ico ico-sm"><use href="#i-image"/></svg></button>
+                <button class="btn btn-ghost btn-icon"><svg class="ico ico-sm"><use href="#i-video"/></svg></button>
+                <button class="btn btn-ghost btn-icon"><svg class="ico ico-sm"><use href="#i-link"/></svg></button>
+                <button class="btn btn-ghost btn-icon"><svg class="ico ico-sm"><use href="#i-sparkle"/></svg></button>
+              </div>
+              <div class="row" style="gap:var(--s-3)">
+                <span class="count">312 / 500</span>
+                <button class="btn btn-secondary btn-sm"><svg class="ico ico-sm"><use href="#i-clock"/></svg>Schedule</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:var(--s-5)">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <div class="screen-eyebrow">Scanner · suggestions</div>
+                <h5 style="margin-top:4px">Two patterns to watch</h5>
+              </div>
+              <button class="btn btn-ghost btn-sm">Apply all</button>
+            </div>
+            <div class="stack" style="margin-top:var(--s-3);gap:var(--s-3)">
+              <div class="row" style="gap:var(--s-3);padding:var(--s-3);border:var(--bw) solid var(--line);border-radius:var(--r-base)">
+                <svg class="ico" style="color:var(--warn)"><use href="#i-flag"/></svg>
+                <div class="grow">
+                  <div style="font-weight:500;font-size:var(--t-sm)">Repeated opener "balcony garden update"</div>
+                  <div class="mono-tag">Used 4× in the last 14 posts · algorithm may de-rank repetition.</div>
+                </div>
+                <button class="btn btn-secondary btn-sm">Rewrite</button>
+              </div>
+              <div class="row" style="gap:var(--s-3);padding:var(--s-3);border:var(--bw) solid var(--line);border-radius:var(--r-base)">
+                <svg class="ico" style="color:var(--ink-3)"><use href="#i-sparkle"/></svg>
+                <div class="grow">
+                  <div style="font-weight:500;font-size:var(--t-sm)">Add a question to invite replies</div>
+                  <div class="mono-tag">Posts with a closing question average 2.4× more replies for your audience.</div>
+                </div>
+                <button class="btn btn-secondary btn-sm">Suggest</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot" data-screen-label="06 Footer">
+    <div>
+      <div class="brand"><span class="glyph"></span><span>Spool</span></div>
+      <div class="mono-tag" style="margin-top:8px">SPL/2.0 · 2026.05</div>
+    </div>
+    <div>
+      <h6>Tokens</h6>
+      <ul>
+        <li>Color</li>
+        <li>Type</li>
+        <li>Spacing & radii</li>
+        <li>Lines</li>
+      </ul>
+    </div>
+    <div>
+      <h6>Components</h6>
+      <ul>
+        <li>Buttons</li>
+        <li>Inputs</li>
+        <li>Cards</li>
+        <li>Badges</li>
+        <li>Avatars</li>
+        <li>Icons</li>
+        <li>Banners</li>
+      </ul>
+    </div>
+    <div>
+      <h6>Patterns</h6>
+      <ul>
+        <li>Conversation</li>
+        <li>Navigation</li>
+        <li>Overview</li>
+        <li>Posts table</li>
+        <li>Composer</li>
+      </ul>
+    </div>
+  </footer>
+
+</main>
+
+<!-- ============ TWEAKS ============ -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel">
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "dark": false,
+    "accent": "#2a4cf0",
+    "fontPair": "geist",
+    "radius": 4,
+    "density": "regular"
+  }/*EDITMODE-END*/;
+
+  const FONT_PAIRS = {
+    geist:  { sans: '"Geist", ui-sans-serif, system-ui, sans-serif',  mono: '"Geist Mono", ui-monospace, monospace',  label: "Geist · Geist Mono" },
+    plex:   { sans: '"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif', mono: '"IBM Plex Mono", ui-monospace, monospace', label: "IBM Plex Sans · Mono" },
+    hanken: { sans: '"Hanken Grotesk", ui-sans-serif, system-ui, sans-serif', mono: '"JetBrains Mono", ui-monospace, monospace', label: "Hanken · JetBrains Mono" },
+    space:  { sans: '"Space Grotesk", ui-sans-serif, system-ui, sans-serif',  mono: '"Space Mono", ui-monospace, monospace',  label: "Space Grotesk · Space Mono" },
+  };
+
+  // Preload alt font pairs
+  const altFontHref = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap";
+  const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = altFontHref; document.head.appendChild(link);
+
+  function App() {
+    const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+    React.useEffect(() => {
+      const root = document.documentElement;
+      root.dataset.theme = t.dark ? 'dark' : 'light';
+      root.dataset.density = t.density;
+      const pair = FONT_PAIRS[t.fontPair] || FONT_PAIRS.geist;
+      root.style.setProperty('--font-sans', pair.sans);
+      root.style.setProperty('--font-mono', pair.mono);
+      root.style.setProperty('--accent', t.accent);
+      // accent-soft = accent at 10% on top of paper
+      root.style.setProperty('--accent-soft', `color-mix(in oklab, ${t.accent} 14%, transparent)`);
+      root.style.setProperty('--r-base', `${t.radius}px`);
+    }, [t]);
+
+    return (
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Theme" />
+        <TweakToggle label="Dark mode" value={t.dark} onChange={(v)=>setTweak('dark', v)} />
+        <TweakColor label="Accent" value={t.accent}
+          options={['#2a4cf0','#1a8a5b','#b8392d','#8a6b16','#7d4cd1','#0a0a09']}
+          onChange={(v)=>setTweak('accent', v)} />
+
+        <TweakSection label="Typography" />
+        <TweakSelect label="Font pair" value={t.fontPair}
+          options={[
+            {value:'geist',  label:'Geist · Geist Mono'},
+            {value:'plex',   label:'IBM Plex Sans · Mono'},
+            {value:'hanken', label:'Hanken · JetBrains Mono'},
+            {value:'space',  label:'Space Grotesk · Mono'},
+          ]}
+          onChange={(v)=>setTweak('fontPair', v)} />
+
+        <TweakSection label="Shape" />
+        <TweakRadio label="Radius" value={String(t.radius)}
+          options={['0','2','4','8']}
+          onChange={(v)=>setTweak('radius', parseInt(v, 10))} />
+
+        <TweakSection label="Density" />
+        <TweakRadio label="Row height" value={t.density}
+          options={['compact','regular','comfy']}
+          onChange={(v)=>setTweak('density', v)} />
+      </TweaksPanel>
+    );
+  }
+
+  const root = document.createElement('div');
+  document.body.appendChild(root);
+  ReactDOM.createRoot(root).render(<App />);
+</script>
+
+</body>
+</html>

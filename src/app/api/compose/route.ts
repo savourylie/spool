@@ -1,0 +1,471 @@
+import { randomUUID } from "node:crypto";
+import { type NextRequest, NextResponse } from "next/server";
+
+import { getSession } from "@/lib/session";
+import { createAdminClient } from "@/lib/supabase/server";
+import { resolveLLMClient } from "@/lib/llm-resolver";
+import {
+  buildComposerPrompt,
+  parseComposerResponse,
+  type ComposerUserContext,
+  type ComposerTopPost,
+} from "@/lib/composer-prompt";
+import { getActiveVoiceProfile } from "@/lib/brand-voice";
+import {
+  predictEngagement,
+  type HistoricalPost,
+} from "@/lib/engagement-prediction";
+import { snapshotPrediction } from "@/lib/post-review";
+import { computeNormalizedWES } from "@/lib/weighted-engagement";
+import {
+  checkTopicFreshness,
+  RateLimitError,
+  SURPRISE_ME_SENTINEL,
+  type FreshnessResult,
+} from "@/lib/freshness-gate";
+import {
+  fetchComposerConceptAdvisory,
+  type ConceptAdvisoryPayload,
+} from "@/lib/concept-library-view";
+
+const MAX_TOPIC_LENGTH = 500;
+const MAX_TOKENS = 2048;
+const STREAM_TIMEOUT_MS = 60_000;
+
+// Payload shape emitted as the first SSE event. UI renders a banner from this
+// and may buffer subsequent draft events until the user acknowledges.
+type FreshnessEventPayload =
+  | FreshnessResult
+  | { runId: string; rateLimited: true }
+  | null;
+
+interface PredictionContext {
+  dayOfWeek: number;
+  hourOfDay: number;
+}
+
+function parsePredictionContext(value: unknown): PredictionContext | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const dayOfWeek = Number((value as { dayOfWeek?: number }).dayOfWeek);
+  const hourOfDay = Number((value as { hourOfDay?: number }).hourOfDay);
+
+  if (
+    !Number.isInteger(dayOfWeek) ||
+    dayOfWeek < 0 ||
+    dayOfWeek > 6 ||
+    !Number.isInteger(hourOfDay) ||
+    hourOfDay < 0 ||
+    hourOfDay > 23
+  ) {
+    return null;
+  }
+
+  return { dayOfWeek, hourOfDay };
+}
+
+export async function POST(request: NextRequest): Promise<Response> {
+  // ── Auth ────────────────────────────────────────────────────────
+  const userId = getSession(request);
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // ── Parse & validate body ──────────────────────────────────────
+  let body: {
+    topic?: string;
+    style?: string;
+    predictionContext?: PredictionContext;
+  };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON body" },
+      { status: 400 },
+    );
+  }
+
+  const topic = typeof body.topic === "string" ? body.topic.trim() : "";
+  if (!topic) {
+    return NextResponse.json(
+      { error: "Topic is required" },
+      { status: 400 },
+    );
+  }
+  if (topic.length > MAX_TOPIC_LENGTH) {
+    return NextResponse.json(
+      { error: `Topic exceeds maximum length of ${MAX_TOPIC_LENGTH} characters` },
+      { status: 400 },
+    );
+  }
+
+  const style =
+    typeof body.style === "string" ? body.style.trim() || undefined : undefined;
+  const predictionContext =
+    parsePredictionContext(body.predictionContext) ?? {
+      dayOfWeek: new Date().getDay(),
+      hourOfDay: new Date().getHours(),
+    };
+
+  // ── Freshness gate (TICKET-071) ────────────────────────────────
+  // Advisory pre-draft check. Never blocks — always proceed to draft. The
+  // gate's verdict + sources ride as the first SSE event so the client can
+  // render the banner before drafts stream in.
+  const runId = randomUUID();
+  let freshnessEvent: FreshnessEventPayload = null;
+  let conceptAdvisory: ConceptAdvisoryPayload | null = null;
+  if (topic.startsWith(SURPRISE_ME_SENTINEL)) {
+    // Sentinel from "Generate ideas for me" — gate has no signal on the
+    // literal placeholder string, so we skip it and emit a symmetric event.
+    freshnessEvent = {
+      runId,
+      verdict: "green",
+      externalSignal: {
+        saturation: "green",
+        topRelevance: null,
+        trendCount: 0,
+        unavailable: true,
+        reason: "sentinel",
+      },
+      selfRepetitionRisk: {
+        severity: "none",
+        matchedCluster: null,
+        matchedTag: null,
+        counts: { d7: 0, d14: 0, d30: 0 },
+      },
+      sources: [],
+    };
+  } else {
+    try {
+      freshnessEvent = await checkTopicFreshness(topic, userId, runId);
+    } catch (err) {
+      if (err instanceof RateLimitError) {
+        freshnessEvent = { runId, rateLimited: true };
+      } else {
+        console.error("Freshness gate failed:", err);
+        freshnessEvent = null;
+      }
+    }
+
+    try {
+      conceptAdvisory = await fetchComposerConceptAdvisory(userId, topic);
+    } catch (err) {
+      console.error("Concept advisory failed:", err);
+      conceptAdvisory = null;
+    }
+  }
+
+  // ── Fetch user context ─────────────────────────────────────────
+  const supabase = createAdminClient();
+
+  const [
+    metricsResult,
+    postsResult,
+    demographicsResult,
+    tagsResult,
+    statsResult,
+    brandVoice,
+  ] = await Promise.all([
+    // Top posts with metrics (for WES ranking)
+    supabase.rpc("get_posts_with_metrics", {
+      p_user_id: userId,
+      p_sort_column: "views",
+      p_sort_order: "desc",
+      p_limit: 50,
+      p_offset: 0,
+    }),
+    // Full text for top posts (RPC only returns text_preview)
+    supabase
+      .from("posts")
+      .select("id, text_full")
+      .eq("user_id", userId)
+      .not("text_full", "is", null),
+    // Audience demographics
+    supabase
+      .from("demographics")
+      .select("dimension, key, value")
+      .eq("user_id", userId),
+    // Recent topic tags
+    supabase
+      .from("posts")
+      .select("topic_tag")
+      .eq("user_id", userId)
+      .not("topic_tag", "is", null)
+      .order("published_at", { ascending: false })
+      .limit(30),
+    // Latest follower count + last post timestamp
+    supabase
+      .from("daily_stats")
+      .select("followers_count")
+      .eq("user_id", userId)
+      .order("date", { ascending: false })
+      .limit(1),
+    // Brand voice profile (TICKET-070 — driver when usable+)
+    getActiveVoiceProfile(userId),
+  ]);
+
+  // Build text lookup for full post text
+  const textLookup = new Map(
+    (postsResult.data ?? [])
+      .filter((p) => p.text_full)
+      .map((p) => [p.id, p.text_full!]),
+  );
+
+  // Rank posts by WES, take top 10
+  const metricsRows = metricsResult.data ?? [];
+  const rankedPosts: (typeof metricsRows[number] & { wes: number })[] =
+    metricsRows.map((row) => ({
+      ...row,
+      wes: computeNormalizedWES({
+        views: Number(row.views),
+        likes: Number(row.likes),
+        replies: Number(row.replies),
+        reposts: Number(row.reposts),
+        quotes: Number(row.quotes),
+        shares: Number(row.shares),
+      }),
+    }));
+  rankedPosts.sort((a, b) => b.wes - a.wes);
+
+  const topPosts: ComposerTopPost[] = rankedPosts.slice(0, 10).map((row) => ({
+    text: textLookup.get(row.id) ?? row.text_preview ?? "",
+    views: Number(row.views),
+    likes: Number(row.likes),
+    replies: Number(row.replies),
+    reposts: Number(row.reposts),
+    quotes: Number(row.quotes),
+    shares: Number(row.shares),
+    wes: row.wes,
+  }));
+  const historicalPredictionPosts: HistoricalPost[] = metricsRows.map((row) => ({
+    views: Number(row.views),
+    media_type: row.media_type,
+    text_length: (row.text_preview ?? "").length,
+    published_at: row.published_at,
+    topic_tag: null,
+  }));
+
+  // Deduplicate topic tags
+  const topicTags = [
+    ...new Set(
+      (tagsResult.data ?? [])
+        .map((p) => p.topic_tag)
+        .filter((t): t is string => t != null),
+    ),
+  ];
+
+  // Compute cadence from last post
+  const lastPostRow = rankedPosts.length > 0
+    ? metricsRows.reduce((latest, row) =>
+        new Date(row.published_at) > new Date(latest.published_at)
+          ? row
+          : latest,
+      )
+    : null;
+
+  // Simple average gap from recent posts (sorted by date)
+  const sortedByDate = [...metricsRows].sort(
+    (a, b) =>
+      new Date(b.published_at).getTime() - new Date(a.published_at).getTime(),
+  );
+  let avgGapHours = 24; // default
+  if (sortedByDate.length >= 2) {
+    const gaps: number[] = [];
+    for (let i = 0; i < Math.min(sortedByDate.length - 1, 30); i++) {
+      const gap =
+        (new Date(sortedByDate[i].published_at).getTime() -
+          new Date(sortedByDate[i + 1].published_at).getTime()) /
+        (1000 * 60 * 60);
+      gaps.push(gap);
+    }
+    avgGapHours = gaps.reduce((sum, g) => sum + g, 0) / gaps.length;
+  }
+
+  const userContext: ComposerUserContext = {
+    topPosts,
+    demographics: (demographicsResult.data ?? []).map((d) => ({
+      dimension: d.dimension,
+      key: d.key,
+      value: d.value,
+    })),
+    topicTags,
+    cadence: {
+      lastPostAt: lastPostRow?.published_at ?? null,
+      avgGapHours,
+      recommendedWaitHours: Math.max(18, avgGapHours),
+    },
+    followerCount:
+      (statsResult.data ?? [])[0]?.followers_count ?? 0,
+    brandVoice,
+  };
+
+  // ── Build prompt ───────────────────────────────────────────────
+  const { systemPrompt, userMessage } = buildComposerPrompt({
+    topic,
+    style,
+    userContext,
+  });
+
+  // ── Stream LLM response with custom SSE events ─────────────────
+  const llm = await resolveLLMClient(userId);
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      function emitSSE(event: string, data: unknown) {
+        controller.enqueue(
+          encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+        );
+      }
+
+      try {
+        emitSSE("concept_advisory", conceptAdvisory);
+
+        // First event: freshness verdict (TICKET-071). Always emit — UI
+        // tolerates null (gate errored) and { rateLimited: true } shapes.
+        emitSSE("freshness", freshnessEvent);
+
+        const textStream = llm.generateStreamIterator({
+          systemPrompt,
+          messages: [{ role: "user", content: userMessage }],
+          maxTokens: MAX_TOKENS,
+          timeout: STREAM_TIMEOUT_MS,
+        });
+
+        let accumulated = "";
+        let currentDraft = -1;
+        let delimiterCount = 0;
+
+        for await (const text of textStream) {
+          accumulated += text;
+
+          // Detect new draft sections by counting --- delimiters
+          const newDelimiterCount = (
+            accumulated.match(/\n---\n/g) || []
+          ).length;
+
+          // First draft: emit draft_start when we have content
+          if (currentDraft === -1 && accumulated.trim().length > 0) {
+            currentDraft = 0;
+            const triggerMatch = accumulated.match(
+              /\[TRIGGER:\s*([^\]]+)\]/,
+            );
+            emitSSE("draft_start", {
+              index: 0,
+              shareTrigger: triggerMatch ? triggerMatch[1].trim() : null,
+            });
+          }
+
+          // New delimiter found — new draft starting
+          if (newDelimiterCount > delimiterCount) {
+            delimiterCount = newDelimiterCount;
+            currentDraft = delimiterCount;
+
+            // Try to extract trigger for new section
+            const sections = accumulated.split(/\n---\n/);
+            const lastSection = sections[sections.length - 1];
+            const triggerMatch = lastSection.match(
+              /\[TRIGGER:\s*([^\]]+)\]/,
+            );
+            emitSSE("draft_start", {
+              index: currentDraft,
+              shareTrigger: triggerMatch ? triggerMatch[1].trim() : null,
+            });
+          }
+
+          // Forward text chunk
+          if (currentDraft >= 0) {
+            emitSSE("draft_text", { index: currentDraft, text });
+          }
+        }
+
+        // ── Stream complete — parse and save to DB ───────────────
+        const drafts = parseComposerResponse(accumulated);
+
+        if (drafts.length > 0) {
+          const insertRows = drafts.map((draft) => ({
+            user_id: userId,
+            topic,
+            content: draft.content,
+            share_trigger: draft.shareTrigger,
+          }));
+
+          const { data: savedDrafts, error: saveError } = await supabase
+            .from("drafts")
+            .insert(insertRows)
+            .select("id");
+
+          if (saveError) {
+            console.error("Failed to save drafts:", saveError);
+            emitSSE("error", { message: "Failed to save drafts" });
+          } else {
+            const savedIds = (savedDrafts ?? []).map((d) => d.id);
+            for (let i = 0; i < drafts.length; i++) {
+              let predictionId: string | null = null;
+              const prediction = predictEngagement(historicalPredictionPosts, {
+                mediaType: "TEXT",
+                textLength: drafts[i].content.length,
+                dayOfWeek: predictionContext.dayOfWeek,
+                hourOfDay: predictionContext.hourOfDay,
+              });
+
+              if (prediction.status === "ok") {
+                try {
+                  predictionId = await snapshotPrediction({
+                    userId,
+                    draftText: drafts[i].content,
+                    ranges: prediction.range,
+                    driverFactors: {
+                      source: "composer",
+                      topic,
+                      style: style ?? null,
+                      shareTrigger: drafts[i].shareTrigger,
+                      predictionContext: {
+                        dayOfWeek: predictionContext.dayOfWeek,
+                        hourOfDay: predictionContext.hourOfDay,
+                      },
+                    },
+                  });
+                } catch (predictionError) {
+                  console.error("Failed to snapshot prediction:", predictionError);
+                }
+              }
+
+              emitSSE("draft_end", {
+                index: i,
+                draftId: savedIds[i] ?? null,
+                predictionId,
+                shareTrigger: drafts[i].shareTrigger,
+                content: drafts[i].content,
+              });
+            }
+          }
+        }
+
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Composition failed";
+        console.error("Compose stream failed:", error);
+        controller.enqueue(
+          encoder.encode(
+            `event: error\ndata: ${JSON.stringify({ error: message })}\n\n`,
+          ),
+        );
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}

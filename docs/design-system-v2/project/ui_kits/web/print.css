@@ -1,0 +1,69 @@
+/* Print-specific styles for index-print.html
+   Each .print-page is one landscape page in the PDF. */
+
+@page {
+  size: 1280px 900px;   /* landscape, matches the design viewport */
+  margin: 0;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+}
+
+.print-page {
+  width: 1280px;
+  min-height: 900px;
+  overflow: hidden;
+  position: relative;
+  background: var(--background);
+}
+
+.print-page + .print-page {
+  break-before: page;
+  -webkit-break-before: page;
+  page-break-before: always;
+}
+
+/* Inside the print pages, neutralise things that don't make sense statically. */
+.print-page .shell {
+  min-height: 900px;          /* don't stretch to viewport — bound to page */
+}
+.print-page .sticker { transform: none !important; }
+.print-page .sticker:hover { transform: none !important; }
+.print-page * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Hide the EN/中 and theme toggles + connect button in the print header */
+.print-page .header-controls > .btn,
+.print-page .header-controls > [role="group"],
+.print-page .header-controls > .btn.ghost { display: none !important; }
+
+/* Render a page header strip above each section */
+.print-section-label {
+  position: absolute;
+  top: 18px;
+  right: 32px;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+  z-index: 10;
+}
+
+@media print {
+  body { margin: 0; }
+  .print-page {
+    box-shadow: none !important;
+  }
+  /* Force exact colour rendering so cream paper background + sticker shadows print */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

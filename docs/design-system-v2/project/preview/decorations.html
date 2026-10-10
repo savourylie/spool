@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Decorations</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.deco{
+  position:relative;
+  height:120px; flex:1;
+  background:var(--card);
+  border:2px solid var(--foreground);
+  border-radius: var(--radius-md);
+  overflow:hidden;
+}
+.dot-bg{ background-image: radial-gradient(circle, #E2E8F0 1.4px, transparent 1.4px); background-size: 14px 14px;}
+.deco-label{position:absolute;left:8px;bottom:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-foreground);background:rgba(255,255,255,0.85);padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="card-wrap">
+  <div class="row" style="gap:14px;align-items:stretch">
+    <!-- Dot grid -->
+    <div class="deco dot-bg">
+      <span class="deco-label">Dot grid</span>
+    </div>
+    <!-- Confetti shapes -->
+    <div class="deco">
+      <div style="position:absolute;top:14px;left:14px;width:42px;height:42px;border-radius:9999px;background:rgba(251,191,36,0.55)"></div>
+      <div style="position:absolute;top:38px;right:22px;width:28px;height:28px;background:rgba(244,114,182,0.55);transform:rotate(20deg);border-radius:6px"></div>
+      <div style="position:absolute;bottom:18px;left:42%;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:22px solid rgba(52,211,153,0.55);transform:rotate(-15deg)"></div>
+      <span class="deco-label">Confetti shapes</span>
+    </div>
+    <!-- Squiggle -->
+    <div class="deco" style="display:flex;align-items:center;justify-content:center">
+      <svg width="80%" height="40" viewBox="0 0 240 40"><path d="M 0 20 Q 20 0, 40 20 T 80 20 T 120 20 T 160 20 T 200 20 T 240 20" stroke="#8B5CF6" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      <span class="deco-label">Squiggle</span>
+    </div>
+  </div>
+
+  <div class="row" style="gap:14px;align-items:stretch">
+    <!-- Diagonal stripe fill -->
+    <div class="deco" style="background: repeating-linear-gradient(45deg, rgba(244,114,182,0.18) 0 8px, transparent 8px 16px);">
+      <span class="deco-label">Diagonal stripes</span>
+    </div>
+    <!-- Blob clip -->
+    <div class="deco" style="overflow:visible">
+      <div style="position:absolute;inset:14px;background:linear-gradient(135deg,#FBBF24,#F472B6);border:2px solid #1E293B;border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%"></div>
+      <span class="deco-label">Blob clip-path</span>
+    </div>
+    <!-- Dashed circle -->
+    <div class="deco" style="display:flex;align-items:center;justify-content:center">
+      <div style="width:80px;height:80px;border:2px dashed #F472B6;border-radius:9999px"></div>
+      <span class="deco-label">Dashed accents</span>
+    </div>
+  </div>
+</div>
+</body></html>

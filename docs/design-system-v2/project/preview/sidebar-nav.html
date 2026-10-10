@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sidebar nav</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.sb{
+  width:220px; background: var(--background); border:2px solid var(--border); border-radius:var(--radius-md);
+  padding: 18px 12px; font-family: var(--font-sans);
+}
+.brand{ padding: 0 8px 14px; border-bottom:1px solid var(--border); margin-bottom:10px }
+.brand .name{ font-family:var(--font-heading); font-weight:800; font-size:20px; color: var(--accent) }
+.brand .h{ font-size:12px; color: var(--muted-foreground); margin-top:2px }
+
+.section-lbl{ font-size:10px; font-weight:700; letter-spacing:.08em; color: var(--muted-foreground); padding: 10px 12px 6px}
+.nav-item{
+  display:flex; align-items:center; gap:10px;
+  padding: 9px 12px; border-radius: 10px; font-size: 13px; cursor:pointer;
+}
+.nav-item:hover{ background: var(--muted) }
+.nav-item.active{ background: var(--muted); font-weight: 700 }
+.nav-item.active svg{ color: var(--accent) }
+.nav-item svg{ color: var(--muted-foreground); flex-shrink:0 }
+</style>
+</head>
+<body>
+<div class="card-wrap" style="flex-direction:row;gap:16px;align-items:flex-start">
+  <div class="sb">
+    <div class="brand">
+      <div class="name">Spool</div>
+      <div class="h">@maya.makes</div>
+    </div>
+    <div class="nav-item active"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12 12 3l9 9v9h-6v-7H9v7H3z"/></svg> Today</div>
+    <div class="section-lbl">UNDERSTAND</div>
+    <div class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M5 17V9m4 8V5m4 12v-6m4 6V8"/></svg> Performance</div>
+    <div class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="8" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/></svg> Audience</div>
+    <div class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M19 12a4 4 0 0 0-2-3.5"/></svg> Voice</div>
+    <div class="section-lbl">CREATE</div>
+    <div class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg> Scanner</div>
+    <div class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg> Compose</div>
+  </div>
+
+  <div class="col" style="gap:8px;flex:1">
+    <div class="lbl">Tablet rail (collapsed) →</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:48px;border:2px solid var(--border);border-radius:var(--radius-md);padding:10px 4px;background:var(--background)">
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--accent);padding-bottom:8px;border-bottom:1px solid var(--border);width:100%;text-align:center">S</div>
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--muted);display:flex;align-items:center;justify-content:center;color:var(--accent)"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12 12 3l9 9v9h-6v-7H9v7H3z"/></svg></div>
+      <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted-foreground)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M5 17V9m4 8V5m4 12v-6m4 6V8"/></svg></div>
+      <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted-foreground)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="8" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/></svg></div>
+      <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted-foreground)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg></div>
+    </div>
+  </div>
+</div>
+</body></html>
