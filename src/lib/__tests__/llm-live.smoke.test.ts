@@ -9,7 +9,11 @@ const live = process.env.SPOOL_LIVE_LLM === "1";
 const targets: Array<{ name: string; enabled: boolean; build: () => ResolvedModel }> = [
   {
     name: "server default",
-    enabled: live && Boolean(process.env.SPOOL_DEFAULT_MODEL?.trim() || process.env.LLM_API_KEY),
+    enabled:
+      live &&
+      Boolean(
+        process.env.SPOOL_DEFAULT_MODEL?.trim() || process.env.LLM_API_KEY || process.env.LLM_BASE_URL,
+      ),
     build: () => resolveServerDefaultModel(),
   },
   {

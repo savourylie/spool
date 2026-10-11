@@ -78,9 +78,13 @@ const GATEWAY_FAMILIES: Record<string, ModelFamily> = {
 };
 
 /**
- * Server default. SPOOL_DEFAULT_MODEL switches it onto AI Gateway (auth via
- * AI_GATEWAY_API_KEY, or Vercel OIDC on deployments). Without it, Spool calls
- * Anthropic directly with LLM_API_KEY, as before.
+ * Server default, for users without their own key.
+ *
+ * SPOOL_DEFAULT_MODEL routes it through AI Gateway (auth via AI_GATEWAY_API_KEY,
+ * or Vercel OIDC on deployments). Otherwise LLM_PROVIDER, LLM_API_KEY,
+ * LLM_BASE_URL and LLM_MODEL describe it exactly like a BYOK setting:
+ * `openai` plus a base URL is an OpenAI-compatible server such as DashScope or
+ * Ollama. With only LLM_API_KEY set, it calls Anthropic, as before.
  */
 export function resolveServerDefaultModel(
   env: Record<string, string | undefined> = process.env,
@@ -96,18 +100,39 @@ export function resolveServerDefaultModel(
     };
   }
 
-  const apiKey = env.LLM_API_KEY;
-  if (!apiKey) {
+  const provider = env.LLM_PROVIDER?.trim().toLowerCase() || "anthropic";
+  if (!isLLMProvider(provider)) {
     throw new LLMAuthError(
-      "LLM_API_KEY is not set. Set it, or set SPOOL_DEFAULT_MODEL to route the server default through AI Gateway.",
+      `LLM_PROVIDER must be anthropic, openai, or xai (got "${env.LLM_PROVIDER}").`,
     );
   }
 
-  const modelId = PROVIDER_DEFAULTS.anthropic;
-  return {
-    model: createAnthropic({ apiKey, fetch: timeoutFetch })(modelId),
-    ...describeModel("anthropic", modelId),
-  };
+  const apiKey = env.LLM_API_KEY?.trim() || undefined;
+  const baseURL = env.LLM_BASE_URL?.trim() || undefined;
+  const model = env.LLM_MODEL?.trim() || undefined;
+  const compatibleServer =
+    provider === "openai" && baseURL !== undefined && !isOfficialOpenAIURL(baseURL);
+
+  // Keyless servers (Ollama, LM Studio) only make sense behind a custom base URL.
+  if (!apiKey && !compatibleServer) {
+    throw new LLMAuthError(
+      "LLM_API_KEY is not set. Set it (plus LLM_PROVIDER, LLM_BASE_URL and LLM_MODEL as needed), or set SPOOL_DEFAULT_MODEL to route the server default through AI Gateway.",
+    );
+  }
+  if (compatibleServer && !model) {
+    throw new LLMAuthError(
+      "LLM_MODEL is required when LLM_BASE_URL points at an OpenAI-compatible server.",
+    );
+  }
+
+  return createByokModel({ provider, apiKey, baseURL, model });
+}
+
+// A Set, not `in`, so inherited names like "constructor" are not providers.
+const LLM_PROVIDERS = new Set<string>(Object.keys(PROVIDER_DEFAULTS));
+
+function isLLMProvider(value: string): value is LLMProvider {
+  return LLM_PROVIDERS.has(value);
 }
 
 export interface ByokModelInput {

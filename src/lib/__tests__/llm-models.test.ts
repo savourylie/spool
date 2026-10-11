@@ -95,6 +95,79 @@ describe("resolveServerDefaultModel", () => {
   });
 });
 
+describe("resolveServerDefaultModel from LLM_* settings", () => {
+  const DASHSCOPE = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+
+  it.each([
+    [
+      "an OpenAI-compatible server",
+      { LLM_PROVIDER: "openai", LLM_BASE_URL: DASHSCOPE, LLM_MODEL: "deepseek-v4-pro", LLM_API_KEY: "sk-dash" },
+      { provider: "openai-compatible.chat", modelId: "deepseek-v4-pro", family: "openai-compatible", alwaysReasons: false },
+    ],
+    [
+      "OpenAI itself",
+      { LLM_PROVIDER: "openai", LLM_API_KEY: "sk-openai" },
+      { provider: "openai.responses", modelId: PROVIDER_DEFAULTS.openai, family: "openai", alwaysReasons: true },
+    ],
+    [
+      "xAI",
+      { LLM_PROVIDER: "xai", LLM_API_KEY: "xai-key", LLM_MODEL: "grok-4.5" },
+      { provider: "xai.responses", modelId: "grok-4.5", family: "xai", alwaysReasons: true },
+    ],
+    [
+      "Anthropic with a chosen model",
+      { LLM_PROVIDER: "anthropic", LLM_API_KEY: "sk-ant", LLM_MODEL: "claude-sonnet-5-5" },
+      { provider: "anthropic.messages", modelId: "claude-sonnet-5-5", family: "anthropic", alwaysReasons: true },
+    ],
+    [
+      "a keyless local OpenAI-compatible server",
+      { LLM_PROVIDER: "openai", LLM_BASE_URL: "http://localhost:11434/v1", LLM_MODEL: "llama3.1" },
+      { provider: "openai-compatible.chat", modelId: "llama3.1", family: "openai-compatible", alwaysReasons: false },
+    ],
+  ])("builds the server default for %s", (_label, env, expected) => {
+    expect(info(resolveServerDefaultModel(env))).toEqual(expected);
+  });
+
+  it("accepts LLM_PROVIDER in any case and with surrounding spaces", () => {
+    expect(info(resolveServerDefaultModel({ LLM_PROVIDER: " OpenAI ", LLM_API_KEY: "sk-openai" })).provider).toBe(
+      "openai.responses",
+    );
+  });
+
+  it("still prefers AI Gateway when SPOOL_DEFAULT_MODEL is set", () => {
+    expect(
+      info(
+        resolveServerDefaultModel({
+          SPOOL_DEFAULT_MODEL: "anthropic/claude-sonnet-4.6",
+          LLM_PROVIDER: "openai",
+          LLM_BASE_URL: DASHSCOPE,
+          LLM_MODEL: "deepseek-v4-pro",
+          LLM_API_KEY: "sk-dash",
+        }),
+      ).provider,
+    ).toBe("gateway");
+  });
+
+  it.each([["mistral"], ["constructor"], ["__proto__"]])("rejects the unknown LLM_PROVIDER %s", (provider) => {
+    expect(() => resolveServerDefaultModel({ LLM_PROVIDER: provider, LLM_API_KEY: "k" })).toThrow(
+      /LLM_PROVIDER/,
+    );
+  });
+
+  it.each([["openai"], ["xai"], ["anthropic"]])(
+    "requires LLM_API_KEY for %s unless it is an OpenAI-compatible server",
+    (provider) => {
+      expect(() => resolveServerDefaultModel({ LLM_PROVIDER: provider })).toThrow(LLMAuthError);
+    },
+  );
+
+  it("requires LLM_MODEL for an OpenAI-compatible server instead of sending it OpenAI's default", () => {
+    expect(() =>
+      resolveServerDefaultModel({ LLM_PROVIDER: "openai", LLM_BASE_URL: DASHSCOPE, LLM_API_KEY: "sk-dash" }),
+    ).toThrow(/LLM_MODEL/);
+  });
+});
+
 describe("createByokModel", () => {
   it("uses the provider default when no model is saved", () => {
     expect(info(createByokModel({ provider: "anthropic", apiKey: "sk-ant" })).modelId).toBe(
