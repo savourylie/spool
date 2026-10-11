@@ -27,6 +27,18 @@ describe("describeModel", () => {
     expect(describeModel(family, modelId).alwaysReasons).toBe(expected);
   });
 
+  it.each([
+    ["anthropic", "claude-sonnet-4-6", false],
+    ["anthropic", "claude-sonnet-5-5", true],
+    ["openai", "gpt-4o", false],
+    ["openai", "gpt-6.1-sol", true],
+    ["xai", "grok-4.20-non-reasoning", false],
+    ["openai-compatible", "deepseek-v4-pro", true],
+    ["other", "gemini-3.8-flash", true],
+  ] as const)("%s %s → reservesReasoningTokens=%s", (family, modelId, expected) => {
+    expect(describeModel(family, modelId).reservesReasoningTokens).toBe(expected);
+  });
+
   it("forwards a caller's reasoning effort only to models that reason", () => {
     expect(describeModel("anthropic", "claude-sonnet-4-6").acceptsReasoningEffort).toBe(false);
     expect(describeModel("anthropic", "claude-sonnet-5-5").acceptsReasoningEffort).toBe(true);

@@ -29,6 +29,13 @@ export interface ModelCapabilities {
   alwaysReasons: boolean;
   /** Whether a caller-supplied reasoningEffort is forwarded to the model. */
   acceptsReasoningEffort: boolean;
+  /**
+   * Reserve extra output tokens for thinking. True for models that always
+   * reason, and for families whose models may think by default without Spool
+   * being able to tell (OpenAI-compatible servers, unknown Gateway families),
+   * e.g. DeepSeek V4 on DashScope.
+   */
+  reservesReasoningTokens: boolean;
 }
 
 export interface ResolvedModel extends ModelCapabilities {
@@ -67,7 +74,10 @@ export function describeModel(
         modelId.toLowerCase().startsWith("mercury")
       : reasons;
 
-  return { family, alwaysReasons: reasons, acceptsReasoningEffort };
+  const reservesReasoningTokens =
+    reasons || family === "openai-compatible" || family === "other";
+
+  return { family, alwaysReasons: reasons, acceptsReasoningEffort, reservesReasoningTokens };
 }
 
 const GATEWAY_FAMILIES: Record<string, ModelFamily> = {

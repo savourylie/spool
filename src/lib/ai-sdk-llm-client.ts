@@ -167,7 +167,8 @@ export class AiSdkLLMClient implements ILLMClient {
       reasoningEffort,
       timeout = defaultTimeout,
     } = options;
-    const { model, family, alwaysReasons, acceptsReasoningEffort } = this.resolved;
+    const { model, family, alwaysReasons, acceptsReasoningEffort, reservesReasoningTokens } =
+      this.resolved;
 
     const instructions = toInstructions(systemPrompt, family);
     const reasoning = alwaysReasons
@@ -180,7 +181,7 @@ export class AiSdkLLMClient implements ILLMClient {
       model,
       ...(instructions !== undefined ? { instructions } : {}),
       messages: messages.map(toModelMessage),
-      maxOutputTokens: maxTokens + (alwaysReasons ? REASONING_TOKEN_ALLOWANCE : 0),
+      maxOutputTokens: maxTokens + (reservesReasoningTokens ? REASONING_TOKEN_ALLOWANCE : 0),
       ...(reasoning ? { reasoning } : {}),
       ...(family === "openai" ? { providerOptions: OPENAI_NO_REASONING_SUMMARY } : {}),
       // Not AI SDK's `timeout`, which caps the whole call (streaming and retries

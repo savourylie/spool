@@ -163,9 +163,30 @@ describe("AiSdkLLMClient.generate", () => {
       resolved(mercury, "openai-compatible", "mercury-2", "https://llm.example.test/v1"),
     ).generate({ messages: HI, maxTokens: 100, reasoningEffort: "high" });
 
-    expect([ollama.doGenerateCalls[0].reasoning, ollama.doGenerateCalls[0].maxOutputTokens]).toEqual([undefined, 100]);
-    expect([mercury.doGenerateCalls[0].reasoning, mercury.doGenerateCalls[0].maxOutputTokens]).toEqual(["high", 100]);
+    expect(ollama.doGenerateCalls[0].reasoning).toBeUndefined();
+    expect(mercury.doGenerateCalls[0].reasoning).toBe("high");
   });
+
+  it.each([
+    ["openai-compatible", "deepseek-v4-pro"],
+    ["other", "gemini-3.8-flash"],
+  ] as const)(
+    "reserves thinking room for %s models that may think by default, without forcing an effort",
+    async (family, modelId) => {
+      vi.spyOn(console, "log").mockImplementation(() => {});
+      const model = new MockLanguageModelV4({ doGenerate: textResult("ok") });
+
+      await new AiSdkLLMClient(resolved(model, family, modelId, "https://llm.example.test/v1")).generate({
+        messages: HI,
+        maxTokens: 100,
+      });
+
+      expect([model.doGenerateCalls[0].maxOutputTokens, model.doGenerateCalls[0].reasoning]).toEqual([
+        4196,
+        undefined,
+      ]);
+    },
+  );
 
   it("logs token usage in the cache-usage line format", async () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -501,4 +522,52 @@ describe("AiSdkLLMClient timeouts against a real provider", () => {
 
     await expect(compatClient().generate({ messages: HI, timeout: 500 })).resolves.toBe("OK");
   }, 10_000);
+});
+
+describe("AiSdkLLMClient with an OpenAI-compatible model that thinks first", () => {
+  it("leaves room for the model's thinking so a short answer is not cut off", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    // Like DeepSeek V4 on DashScope: thinking comes back as reasoning_content
+    // and uses about 1,000 tokens before any answer text.
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input, init) => {
+      const { max_tokens: maxTokens } = JSON.parse(String(init?.body)) as { max_tokens: number };
+      const answered = maxTokens > 1000;
+      return new Response(
+        JSON.stringify({
+          id: "c1",
+          object: "chat.completion",
+          created: 1,
+          model: "deepseek-v4-pro",
+          choices: [
+            {
+              index: 0,
+              message: {
+                role: "assistant",
+                content: answered ? "OK" : "",
+                reasoning_content: "The user wants exactly one word.",
+              },
+              finish_reason: answered ? "stop" : "length",
+            },
+          ],
+          usage: { prompt_tokens: 13, completion_tokens: answered ? 1001 : maxTokens, total_tokens: 0 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+
+    const text = await new AiSdkLLMClient(
+      createByokModel({
+        provider: "openai",
+        apiKey: "sk-dash",
+        baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        model: "deepseek-v4-pro",
+      }),
+    ).generate({
+      systemPrompt: "Reply with exactly one word.",
+      messages: [{ role: "user", content: "Say OK." }],
+      maxTokens: 20,
+    });
+
+    expect(text).toBe("OK");
+  });
 });
