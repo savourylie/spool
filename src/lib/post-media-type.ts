@@ -7,6 +7,13 @@ export const STORED_POST_MEDIA_TYPES = [
 
 export type StoredPostMediaType = (typeof STORED_POST_MEDIA_TYPES)[number];
 
+export const POST_MEDIA_LABELS: Record<StoredPostMediaType, string> = {
+  TEXT: "Text",
+  IMAGE: "Image",
+  VIDEO: "Video",
+  CAROUSEL: "Carousel",
+};
+
 const THREADS_MEDIA_TYPE_ALIASES = {
   TEXT_POST: "TEXT",
   IMAGE_POST: "IMAGE",

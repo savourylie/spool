@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PostRow } from "@/components/dashboard/post-table";
+import type { PostRow } from "@/lib/post-row";
 import {
   MIN_POSTS_FOR_ANALYSIS,
   TEXT_LENGTH_BUCKETS,

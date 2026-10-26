@@ -9,7 +9,7 @@ import { detectReselectedPosts } from "@/lib/reselection-detection";
 import { getViralRecoveryState } from "@/lib/viral-detection";
 import type { DailyStat } from "@/lib/viral-detection";
 import { computeFormatBreakdown } from "@/lib/format-analysis";
-import type { PostRow } from "@/components/dashboard/post-table";
+import type { PostRow } from "@/lib/post-row";
 import {
   findBestPost,
   computeNextBestSlot,

@@ -5,7 +5,7 @@
  * Shows which content formats perform best for the user's audience.
  */
 
-import type { PostRow } from "@/components/dashboard/post-table";
+import type { PostRow } from "@/lib/post-row";
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
 
 /* ------------------------------------------------------------------ */

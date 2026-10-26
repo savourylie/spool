@@ -17,6 +17,10 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
   function buildHref(page: number) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(page));
+    // A detail selection belongs to the page it was opened from.
+    params.delete("post");
+    params.delete("reply");
+    params.delete("repost");
     return `${pathname}?${params.toString()}`;
   }
 

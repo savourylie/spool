@@ -539,41 +539,77 @@ export type Database = {
       }
       posts: {
         Row: {
+          alt_text: string | null
+          children: Json | null
           concept_extracted_at: string | null
           created_at: string | null
+          gif_url: string | null
           id: string
+          is_quote_post: boolean
+          link_attachment_url: string | null
+          link_site_name: string | null
+          link_title: string | null
+          media_fetched_at: string | null
+          media_product_type: string | null
           media_type: string
+          media_url: string | null
           permalink: string | null
           published_at: string
+          quoted_post_id: string | null
           text_full: string | null
           text_preview: string | null
           threads_media_id: string
+          thumbnail_url: string | null
           topic_tag: string | null
           user_id: string
         }
         Insert: {
+          alt_text?: string | null
+          children?: Json | null
           concept_extracted_at?: string | null
           created_at?: string | null
+          gif_url?: string | null
           id?: string
+          is_quote_post?: boolean
+          link_attachment_url?: string | null
+          link_site_name?: string | null
+          link_title?: string | null
+          media_fetched_at?: string | null
+          media_product_type?: string | null
           media_type: string
+          media_url?: string | null
           permalink?: string | null
           published_at: string
+          quoted_post_id?: string | null
           text_full?: string | null
           text_preview?: string | null
           threads_media_id: string
+          thumbnail_url?: string | null
           topic_tag?: string | null
           user_id: string
         }
         Update: {
+          alt_text?: string | null
+          children?: Json | null
           concept_extracted_at?: string | null
           created_at?: string | null
+          gif_url?: string | null
           id?: string
+          is_quote_post?: boolean
+          link_attachment_url?: string | null
+          link_site_name?: string | null
+          link_title?: string | null
+          media_fetched_at?: string | null
+          media_product_type?: string | null
           media_type?: string
+          media_url?: string | null
           permalink?: string | null
           published_at?: string
+          quoted_post_id?: string | null
           text_full?: string | null
           text_preview?: string | null
           threads_media_id?: string
+          thumbnail_url?: string | null
           topic_tag?: string | null
           user_id?: string
         }
@@ -587,11 +623,52 @@ export type Database = {
           },
         ]
       }
+      reposts: {
+        Row: {
+          created_at: string | null
+          id: string
+          permalink: string | null
+          reposted_at: string
+          shortcode: string | null
+          threads_media_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permalink?: string | null
+          reposted_at: string
+          shortcode?: string | null
+          threads_media_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permalink?: string | null
+          reposted_at?: string
+          shortcode?: string | null
+          threads_media_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reposts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_replies: {
         Row: {
+          alt_text: string | null
           fetched_at: string
           id: string
+          link_attachment_url: string | null
           media_type: string | null
+          media_url: string | null
           permalink: string | null
           replied_at: string
           replied_to_id: string | null
@@ -604,12 +681,16 @@ export type Database = {
           shortcode: string | null
           text: string | null
           threads_reply_id: string
+          thumbnail_url: string | null
           user_id: string
         }
         Insert: {
+          alt_text?: string | null
           fetched_at?: string
           id?: string
+          link_attachment_url?: string | null
           media_type?: string | null
+          media_url?: string | null
           permalink?: string | null
           replied_at: string
           replied_to_id?: string | null
@@ -622,12 +703,16 @@ export type Database = {
           shortcode?: string | null
           text?: string | null
           threads_reply_id: string
+          thumbnail_url?: string | null
           user_id: string
         }
         Update: {
+          alt_text?: string | null
           fetched_at?: string
           id?: string
+          link_attachment_url?: string | null
           media_type?: string | null
+          media_url?: string | null
           permalink?: string | null
           replied_at?: string
           replied_to_id?: string | null
@@ -640,6 +725,7 @@ export type Database = {
           shortcode?: string | null
           text?: string | null
           threads_reply_id?: string
+          thumbnail_url?: string | null
           user_id?: string
         }
         Relationships: [
@@ -661,6 +747,8 @@ export type Database = {
           llm_base_url: string | null
           llm_model: string | null
           llm_provider: string | null
+          post_content_seeded_at: string | null
+          reposts_seeded_at: string | null
           threads_user_id: string
           token_expires_at: string
           username: string | null
@@ -673,6 +761,8 @@ export type Database = {
           llm_base_url?: string | null
           llm_model?: string | null
           llm_provider?: string | null
+          post_content_seeded_at?: string | null
+          reposts_seeded_at?: string | null
           threads_user_id: string
           token_expires_at: string
           username?: string | null
@@ -685,6 +775,8 @@ export type Database = {
           llm_base_url?: string | null
           llm_model?: string | null
           llm_provider?: string | null
+          post_content_seeded_at?: string | null
+          reposts_seeded_at?: string | null
           threads_user_id?: string
           token_expires_at?: string
           username?: string | null
@@ -715,58 +807,58 @@ export type Database = {
           views: number
         }[]
       }
-      get_posts_with_metrics:
-        | {
-            Args: {
-              p_limit: number
-              p_offset: number
-              p_sort_column: string
-              p_sort_order: string
-              p_user_id: string
-            }
-            Returns: {
-              engagement_rate: number
-              id: string
-              likes: number
-              media_type: string
-              permalink: string
-              published_at: string
-              quotes: number
-              replies: number
-              reposts: number
-              shares: number
-              text_preview: string
-              total_count: number
-              views: number
-            }[]
-          }
-        | {
-            Args: {
-              p_date_from?: string
-              p_date_to?: string
-              p_limit: number
-              p_media_types?: string[]
-              p_offset: number
-              p_sort_column: string
-              p_sort_order: string
-              p_user_id: string
-            }
-            Returns: {
-              engagement_rate: number
-              id: string
-              likes: number
-              media_type: string
-              permalink: string
-              published_at: string
-              quotes: number
-              replies: number
-              reposts: number
-              shares: number
-              text_preview: string
-              total_count: number
-              views: number
-            }[]
-          }
+      get_posts_overview: {
+        Args: { p_user_id: string }
+        Returns: {
+          engagement_rate: number
+          media_breakdown: Json
+          top_post: Json
+          total_interactions: number
+          total_posts: number
+          total_views: number
+        }[]
+      }
+      get_posts_with_metrics: {
+        Args: {
+          p_date_from?: string
+          p_date_to?: string
+          p_limit: number
+          p_media_types?: string[]
+          p_offset: number
+          p_only_media?: boolean
+          p_sort_column: string
+          p_sort_order: string
+          p_user_id: string
+        }
+        Returns: {
+          alt_text: string
+          children: Json
+          engagement_rate: number
+          gif_url: string
+          id: string
+          is_quote_post: boolean
+          likes: number
+          link_attachment_url: string
+          link_site_name: string
+          link_title: string
+          media_product_type: string
+          media_type: string
+          media_url: string
+          permalink: string
+          published_at: string
+          quoted_post_id: string
+          quotes: number
+          replies: number
+          reposts: number
+          shares: number
+          text_full: string
+          text_preview: string
+          thumbnail_url: string
+          topic_tag: string
+          total_count: number
+          views: number
+        }[]
+      }
       get_timing_heatmap_data: {
         Args: { p_user_id: string }
         Returns: {

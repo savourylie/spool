@@ -56,6 +56,20 @@ function createMockFrom(table: string) {
           // refreshAllUsers query
           return Promise.resolve(mockUsersListResult);
         }
+        if (fields === "reposts_seeded_at, post_content_seeded_at") {
+          return {
+            eq: () => ({
+              single: () =>
+                Promise.resolve({
+                  data: {
+                    reposts_seeded_at: new Date().toISOString(),
+                    post_content_seeded_at: new Date().toISOString(),
+                  },
+                  error: null,
+                }),
+            }),
+          };
+        }
         // refreshMetrics user query
         return {
           eq: () => ({
@@ -63,6 +77,9 @@ function createMockFrom(table: string) {
           }),
         };
       },
+      update: () => ({
+        eq: () => Promise.resolve({ error: null }),
+      }),
     };
   }
 
@@ -87,6 +104,34 @@ function createMockFrom(table: string) {
           };
         }
 
+        if (fields === "id, threads_media_id, media_type, media_fetched_at, published_at") {
+          return {
+            eq: () => ({
+              in: () => ({
+                or: () => ({
+                  order: () => ({
+                    limit: () => Promise.resolve({ data: [], error: null }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+
+        if (fields === "id, link_attachment_url") {
+          return {
+            eq: () => ({
+              not: () => ({
+                is: () => ({
+                  order: () => ({
+                    limit: () => Promise.resolve({ data: [], error: null }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+
         return {
           eq: () => ({
             gte: () => Promise.resolve(mockRecentPostsResult),
@@ -105,8 +150,19 @@ function createMockFrom(table: string) {
       update: (...args: unknown[]) => {
         trackCall(table, "update", ...args);
         return {
-          eq: () => Promise.resolve({ error: null }),
+          eq: () => ({
+            eq: () => Promise.resolve({ error: null }),
+          }),
         };
+      },
+    };
+  }
+
+  if (table === "reposts") {
+    return {
+      upsert: (...args: unknown[]) => {
+        trackCall(table, "upsert", ...args);
+        return Promise.resolve({ error: null });
       },
     };
   }
@@ -148,6 +204,7 @@ const mockGetPostInsights = vi.fn();
 const mockGetPostReplies = vi.fn();
 
 vi.mock("@/lib/threads-api", () => ({
+  THREADS_API_LAUNCH: new Date("2024-04-13T00:00:00Z"),
   ThreadsAPI: vi.fn().mockImplementation(function () {
     return {
       getUserPosts: mockGetUserPosts,
@@ -314,7 +371,9 @@ describe("refreshMetrics", () => {
 
     expect(result.newPosts).toBe(1);
     expect(result.updatedMetrics).toBe(0);
-    expect(mockGetUserPosts).toHaveBeenCalledWith(undefined);
+    expect(mockGetUserPosts).toHaveBeenCalledWith(undefined, {
+      includeReposts: true,
+    });
   });
 
   it("skips users with expired tokens", async () => {

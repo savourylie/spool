@@ -22,22 +22,28 @@ function formatChipDate(iso: string): string {
   });
 }
 
-export function PostFilters() {
+export function PostFilters({
+  showMediaTypes = true,
+}: {
+  showMediaTypes?: boolean;
+}) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
   // Parse current filter state from URL
   const typesParam = searchParams.get("types");
-  const selectedTypes: string[] = typesParam
-    ? typesParam.split(",").filter((t) => ALL_TYPE_KEYS.includes(t as (typeof ALL_TYPE_KEYS)[number]))
-    : [...ALL_TYPE_KEYS];
+  const selectedTypes: string[] = !showMediaTypes
+    ? [...ALL_TYPE_KEYS]
+    : typesParam
+      ? typesParam.split(",").filter((t) => ALL_TYPE_KEYS.includes(t as (typeof ALL_TYPE_KEYS)[number]))
+      : [...ALL_TYPE_KEYS];
   const allSelected = selectedTypes.length === ALL_TYPE_KEYS.length;
 
   const fromDate = searchParams.get("from") ?? "";
   const toDate = searchParams.get("to") ?? "";
 
-  const hasFilters = !allSelected || fromDate !== "" || toDate !== "";
+  const hasFilters = (showMediaTypes && !allSelected) || fromDate !== "" || toDate !== "";
 
   function navigate(updates: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -49,6 +55,7 @@ export function PostFilters() {
       }
     }
     params.delete("page"); // Always reset pagination on filter change
+    params.delete("post");
     const qs = params.toString();
     router.push(qs ? `${pathname}?${qs}` : pathname);
   }
@@ -75,21 +82,23 @@ export function PostFilters() {
     <div className="flex flex-col gap-3 mb-4">
       {/* Row 1: Media type toggles + date range */}
       <div className="flex flex-wrap items-center gap-2">
-        {MEDIA_TYPES.map(({ key, label, icon: Icon }) => {
-          const isActive = selectedTypes.includes(key);
-          return (
-            <Button
-              key={key}
-              variant={isActive ? "candy" : "outline"}
-              size="sm"
-              className="gap-1.5"
-              onClick={() => toggleType(key)}
-            >
-              <Icon weight={isActive ? "fill" : "regular"} className="size-4" />
-              {label}
-            </Button>
-          );
-        })}
+        {showMediaTypes
+          ? MEDIA_TYPES.map(({ key, label, icon: Icon }) => {
+              const isActive = selectedTypes.includes(key);
+              return (
+                <Button
+                  key={key}
+                  variant={isActive ? "candy" : "outline"}
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => toggleType(key)}
+                >
+                  <Icon weight={isActive ? "fill" : "regular"} className="size-4" />
+                  {label}
+                </Button>
+              );
+            })
+          : null}
 
         <div className="w-full sm:ml-auto sm:w-auto flex flex-wrap items-center gap-2">
           <label htmlFor="filter-date-from" className="font-mono text-[11px] uppercase tracking-[0.08em] text-ink-3">From</label>

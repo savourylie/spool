@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getFormatEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
-import type { PostRow } from "@/components/dashboard/post-table";
+import type { PostRow } from "@/lib/post-row";
 import {
   MIN_POSTS_FOR_ANALYSIS,
   computeFormatBreakdown,

@@ -99,7 +99,7 @@ export function computePercentile(
 
 /**
  * Format a number for compact display (1.2K, 3.5M).
- * Shared utility — also used by post-table.tsx.
+ * Shared utility — also used by the post library.
  */
 export function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;

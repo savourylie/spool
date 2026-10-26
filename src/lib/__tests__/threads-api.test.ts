@@ -107,6 +107,46 @@ describe("ThreadsAPI", () => {
       expect(posts[0].id).toBe("1");
     });
 
+    it("can include repost facades for the repost history", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          data: [
+            {
+              id: "1",
+              media_type: "IMAGE",
+              media_url: "https://cdn.example/image.jpg",
+              thumbnail_url: "https://cdn.example/thumb.jpg",
+              alt_text: "A photo",
+              text: "keep",
+              timestamp: "2024-12-01T00:00:00Z",
+              permalink: "https://threads.net/@user/1",
+              shortcode: "abc",
+              children: { data: [{ id: "child-1" }] },
+              link_attachment_url: "https://www.youtube.com/watch?v=abc123",
+            },
+            {
+              id: "2",
+              media_type: "REPOST_FACADE",
+              timestamp: "2024-12-02T00:00:00Z",
+              permalink: "https://threads.net/@user/2",
+              shortcode: "def",
+            },
+          ],
+        }),
+      );
+
+      const threads = await api.getUserPosts(undefined, {
+        includeReposts: true,
+      });
+
+      expect(threads.map((post) => post.id)).toEqual(["1", "2"]);
+      expect(threads[0].media_url).toBe("https://cdn.example/image.jpg");
+      expect(threads[0].link_attachment_url).toBe(
+        "https://www.youtube.com/watch?v=abc123",
+      );
+      expect(threads[0].children?.data[0]?.id).toBe("child-1");
+    });
+
     it("filters out pre-April 2024 posts and stops pagination early", async () => {
       fetchSpy.mockResolvedValueOnce(
         jsonResponse({
@@ -320,6 +360,30 @@ describe("ThreadsAPI", () => {
     });
   });
 
+  describe("getPostMedia", () => {
+    it("requests the media fields needed by previews", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          id: "media-1",
+          media_type: "VIDEO",
+          media_url: "https://cdn.example/video.mp4",
+          thumbnail_url: "https://cdn.example/thumb.jpg",
+          alt_text: "A clip",
+          children: { data: [{ id: "child-1" }] },
+        }),
+      );
+
+      const media = await api.getPostMedia("media-1");
+
+      expect(media.thumbnail_url).toBe("https://cdn.example/thumb.jpg");
+      const url = new URL(fetchSpy.mock.calls[0][0] as string);
+      expect(url.pathname).toBe("/v1.0/media-1");
+      expect(url.searchParams.get("fields")).toContain("media_url");
+      expect(url.searchParams.get("fields")).toContain("thumbnail_url");
+      expect(url.searchParams.get("fields")).toContain("alt_text");
+    });
+  });
+
   describe("getFollowersCount", () => {
     it("extracts number from total_value insights response", async () => {
       fetchSpy.mockResolvedValueOnce(
@@ -446,7 +510,7 @@ describe("ThreadsAPI", () => {
     it("times out hung requests instead of hanging forever", async () => {
       vi.useFakeTimers();
 
-      fetchSpy.mockImplementationOnce((_, init) => {
+      fetchSpy.mockImplementationOnce((_: RequestInfo | URL, init?: RequestInit) => {
         const signal = init?.signal as AbortSignal | undefined;
 
         return new Promise<Response>((_, reject) => {

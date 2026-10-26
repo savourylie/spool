@@ -6,7 +6,7 @@
  * returns derived display values.
  */
 
-import type { PostRow } from "@/components/dashboard/post-table";
+import type { PostRow } from "@/lib/post-row";
 import type { TimingPost } from "@/components/dashboard/timing-heatmap";
 import { computeWES } from "@/lib/weighted-engagement";
 import type { FormatBreakdown } from "@/lib/format-analysis";

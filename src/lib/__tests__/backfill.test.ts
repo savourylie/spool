@@ -31,6 +31,12 @@ function createMockFrom(table: string) {
           single: () => Promise.resolve(mockUserResult),
         }),
       }),
+      update: (...args: unknown[]) => {
+        trackCall(table, "update", ...args);
+        return {
+          eq: () => Promise.resolve({ error: null }),
+        };
+      },
     };
   }
 
@@ -38,6 +44,35 @@ function createMockFrom(table: string) {
     return {
       select: (...args: unknown[]) => {
         trackCall(table, "select", ...args);
+
+        if (args[0] === "id, threads_media_id, media_type, media_fetched_at, published_at") {
+          return {
+            eq: () => ({
+              in: () => ({
+                or: () => ({
+                  order: () => ({
+                    limit: () => Promise.resolve({ data: [], error: null }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+
+        if (args[0] === "id, link_attachment_url") {
+          return {
+            eq: () => ({
+              not: () => ({
+                is: () => ({
+                  order: () => ({
+                    limit: () => Promise.resolve({ data: [], error: null }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+
         return {
           eq: () =>
             Promise.resolve({ data: mockExistingPostsData, error: null }),
@@ -54,6 +89,15 @@ function createMockFrom(table: string) {
               }),
           }),
         };
+      },
+    };
+  }
+
+  if (table === "reposts") {
+    return {
+      upsert: (...args: unknown[]) => {
+        trackCall(table, "upsert", ...args);
+        return Promise.resolve({ error: null });
       },
     };
   }
@@ -140,6 +184,7 @@ const mockGetFollowersCount = vi.fn();
 const mockGetFollowerDemographics = vi.fn();
 
 vi.mock("@/lib/threads-api", () => ({
+  THREADS_API_LAUNCH: new Date("2024-04-13T00:00:00Z"),
   ThreadsAPI: vi.fn().mockImplementation(function () {
     return {
       getUserPosts: mockGetUserPosts,
@@ -179,8 +224,24 @@ function getEventInsertCalls() {
 
 function getPostUpsertCalls() {
   return calls
-    .filter((call) => call.table === "posts" && call.op === "upsert")
+    .filter(
+      (call) =>
+        call.table === "posts" &&
+        call.op === "upsert" &&
+        !Array.isArray(call.args[0]),
+    )
     .map((call) => call.args[0] as Record<string, unknown>);
+}
+
+function getPostBatchUpsertCalls() {
+  return calls
+    .filter(
+      (call) =>
+        call.table === "posts" &&
+        call.op === "upsert" &&
+        Array.isArray(call.args[0]),
+    )
+    .map((call) => call.args[0] as Array<Record<string, unknown>>);
 }
 
 function getPostMetricsInsertCalls() {
@@ -565,11 +626,18 @@ describe("runBackfill", () => {
     const updates = getUpdateCalls();
     const events = getEventInsertCalls();
     const postUpserts = getPostUpsertCalls();
+    const postBatchUpserts = getPostBatchUpsertCalls();
     const postMetricsInserts = getPostMetricsInsertCalls();
 
     expect(mockGetPostInsights.mock.calls.map((call) => call[0])).toEqual([
       "media-partial",
       "media-missing",
+    ]);
+
+    expect(postBatchUpserts).toHaveLength(1);
+    expect(postBatchUpserts[0].map((row) => row.threads_media_id)).toEqual([
+      "media-covered",
+      "media-partial",
     ]);
 
     expect(postUpserts).toHaveLength(1);

@@ -144,7 +144,7 @@ const COMPLETE_JOB: BackfillJob = {
   total_posts: 20,
   stage: "complete",
   current_post_id: null,
-  last_heartbeat_at: null,
+  last_heartbeat_at: new Date().toISOString(),
   last_error_message: null,
   last_error_status: null,
   last_error_payload: null,

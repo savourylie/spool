@@ -3,6 +3,14 @@ import { ThreadsAPI } from "@/lib/threads-api";
 import { decrypt } from "@/lib/crypto";
 import { linkPredictionToPost } from "@/lib/post-review";
 import { normalizeThreadsMediaType } from "@/lib/post-media-type";
+import {
+  enrichMissingLinkPreviews,
+  isRepostFacade,
+  refreshStalePostMedia,
+  saveReposts,
+  seedLibraryIfNeeded,
+  toPostContentFields,
+} from "@/lib/post-media";
 import { extractTopics, classifyPostTopic } from "@/lib/topic-classification";
 
 function countWords(text: string | null | undefined): number {
@@ -44,11 +52,24 @@ export async function refreshMetrics(
   if (latestPostError) throw latestPostError;
 
   const since = latestPost ? new Date(latestPost.published_at) : undefined;
-  const newPostsData = await api.getUserPosts(since);
+  const threads = await api.getUserPosts(since, { includeReposts: true });
+  const repostFacades = threads.filter(isRepostFacade);
+  const newPostsData = threads.filter((post) => !isRepostFacade(post));
+
+  await saveReposts(supabase, userId, repostFacades);
+  try {
+    await seedLibraryIfNeeded(supabase, userId, api);
+  } catch (seedError) {
+    console.warn("Failed to seed library metadata", {
+      userId,
+      error: seedError,
+    });
+  }
 
   let newPosts = 0;
   const newPostIds: string[] = [];
   for (const post of newPostsData) {
+    const fetchedAt = new Date().toISOString();
     const { data: insertedPost } = await supabase
       .from("posts")
       .upsert(
@@ -58,8 +79,9 @@ export async function refreshMetrics(
           media_type: normalizeThreadsMediaType(post.media_type),
           text_preview: post.text?.substring(0, 280) ?? null,
           text_full: post.text ?? null,
-          permalink: post.permalink,
+          permalink: post.permalink ?? null,
           published_at: post.timestamp,
+          ...toPostContentFields(post, fetchedAt),
         },
         { onConflict: "threads_media_id" },
       )
@@ -176,6 +198,18 @@ export async function refreshMetrics(
         err,
       );
     }
+  }
+
+  // 5. Keep media preview URLs and link cards fresh. Both are best-effort:
+  // a signed CDN URL expiring should not fail metrics ingestion.
+  try {
+    await refreshStalePostMedia(supabase, userId, api);
+    await enrichMissingLinkPreviews(supabase, userId);
+  } catch (previewError) {
+    console.warn("Failed to refresh post previews", {
+      userId,
+      error: previewError,
+    });
   }
 
   return { newPosts, updatedMetrics, repliesStored };

@@ -39,7 +39,7 @@ const sections: NavSection[] = [
     items: [
       { label: "Overview", href: "/dashboard", icon: House },
       { label: "Posts", href: "/dashboard/posts", icon: ListBullets },
-      { label: "Replies", href: "/dashboard/replies", icon: ChatCircleText },
+      { label: "Reply review", href: "/dashboard/replies", icon: ChatCircleText },
       { label: "Performance", href: "/dashboard/understand", icon: ChartBar },
       { label: "Timing", href: "/dashboard/timing", icon: Clock },
       { label: "Audience", href: "/dashboard/understand/audience", icon: Users },

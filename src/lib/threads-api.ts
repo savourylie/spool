@@ -3,6 +3,7 @@ import type {
   ThreadsUserProfile,
   ThreadsPost,
   ThreadsPostInsights,
+  ThreadsPostMedia,
   ThreadsReply,
   ThreadsUserReply,
   ThreadsUserInsightValue,
@@ -219,11 +220,32 @@ export class ThreadsAPI {
     });
   }
 
-  async getUserPosts(since?: Date): Promise<ThreadsPost[]> {
+  async getUserPosts(
+    since?: Date,
+    options: { includeReposts?: boolean } = {},
+  ): Promise<ThreadsPost[]> {
     const allPosts: ThreadsPost[] = [];
     let cursor: string | undefined;
 
-    const fields = "id,media_type,text,timestamp,permalink,shortcode";
+    const fields = [
+      "id",
+      "media_product_type",
+      "media_type",
+      "media_url",
+      "text",
+      "timestamp",
+      "permalink",
+      "shortcode",
+      "thumbnail_url",
+      "children",
+      "is_quote_post",
+      "quoted_post",
+      "reposted_post",
+      "alt_text",
+      "link_attachment_url",
+      "gif_url",
+      "topic_tag",
+    ].join(",");
 
     for (;;) {
       const params: Record<string, string> = { fields };
@@ -237,8 +259,10 @@ export class ThreadsAPI {
       let shouldStop = false;
 
       for (const post of page.data) {
-        // Filter out repost facades (CLAUDE.md #4)
-        if (post.media_type === "REPOST_FACADE") continue;
+        // Repost facades are stored separately (CLAUDE.md #4).
+        if (post.media_type === "REPOST_FACADE" && !options.includeReposts) {
+          continue;
+        }
 
         const postDate = new Date(post.timestamp);
 
@@ -262,6 +286,13 @@ export class ThreadsAPI {
     }
 
     return allPosts;
+  }
+
+  async getPostMedia(mediaId: string): Promise<ThreadsPostMedia> {
+    return this.request<ThreadsPostMedia>(`/${mediaId}`, {
+      fields:
+        "id,media_type,media_url,thumbnail_url,alt_text,gif_url,children",
+    });
   }
 
   async getPostInsights(mediaId: string): Promise<ThreadsPostInsights> {
@@ -401,6 +432,10 @@ export class ThreadsAPI {
       "permalink",
       "shortcode",
       "media_type",
+      "media_url",
+      "thumbnail_url",
+      "alt_text",
+      "link_attachment_url",
       "root_post",
       "replied_to",
       "is_reply",

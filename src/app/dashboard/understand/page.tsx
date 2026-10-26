@@ -6,7 +6,7 @@ import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { ErrorState } from "@/components/ui/error-state";
 import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import { ScreenHead } from "@/components/dashboard/screen-head";
-import { type PostRow } from "@/components/dashboard/post-table";
+import { type PostRow } from "@/lib/post-row";
 import { FormatAnalysis } from "@/components/dashboard/format-analysis";
 import { isImportingBackfillStatus } from "@/lib/backfill-job";
 import { getMostRecentBackfillJob } from "@/lib/backfill-recovery";

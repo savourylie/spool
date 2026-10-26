@@ -13,11 +13,33 @@ export type ThreadsMediaType =
 
 export interface ThreadsPost {
   id: string;
+  media_product_type?: string | null;
   media_type: ThreadsMediaType;
+  media_url?: string | null;
   text: string;
   timestamp: string;
   permalink: string;
   shortcode: string;
+  thumbnail_url?: string | null;
+  children?: { data: { id: string }[] } | null;
+  is_quote_post?: boolean | null;
+  quoted_post?: { id: string } | string | null;
+  reposted_post?: { id: string } | string | null;
+  alt_text?: string | null;
+  link_attachment_url?: string | null;
+  gif_url?: string | null;
+  topic_tag?: string | null;
+}
+
+/** Fields needed to render a post's media, fetched on demand when a CDN URL expires. */
+export interface ThreadsPostMedia {
+  id: string;
+  media_type: ThreadsMediaType;
+  media_url?: string | null;
+  thumbnail_url?: string | null;
+  alt_text?: string | null;
+  gif_url?: string | null;
+  children?: { data: { id: string }[] } | null;
 }
 
 export interface ThreadsPostInsights {
@@ -68,6 +90,10 @@ export interface ThreadsUserReply {
   permalink?: string | null;
   shortcode?: string | null;
   media_type?: ThreadsMediaType | "TEXT_POST" | "AUDIO";
+  media_url?: string | null;
+  thumbnail_url?: string | null;
+  alt_text?: string | null;
+  link_attachment_url?: string | null;
   root_post?: { id: string } | string | null;
   replied_to?: { id: string } | string | null;
   is_reply?: boolean;

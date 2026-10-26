@@ -35,6 +35,10 @@ function toStoredReply(userId: string, reply: ThreadsUserReply) {
     root_post_id: getReplyRefId(reply.root_post),
     replied_to_id: getReplyRefId(reply.replied_to),
     media_type: reply.media_type ?? null,
+    media_url: reply.media_url ?? null,
+    thumbnail_url: reply.thumbnail_url ?? null,
+    alt_text: reply.alt_text ?? null,
+    link_attachment_url: reply.link_attachment_url ?? null,
     shortcode: reply.shortcode ?? null,
     fetched_at: new Date().toISOString(),
   };

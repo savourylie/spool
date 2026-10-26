@@ -7,6 +7,14 @@ import { linkPredictionToPost } from "@/lib/post-review";
 import { extractConceptsForPost } from "@/lib/concept-library";
 import { ThreadsAPIError } from "@/lib/threads";
 import { normalizeThreadsMediaType } from "@/lib/post-media-type";
+import {
+  enrichMissingLinkPreviews,
+  isRepostFacade,
+  refreshStalePostMedia,
+  saveReposts,
+  toPostContentFields,
+  updatePostContentFromThreads,
+} from "@/lib/post-media";
 import { extractTopics, classifyPostTopic } from "@/lib/topic-classification";
 
 type BackfillEventLevel = "info" | "warn" | "error";
@@ -330,16 +338,26 @@ export async function runBackfill(userId: string, jobId: string) {
       nextStage: "fetching_posts",
       message: "Requesting Threads post list",
     });
-    const posts = await api.getUserPosts();
+    const threads = await api.getUserPosts(undefined, {
+      includeReposts: true,
+    });
+    const posts = threads.filter((post) => !isRepostFacade(post));
+    const reposts = threads.filter(isRepostFacade);
     await appendEvent("info", "Threads post list received", {
       totalPosts: posts.length,
+      totalReposts: reposts.length,
     });
 
     console.log("Backfill fetched posts", {
       userId,
       jobId,
       totalPosts: posts.length,
+      totalReposts: reposts.length,
     });
+
+    if (reposts.length > 0) {
+      await saveReposts(supabase, userId, reposts);
+    }
 
     await checkpoint({
       nextStage: "analyzing_existing_coverage",
@@ -370,6 +388,40 @@ export async function runBackfill(userId: string, jobId: string) {
       postsToProcess.push({
         post,
         existingPostId: coverage.existingPostId,
+      });
+    }
+
+    const existingThreads = posts.filter((post) =>
+      coverageByMediaId.has(post.id),
+    );
+    let contentSeeded = false;
+
+    try {
+      if (existingThreads.length > 0) {
+        await updatePostContentFromThreads(supabase, userId, existingThreads);
+      }
+      contentSeeded = true;
+      await appendEvent("info", "Existing post media fields refreshed", {
+        totalPosts: existingThreads.length,
+      });
+    } catch (contentError) {
+      await appendEvent("warn", "Post media update failed", {
+        error: serializeBackfillError(contentError),
+      });
+    }
+
+    const seededAt = new Date().toISOString();
+    await supabase
+      .from("users")
+      .update({
+        reposts_seeded_at: seededAt,
+        ...(contentSeeded ? { post_content_seeded_at: seededAt } : {}),
+      })
+      .eq("id", userId);
+
+    if (reposts.length > 0) {
+      await appendEvent("info", "Saved repost history", {
+        totalReposts: reposts.length,
       });
     }
 
@@ -449,8 +501,9 @@ export async function runBackfill(userId: string, jobId: string) {
               media_type: normalizeThreadsMediaType(post.media_type),
               text_preview: post.text?.substring(0, 280) ?? null,
               text_full: post.text ?? null,
-              permalink: post.permalink,
+              permalink: post.permalink ?? null,
               published_at: post.timestamp,
+              ...toPostContentFields(post, new Date().toISOString()),
             },
             { onConflict: "threads_media_id" },
           )
@@ -567,6 +620,25 @@ export async function runBackfill(userId: string, jobId: string) {
         totalPosts: allPosts.length,
         classified,
         clusters: topicClusters.length,
+      });
+    }
+
+    await checkpoint({
+      nextStage: "refreshing_media_previews",
+      nextCurrentPostId: null,
+      message: "Refreshing media preview URLs",
+    });
+
+    try {
+      const mediaRefreshed = await refreshStalePostMedia(supabase, userId, api);
+      const linksEnriched = await enrichMissingLinkPreviews(supabase, userId);
+      await appendEvent("info", "Media previews refreshed", {
+        mediaRefreshed,
+        linksEnriched,
+      });
+    } catch (previewError) {
+      await appendEvent("warn", "Media preview refresh failed", {
+        error: serializeBackfillError(previewError),
       });
     }
 

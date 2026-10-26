@@ -43,28 +43,26 @@ Individual creators and personal brand marketers on Threads with 100+ followers 
 
 ## MVP Features (v0 — Complete)
 
-### 1. Post Performance Ranking
+### 1. Post Library
 
-**Goal:** Instantly answer "what content of mine performs best?"
+**Goal:** Instantly answer "what content of mine performs best?" — and read it the way it appeared on Threads.
 
 **Functionality:**
-- On connect, backfill all available posts and their per-post insights from the Threads API
-- Display a sortable, paginated table of posts with columns:
-  - Post preview (truncated text + media type icon)
-  - Published date
-  - Views
-  - Likes
-  - Replies
-  - Reposts
-  - Quotes
-  - Shares
-  - Engagement rate (likes + replies + reposts + quotes + shares) / views
-  - Weighted Engagement Score (WES) — algorithm-weighted metric (see [SEO_FEATURES.md](SEO_FEATURES.md) §1.1)
+- On connect, backfill all available posts, media metadata, and their per-post insights from the Threads API
+- One library route with four tabs, mirroring the native Threads profile:
+  - **Posts** — every post you authored
+  - **Replies** — replies you authored (with the separate reputation-review workflow one click away)
+  - **Media** — posts with an image, video, or carousel
+  - **Reposts** — repost history (facade metadata only; the Threads API does not expose the original post's content)
+- **Posts tab** uses a master–detail layout:
+  - Left: a compact, sortable, paginated post list with a media thumbnail, date, media type, views, likes, replies, engagement rate, and WES
+  - Right: the selected post in full — complete text, inline image/video/carousel, YouTube or link preview, metric grid, momentum sparkline, and comment quality
+  - No selection: a library overview with totals, engagement by format, and the most-viewed post
 - Filter by:
-  - Media type: Text, Image, Video, Carousel (multi-select)
+  - Media type: Text, Image, Video, Carousel (multi-select; Posts tab)
   - Date range picker
-- Sort by any metric column (ascending / descending)
-- Click a row to expand full post text and a mini engagement-over-time sparkline (from `post_metrics` snapshots)
+- Sort by published date, views, likes, replies, or engagement rate (ascending / descending)
+- Selection is reflected in the URL (`?post=…`), so a post detail is shareable and survives refresh
 
 **API endpoints used:**
 - `GET /{threads-user-id}/threads` — list user's posts
@@ -139,7 +137,7 @@ Loading screen: "Analyzing your posts..." (progress bar, ~30s)
   │
   ▼
 Dashboard
-  ├── [Posts]      Sortable performance table + WES + format analysis
+  ├── [Posts]     Library: Posts · Replies · Media · Reposts, master-detail view + WES
   ├── [Timing]    Day/hour engagement heatmap + cadence optimizer
   ├── [Audience]  Follower trend + demographics + audience fit
   ├── [Scanner]   Content quality analysis (v1 Phase 3)
