@@ -25,6 +25,16 @@ describe("post library source", () => {
     expect(detail).toContain("<PostLinkCard");
   });
 
+  it("plays YouTube links inline without leaving the library", async () => {
+    const card = await read(
+      "../../../components/dashboard/post-link-card.tsx",
+    );
+
+    expect(card).toContain("youtube-nocookie.com/embed");
+    expect(card).toContain("allowFullScreen");
+    expect(card).toContain("setIsPlaying(true)");
+  });
+
   it("refreshes expired media URLs and seeds post content once", async () => {
     const media = await read("../../../lib/post-media.ts");
 
