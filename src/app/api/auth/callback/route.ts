@@ -5,6 +5,7 @@ import {
   fetchUserProfile,
 } from "@/lib/threads";
 import { OAUTH_STATE_COOKIE_NAME, setSessionCookie } from "@/lib/session";
+import { classifyDatabaseError } from "@/lib/auth-errors";
 import { createAdminClient } from "@/lib/supabase/server";
 import { encrypt } from "@/lib/crypto";
 import { runBackfill } from "@/lib/backfill";
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (upsertError || !user) {
-      throw upsertError;
+      throw upsertError ?? new Error("users upsert returned no row");
     }
 
     userId = user.id;
@@ -105,13 +106,17 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (jobError || !job) {
-      throw jobError;
+      throw jobError ?? new Error("backfill_jobs insert returned no row");
     }
 
     backfillJobId = job.id;
   } catch (err) {
-    console.error("[auth/callback] Failed to upsert user or create backfill job:", err);
-    return errorRedirect("unknown");
+    const errorCode = classifyDatabaseError(err);
+    console.error(
+      `[auth/callback] Failed to upsert user or create backfill job (${errorCode}):`,
+      err,
+    );
+    return errorRedirect(errorCode);
   }
 
   after(async () => {

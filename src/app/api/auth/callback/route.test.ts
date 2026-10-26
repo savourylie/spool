@@ -132,4 +132,69 @@ describe("GET /api/auth/callback", () => {
     expect(mocks.runBackfill).toHaveBeenCalledTimes(1);
     expect(mocks.runBackfill).toHaveBeenCalledWith("user-uuid", "job-uuid");
   });
+
+  describe("when the database step fails", () => {
+    const request = () =>
+      new NextRequest(
+        "http://localhost/api/auth/callback?state=valid-state&code=test-code",
+        {
+          headers: {
+            cookie: "spool_oauth_state=valid-state",
+          },
+        },
+      );
+
+    it("reports an unreachable database as db_unavailable", async () => {
+      const cause = Object.assign(new Error("connect ECONNREFUSED 127.0.0.1:55321"), {
+        code: "ECONNREFUSED",
+      });
+      const fetchError = new TypeError("fetch failed");
+      (fetchError as TypeError & { cause?: unknown }).cause = cause;
+
+      mocks.from.mockImplementation(() => {
+        throw fetchError;
+      });
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const response = await GET(request());
+
+      expect(response.headers.get("location")).toBe(
+        "http://localhost/?error=db_unavailable",
+      );
+      expect(mocks.setSessionCookie).not.toHaveBeenCalled();
+      expect(mocks.after).not.toHaveBeenCalled();
+      expect(consoleError).toHaveBeenCalledWith(
+        expect.stringContaining("db_unavailable"),
+        fetchError,
+      );
+
+      consoleError.mockRestore();
+    });
+
+    it("reports a rejected write as db_error", async () => {
+      const upsertError = { code: "23505", message: "duplicate key value" };
+
+      mocks.from.mockImplementation(() => ({
+        upsert: () => ({
+          select: () => ({
+            single: () => Promise.resolve({ data: null, error: upsertError }),
+          }),
+        }),
+      }));
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const response = await GET(request());
+
+      expect(response.headers.get("location")).toBe(
+        "http://localhost/?error=db_error",
+      );
+      expect(mocks.after).not.toHaveBeenCalled();
+
+      consoleError.mockRestore();
+    });
+  });
 });

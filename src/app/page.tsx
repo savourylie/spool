@@ -6,6 +6,7 @@ import { Clock } from "@phosphor-icons/react/dist/ssr/Clock";
 import { Users } from "@phosphor-icons/react/dist/ssr/Users";
 import { Lightning } from "@phosphor-icons/react/dist/ssr/Lightning";
 import { PencilLine } from "@phosphor-icons/react/dist/ssr/PencilLine";
+import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
@@ -15,13 +16,24 @@ import {
   StickerCardDescription,
   StickerCardIcon,
 } from "@/components/ui/card";
+import { getAuthErrorHint, getAuthErrorMessage } from "@/lib/auth-errors";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string | string[] }>;
+}) {
   const cookieStore = await cookies();
   if (cookieStore.get(SESSION_COOKIE_NAME)) {
     redirect("/dashboard");
   }
+
+  const { error } = await searchParams;
+  const errorCode = Array.isArray(error) ? error[0] : error;
+  const errorMessage = getAuthErrorMessage(errorCode);
+  const errorHint =
+    process.env.NODE_ENV === "production" ? null : getAuthErrorHint(errorCode);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -61,6 +73,32 @@ export default async function Home() {
             post next. Spool turns your Threads data into algorithm-aware
             insights and AI-powered content recommendations.
           </p>
+          {errorMessage ? (
+            <div
+              role="alert"
+              className="mt-6 w-full max-w-md rounded-[var(--radius-lg)] border border-neg/30 bg-neg-soft px-4 py-3 text-left"
+            >
+              <div className="flex items-start gap-2.5">
+                <WarningCircle
+                  weight="fill"
+                  className="mt-0.5 size-4 shrink-0 text-neg"
+                />
+                <div>
+                  <p className="text-sm font-medium text-neg">
+                    Couldn&apos;t sign you in
+                  </p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {errorMessage}
+                  </p>
+                  {errorHint ? (
+                    <p className="mt-1 font-mono text-xs text-muted-foreground/80">
+                      {errorHint}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : null}
           <a
             href="/api/auth/threads"
             className={buttonVariants({ size: "lg", className: "mt-8" })}
