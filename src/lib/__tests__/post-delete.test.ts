@@ -9,6 +9,7 @@ const MEDIA_ID = "17900000000000001";
 const THREADS_USER_ID = "threads-123";
 const ENCRYPTED_TOKEN = "encrypted-token";
 const DECRYPTED_TOKEN = "decrypted-token";
+const THREADS_FAILURE_LOG = "Threads delete not confirmed; post kept in Spool";
 
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
@@ -45,6 +46,10 @@ import { deletePostForUser, getDeleteQuotaForUser } from "../post-delete";
 // Every query is recorded with its table, operation, payload and `.eq()`
 // filters, so the tests can check what was read or written and for whom. A
 // query settles with the result configured under "<table>.<op>".
+//
+// A failed query's `error` is a plain `{ message }` object, as postgrest-js
+// returns it. It is never an Error instance, so the code under test must not
+// rely on `instanceof Error` to read it.
 
 type QueryResult = { data: unknown; error: unknown };
 
@@ -136,6 +141,18 @@ function failThreadsDelete(error: unknown) {
 
 function loggedErrors() {
   return JSON.stringify(errorSpy.mock.calls);
+}
+
+// Resolves to whatever the promise rejects with, so a test can check both the
+// type and the message of the thrown value.
+async function rejectionOf(promise: Promise<unknown>): Promise<unknown> {
+  try {
+    await promise;
+  } catch (error) {
+    return error;
+  }
+
+  throw new Error("Expected the promise to reject");
 }
 
 beforeEach(() => {
@@ -242,13 +259,17 @@ describe("deletePostForUser", () => {
     );
 
     it("throws when loading the post fails, instead of reporting the post as gone", async () => {
-      const databaseError = new Error("connection reset");
-      results["posts.select"] = { data: null, error: databaseError };
+      results["posts.select"] = {
+        data: null,
+        error: { message: "connection reset" },
+      };
 
-      await expect(deletePostForUser(USER_ID, POST_ID)).rejects.toBe(
-        databaseError,
+      const thrown = await rejectionOf(deletePostForUser(USER_ID, POST_ID));
+
+      expect(thrown).toBeInstanceOf(Error);
+      expect((thrown as Error).message).toBe(
+        "Failed to load post: connection reset",
       );
-
       expect(mocks.getMostRecentBackfillJob).not.toHaveBeenCalled();
       expect(mocks.deletePost).not.toHaveBeenCalled();
       expect(writes()).toEqual([]);
@@ -297,17 +318,35 @@ describe("deletePostForUser", () => {
       },
     );
 
-    it("fails closed when the backfill lookup itself fails", async () => {
-      const lookupError = new Error("backfill lookup failed");
-      mocks.getMostRecentBackfillJob.mockRejectedValue(lookupError);
+    it.each([
+      {
+        label: "a plain database error object",
+        thrown: { message: "backfill lookup failed" },
+        message: "Failed to check backfill status: backfill lookup failed",
+      },
+      {
+        label: "an Error",
+        thrown: new Error("backfill lookup failed"),
+        message: "Failed to check backfill status: backfill lookup failed",
+      },
+      {
+        label: "something without a message",
+        thrown: "nope",
+        message: "Failed to check backfill status: Unknown error",
+      },
+    ])(
+      "fails closed when the backfill lookup itself fails ($label)",
+      async ({ thrown, message }) => {
+        mocks.getMostRecentBackfillJob.mockRejectedValue(thrown);
 
-      await expect(deletePostForUser(USER_ID, POST_ID)).rejects.toBe(
-        lookupError,
-      );
+        const error = await rejectionOf(deletePostForUser(USER_ID, POST_ID));
 
-      expect(mocks.deletePost).not.toHaveBeenCalled();
-      expect(writes()).toEqual([]);
-    });
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toBe(message);
+        expect(mocks.deletePost).not.toHaveBeenCalled();
+        expect(writes()).toEqual([]);
+      },
+    );
   });
 
   describe("the Threads token", () => {
@@ -345,8 +384,8 @@ describe("deletePostForUser", () => {
     it.each([
       {
         label: "a database error",
-        result: { data: null, error: new Error("users read failed") },
-        message: "users read failed",
+        result: { data: null, error: { message: "users read failed" } },
+        message: "Failed to load user: users read failed",
       },
       {
         label: "a missing row",
@@ -358,10 +397,10 @@ describe("deletePostForUser", () => {
       async ({ result, message }) => {
         results["users.select"] = result;
 
-        await expect(deletePostForUser(USER_ID, POST_ID)).rejects.toThrow(
-          message,
-        );
+        const thrown = await rejectionOf(deletePostForUser(USER_ID, POST_ID));
 
+        expect(thrown).toBeInstanceOf(Error);
+        expect((thrown as Error).message).toBe(message);
         expect(mocks.deletePost).not.toHaveBeenCalled();
         expect(writes()).toEqual([]);
       },
@@ -437,6 +476,136 @@ describe("deletePostForUser", () => {
         expect(writes()).toEqual([]);
       },
     );
+
+    // The literal strings below are the user-facing wording. They are spelled
+    // out on purpose, not computed with getThreadsErrorMessage.
+    it("uses the generic message when Threads refused the delete with a 4xx but gave no reason", async () => {
+      failThreadsDelete(
+        new ThreadsAPIError("Failed to delete post", 400, {
+          error: { code: 100 },
+        }),
+      );
+
+      await expect(deletePostForUser(USER_ID, POST_ID)).resolves.toEqual({
+        ok: false,
+        code: "threads_error",
+        status: 502,
+        message: "Threads couldn't delete this post.",
+      });
+      expect(writes()).toEqual([]);
+    });
+
+    it("says it could not confirm the delete when the failure is not a refusal from Threads", async () => {
+      failThreadsDelete(new Error("boom"));
+
+      await expect(deletePostForUser(USER_ID, POST_ID)).resolves.toEqual({
+        ok: false,
+        code: "threads_error",
+        status: 502,
+        message: "Couldn't confirm whether Threads deleted this post.",
+      });
+      expect(writes()).toEqual([]);
+    });
+
+    it.each([
+      {
+        label: "a 4xx refusal from Threads",
+        error: new ThreadsAPIError("Failed to delete post", 400, {
+          error: { message: "Boom" },
+        }),
+        logged: { status: 400, message: "Failed to delete post" },
+      },
+      {
+        label: "a timeout",
+        error: new ThreadsAPIError(
+          "Threads API request timed out after 30s",
+          408,
+        ),
+        logged: {
+          status: 408,
+          message: "Threads API request timed out after 30s",
+        },
+      },
+      {
+        label: "a network error",
+        error: new ThreadsAPIError(
+          "Threads API network request failed: fetch failed",
+          undefined,
+          {
+            reason: "network_error",
+            url: "https://graph.threads.net/v1.0/17900000000000001?access_token=REDACTED",
+          },
+        ),
+        logged: { message: "Threads API network request failed: fetch failed" },
+      },
+      {
+        label: "a 200 without success: true",
+        error: new ThreadsAPIError("Threads did not confirm the delete", 200, {
+          success: false,
+        }),
+        logged: { status: 200, message: "Threads did not confirm the delete" },
+      },
+      {
+        label: "a plain Error",
+        error: new Error("boom"),
+        logged: { message: "boom" },
+      },
+      {
+        label: "a value that is not an Error",
+        error: "nope",
+        logged: { message: "Unknown error" },
+      },
+    ])(
+      "logs the post, the status and the message for $label, and nothing else",
+      async ({ error, logged }) => {
+        failThreadsDelete(error);
+
+        await deletePostForUser(USER_ID, POST_ID);
+
+        // Exactly one call with exactly these arguments: no response body, no
+        // request URL and no error object.
+        expect(errorSpy.mock.calls).toStrictEqual([
+          [THREADS_FAILURE_LOG, { postId: POST_ID, ...logged }],
+        ]);
+      },
+    );
+
+    it.each([
+      {
+        label: "a network error that names the request URL",
+        error: new ThreadsAPIError(
+          "Threads API network request failed: fetch failed for https://graph.threads.net/v1.0/17900000000000001?fields=id&access_token=secret-token",
+          undefined,
+          {
+            reason: "network_error",
+            url: "https://graph.threads.net/v1.0/17900000000000001?access_token=secret-token",
+          },
+        ),
+        loggedMessage:
+          "Threads API network request failed: fetch failed for https://graph.threads.net/v1.0/17900000000000001?fields=id&access_token=REDACTED",
+      },
+      {
+        label: "a TypeError that names the request URL",
+        error: new TypeError(
+          "Failed to parse URL from https://graph.threads.net/v1.0/17900000000000001?access_token=secret-token",
+        ),
+        loggedMessage:
+          "Failed to parse URL from https://graph.threads.net/v1.0/17900000000000001?access_token=REDACTED",
+      },
+    ])(
+      "keeps the access token out of the log and the result for $label",
+      async ({ error, loggedMessage }) => {
+        failThreadsDelete(error);
+
+        const result = await deletePostForUser(USER_ID, POST_ID);
+
+        expect(errorSpy.mock.calls).toStrictEqual([
+          [THREADS_FAILURE_LOG, { postId: POST_ID, message: loggedMessage }],
+        ]);
+        expect(loggedErrors()).not.toContain("secret-token");
+        expect(JSON.stringify(result)).not.toContain("secret-token");
+      },
+    );
   });
 
   describe("removing the post from Spool", () => {
@@ -482,7 +651,7 @@ describe("deletePostForUser", () => {
     it("returns spool_cleanup_failed and does not delete the post row when discarding predictions fails", async () => {
       results["post_predictions.update"] = {
         data: null,
-        error: new Error("predictions update failed"),
+        error: { message: "predictions update failed" },
       };
 
       await expect(deletePostForUser(USER_ID, POST_ID)).resolves.toEqual({
@@ -508,7 +677,7 @@ describe("deletePostForUser", () => {
     it("returns spool_cleanup_failed when deleting the post row fails", async () => {
       results["posts.delete"] = {
         data: null,
-        error: new Error("post delete failed"),
+        error: { message: "post delete failed" },
       };
 
       await expect(deletePostForUser(USER_ID, POST_ID)).resolves.toEqual({
@@ -577,8 +746,8 @@ describe("getDeleteQuotaForUser", () => {
   it.each([
     {
       label: "a database error",
-      result: { data: null, error: new Error("users read failed") },
-      message: "users read failed",
+      result: { data: null, error: { message: "users read failed" } },
+      message: "Failed to load user: users read failed",
     },
     {
       label: "a missing row",
@@ -590,8 +759,10 @@ describe("getDeleteQuotaForUser", () => {
     async ({ result, message }) => {
       results["users.select"] = result;
 
-      await expect(getDeleteQuotaForUser(USER_ID)).rejects.toThrow(message);
+      const thrown = await rejectionOf(getDeleteQuotaForUser(USER_ID));
 
+      expect(thrown).toBeInstanceOf(Error);
+      expect((thrown as Error).message).toBe(message);
       expect(mocks.getDeleteQuota).not.toHaveBeenCalled();
     },
   );

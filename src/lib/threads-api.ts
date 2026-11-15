@@ -69,19 +69,35 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+// Threads received the request and refused to run it: a 4xx, except 408 (the
+// request timed out, so its outcome is unknown). A 429 counts, since a request
+// that was rate limited was not executed.
+function isRefusalStatus(status: number | undefined): boolean {
+  return (
+    typeof status === "number" &&
+    status >= 400 &&
+    status < 500 &&
+    status !== 408
+  );
+}
+
 /**
- * User-facing reason a delete failed. A timeout or network error means the
- * outcome is unknown (the post may be gone), so that is checked before the
- * message in the Threads error body.
+ * User-facing reason a delete failed. Only Threads refusing the request (a
+ * ThreadsAPIError with a 4xx status other than 408) proves the post was not
+ * deleted, so only then is the message from the Threads error body shown.
+ * Anything else leaves the outcome unknown, because the post may already be
+ * gone: a timeout, a network error, a 5xx, a 200 without `success: true`, a
+ * response that could not be read, a missing status, or an error that did not
+ * come from Threads. That is checked before the message in the body.
  */
 export function getThreadsErrorMessage(error: unknown): string {
-  if (!(error instanceof ThreadsAPIError)) {
-    return DELETE_FAILED_MESSAGE;
+  if (!(error instanceof ThreadsAPIError) || !isRefusalStatus(error.status)) {
+    return DELETE_UNCONFIRMED_MESSAGE;
   }
 
   const body = isRecord(error.body) ? error.body : null;
 
-  if (error.status === 408 || body?.reason === "network_error") {
+  if (body?.reason === "network_error") {
     return DELETE_UNCONFIRMED_MESSAGE;
   }
 

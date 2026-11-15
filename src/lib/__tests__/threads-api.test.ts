@@ -1080,24 +1080,90 @@ describe("getThreadsErrorMessage", () => {
         }),
       ),
     ).toBe(unconfirmed);
+    // Also on a status that would otherwise count as a refusal from Threads.
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", 400, {
+          reason: "network_error",
+          error: { message: "Boom" },
+        }),
+      ),
+    ).toBe(unconfirmed);
   });
 
-  it("falls back to a generic message", () => {
-    expect(getThreadsErrorMessage(new ThreadsAPIError("x", 500))).toBe(generic);
-    expect(getThreadsErrorMessage(new ThreadsAPIError("x", 200, null))).toBe(
+  it("shows the Threads message for any 4xx other than a timeout, a rate limit included", () => {
+    for (const status of [400, 401, 403, 404, 429, 499]) {
+      expect(
+        getThreadsErrorMessage(
+          new ThreadsAPIError("x", status, { error: { message: "Boom" } }),
+        ),
+      ).toBe("Boom");
+    }
+  });
+
+  it("falls back to a generic message when Threads refused the delete without a reason", () => {
+    expect(getThreadsErrorMessage(new ThreadsAPIError("x", 400))).toBe(generic);
+    expect(getThreadsErrorMessage(new ThreadsAPIError("x", 404, null))).toBe(
       generic,
     );
     expect(
-      getThreadsErrorMessage(new ThreadsAPIError("x", 200, { success: false })),
+      getThreadsErrorMessage(new ThreadsAPIError("x", 400, { error: {} })),
     ).toBe(generic);
     expect(
       getThreadsErrorMessage(
         new ThreadsAPIError("x", 400, { error: { message: "" } }),
       ),
     ).toBe(generic);
-    expect(getThreadsErrorMessage(new Error("boom"))).toBe(generic);
-    expect(getThreadsErrorMessage("boom")).toBe(generic);
-    expect(getThreadsErrorMessage(undefined)).toBe(generic);
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", 400, { error: { message: "   " } }),
+      ),
+    ).toBe(generic);
+  });
+
+  it.each([200, 301, 399, 500, 502, 503])(
+    "says the outcome is unknown for status %i, even when the body has a message",
+    (status) => {
+      expect(getThreadsErrorMessage(new ThreadsAPIError("x", status))).toBe(
+        unconfirmed,
+      );
+      expect(
+        getThreadsErrorMessage(
+          new ThreadsAPIError("x", status, { error: { message: "Boom" } }),
+        ),
+      ).toBe(unconfirmed);
+    },
+  );
+
+  it("says the outcome is unknown when Threads answered 200 without confirming the delete", () => {
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("Threads did not confirm the delete", 200, {
+          success: false,
+        }),
+      ),
+    ).toBe(unconfirmed);
+    expect(getThreadsErrorMessage(new ThreadsAPIError("x", 200, null))).toBe(
+      unconfirmed,
+    );
+  });
+
+  it("says the outcome is unknown when there is no HTTP status", () => {
+    expect(getThreadsErrorMessage(new ThreadsAPIError("x"))).toBe(unconfirmed);
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", undefined, { error: { message: "Boom" } }),
+      ),
+    ).toBe(unconfirmed);
+  });
+
+  it("says the outcome is unknown for an error that did not come from Threads", () => {
+    expect(getThreadsErrorMessage(new Error("boom"))).toBe(unconfirmed);
+    expect(
+      getThreadsErrorMessage(new SyntaxError("Unexpected end of JSON input")),
+    ).toBe(unconfirmed);
+    expect(getThreadsErrorMessage("boom")).toBe(unconfirmed);
+    expect(getThreadsErrorMessage(undefined)).toBe(unconfirmed);
   });
 });
 

@@ -64,34 +64,56 @@ describe("post delete quota route", () => {
     expect(mocks.getDeleteQuotaForUser).toHaveBeenCalledWith("user-uuid");
   });
 
-  it("returns 500 quota_check_failed when the lookup throws, and logs only the message", async () => {
-    const failure = new Error("database down");
-    mocks.getDeleteQuotaForUser.mockRejectedValue(failure);
+  it.each([
+    {
+      // postgrest-js returns a failed query's error as a plain object, not an
+      // Error, so this is what a database failure looks like if it is thrown
+      // as is.
+      label: "a plain database error object",
+      thrown: {
+        code: "42P01",
+        details: null,
+        hint: null,
+        message: 'relation "users" does not exist',
+      },
+      logged: 'Delete quota check failed: relation "users" does not exist',
+    },
+    {
+      label: "an Error",
+      thrown: new Error("Failed to load user: users read failed"),
+      logged:
+        "Delete quota check failed: Failed to load user: users read failed",
+    },
+    {
+      label: "a string",
+      thrown: "not an error object",
+      logged: "Delete quota check failed: Unknown error",
+    },
+    {
+      label: "an object whose message is not a string",
+      thrown: { code: "42P01", message: 42 },
+      logged: "Delete quota check failed: Unknown error",
+    },
+    {
+      label: "null",
+      thrown: null,
+      logged: "Delete quota check failed: Unknown error",
+    },
+  ])(
+    "returns 500 quota_check_failed and logs only the message when the lookup throws $label",
+    async ({ thrown, logged }) => {
+      mocks.getDeleteQuotaForUser.mockRejectedValue(thrown);
 
-    const response = await callGet();
+      const response = await callGet();
 
-    expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toEqual({
-      error: "quota_check_failed",
-    });
+      expect(response.status).toBe(500);
+      await expect(response.json()).resolves.toEqual({
+        error: "quota_check_failed",
+      });
 
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-    const [loggedArguments] = errorSpy.mock.calls;
-    expect(loggedArguments).toHaveLength(1);
-    expect(loggedArguments[0]).toEqual(expect.any(String));
-    expect(loggedArguments[0]).toContain("database down");
-    expect(loggedArguments).not.toContain(failure);
-  });
-
-  it("returns 500 quota_check_failed when something other than an Error is thrown", async () => {
-    mocks.getDeleteQuotaForUser.mockRejectedValue("not an error object");
-
-    const response = await callGet();
-
-    expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toEqual({
-      error: "quota_check_failed",
-    });
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-  });
+      // Exactly one call with a single string argument: never the thrown
+      // value itself, which can carry request details.
+      expect(errorSpy.mock.calls).toStrictEqual([[logged]]);
+    },
+  );
 });

@@ -2,7 +2,12 @@ import { isImportingBackfillStatus } from "@/lib/backfill-job";
 import { getMostRecentBackfillJob } from "@/lib/backfill-recovery";
 import { decrypt } from "@/lib/crypto";
 import { createAdminClient } from "@/lib/supabase/server";
-import { ThreadsAPI, getThreadsErrorMessage } from "@/lib/threads-api";
+import { ThreadsAPIError } from "@/lib/threads";
+import {
+  ThreadsAPI,
+  getThreadsErrorMessage,
+  redactAccessToken,
+} from "@/lib/threads-api";
 import type { ThreadsDeleteQuota } from "@/lib/threads-api.types";
 
 export type DeletePostErrorCode =
@@ -39,6 +44,22 @@ function postNotFound(): DeletePostFailure {
   return failure("not_found", 404, "This post is no longer in Spool.");
 }
 
+// postgrest-js returns a failed query's error as a plain `{ message, ... }`
+// object, not an Error. Thrown as is, it logs as "Unknown error" wherever only
+// an Error's message is read, so a failed read is wrapped in an Error that
+// says which read failed and why.
+function readFailure(context: string, error: unknown): Error {
+  const message =
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+      ? error.message
+      : "Unknown error";
+
+  return new Error(`${context}: ${message}`);
+}
+
 async function loadThreadsUser(supabase: AdminClient, userId: string) {
   const { data: user, error } = await supabase
     .from("users")
@@ -46,13 +67,49 @@ async function loadThreadsUser(supabase: AdminClient, userId: string) {
     .eq("id", userId)
     .single();
 
-  if (error || !user) throw error ?? new Error("User not found");
+  if (error) throw readFailure("Failed to load user", error);
+  if (!user) throw new Error("User not found");
 
   return user;
 }
 
+// A backfill that listed a post before it was deleted could write it back
+// afterwards, so deleting waits for any import to finish. This is the Posts
+// page's `isImporting` test: the most recent job, with no staleness check, so
+// a stuck job keeps deleting blocked until the user clears it.
+async function isImporting(
+  supabase: AdminClient,
+  userId: string,
+): Promise<boolean> {
+  try {
+    const job = await getMostRecentBackfillJob(supabase, userId);
+    return isImportingBackfillStatus(job?.status);
+  } catch (error) {
+    throw readFailure("Failed to check backfill status", error);
+  }
+}
+
 function isTokenExpired(user: { token_expires_at: string }): boolean {
   return new Date(user.token_expires_at) <= new Date();
+}
+
+// A failed or unconfirmed Threads delete is where Threads and Spool can drift
+// apart (a timeout, or a changed success body, may still have deleted the
+// post), so it always leaves a trace. Log the post, the HTTP status and the
+// message with any access token redacted, never the response body, the request
+// URL or the error object.
+function logThreadsDeleteFailure(postId: string, error: unknown) {
+  const message = redactAccessToken(
+    error instanceof Error ? error.message : "Unknown error",
+  );
+
+  console.error("Threads delete not confirmed; post kept in Spool", {
+    postId,
+    ...(error instanceof ThreadsAPIError && typeof error.status === "number"
+      ? { status: error.status }
+      : {}),
+    message,
+  });
 }
 
 // Threads has already deleted the post when this runs, so the leftover Spool
@@ -84,7 +141,7 @@ function cleanupFailed(
  * A database error on any read (the post, the backfill job, the user) throws,
  * so a failed read is never reported as "post gone" and never lets a delete
  * through. Any rejection from the Threads call means "not confirmed deleted":
- * the Spool row is left untouched.
+ * it is logged, and the Spool row is left untouched.
  */
 export async function deletePostForUser(
   userId: string,
@@ -103,15 +160,10 @@ export async function deletePostForUser(
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (postError) throw postError;
+  if (postError) throw readFailure("Failed to load post", postError);
   if (!post) return postNotFound();
 
-  // A backfill that listed this post before the delete could write it back
-  // afterwards, so deleting waits for any import to finish. This is the Posts
-  // page's `isImporting` test: the most recent job, with no staleness check, so
-  // a stuck job keeps deleting blocked until the user clears it.
-  const backfillJob = await getMostRecentBackfillJob(supabase, userId);
-  if (isImportingBackfillStatus(backfillJob?.status)) {
+  if (await isImporting(supabase, userId)) {
     return failure(
       "import_in_progress",
       409,
@@ -133,6 +185,7 @@ export async function deletePostForUser(
   try {
     await api.deletePost(post.threads_media_id);
   } catch (error) {
+    logThreadsDeleteFailure(postId, error);
     return failure("threads_error", 502, getThreadsErrorMessage(error));
   }
 
