@@ -124,6 +124,35 @@ function isRetryableFetchError(error: unknown) {
   return error instanceof TypeError;
 }
 
+// A 4xx other than 408 (timeout) and 429 (rate limit) is Threads answering the
+// request, for example because the token may not delete. It is not the call
+// itself failing.
+function isOrdinaryClientError(error: unknown): boolean {
+  return (
+    error instanceof ThreadsAPIError &&
+    typeof error.status === "number" &&
+    error.status >= 400 &&
+    error.status < 500 &&
+    error.status !== 408 &&
+    error.status !== 429
+  );
+}
+
+// What is safe to log about a failure: the HTTP status and the message, never
+// the response body, the request URL or the error object.
+function describeFailureForLog(error: unknown): {
+  status?: number;
+  message: string;
+} {
+  const message = redactAccessToken(
+    error instanceof Error ? error.message : "Unknown error",
+  );
+
+  return error instanceof ThreadsAPIError && typeof error.status === "number"
+    ? { status: error.status, message }
+    : { message };
+}
+
 export class ThreadsAPI {
   constructor(
     private accessToken: string,
@@ -524,7 +553,9 @@ export class ThreadsAPI {
   /**
    * The delete quota call doubles as the permission check: delete counts as
    * permitted only when the response carries `delete_config`. Any error, or a
-   * response without it, means "not permitted".
+   * response without it, means "not permitted". An error that does not look
+   * like Threads answering the request (outage, timeout, rate limit, 5xx, a
+   * bug) is also logged, so it leaves a trace on the server.
    */
   async getDeleteQuota(): Promise<ThreadsDeleteQuota> {
     try {
@@ -552,7 +583,14 @@ export class ThreadsAPI {
         total,
         remaining: Math.max(0, total - used),
       };
-    } catch {
+    } catch (error) {
+      if (!isOrdinaryClientError(error)) {
+        console.warn(
+          "Threads delete quota check failed",
+          describeFailureForLog(error),
+        );
+      }
+
       return { permitted: false };
     }
   }

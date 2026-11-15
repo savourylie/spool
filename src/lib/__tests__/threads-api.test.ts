@@ -637,6 +637,158 @@ describe("ThreadsAPI", () => {
 
       await expect(api.getDeleteQuota()).resolves.toEqual({ permitted: false });
     });
+
+    describe("failure logging", () => {
+      const logMessage = "Threads delete quota check failed";
+      let warnSpy: ReturnType<typeof vi.spyOn>;
+
+      beforeEach(() => {
+        warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it.each([400, 403, 404, 499])(
+        "stays quiet on an ordinary %i client error",
+        async (status) => {
+          fetchSpy.mockResolvedValueOnce(
+            jsonResponse({ error: { message: "nope" } }, { status }),
+          );
+
+          await expect(api.getDeleteQuota()).resolves.toEqual({
+            permitted: false,
+          });
+          expect(warnSpy).not.toHaveBeenCalled();
+        },
+      );
+
+      it("stays quiet when the response has no usable delete_config", async () => {
+        fetchSpy
+          .mockResolvedValueOnce(
+            jsonResponse({ data: [{ delete_quota_usage: 3 }] }),
+          )
+          .mockResolvedValueOnce(jsonResponse({ data: [{ delete_config: {} }] }))
+          .mockResolvedValueOnce(jsonResponse({ data: [] }));
+
+        for (let call = 0; call < 3; call++) {
+          await expect(api.getDeleteQuota()).resolves.toEqual({
+            permitted: false,
+          });
+        }
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it("logs a server error once, with only its status and message", async () => {
+        fetchSpy.mockResolvedValueOnce(
+          jsonResponse(
+            { error: { message: "Internal error", fbtrace_id: "trace-1" } },
+            { status: 500 },
+          ),
+        );
+
+        await expect(api.getDeleteQuota()).resolves.toEqual({
+          permitted: false,
+        });
+
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy).toHaveBeenCalledWith(logMessage, {
+          status: 500,
+          message: "Threads API error: 500",
+        });
+        expect(JSON.stringify(warnSpy.mock.calls)).not.toContain("test-token");
+      });
+
+      it("logs a network failure once, without the token", async () => {
+        vi.useFakeTimers();
+        vi.spyOn(Math, "random").mockReturnValue(0);
+
+        fetchSpy.mockRejectedValue(new TypeError("fetch failed"));
+
+        const promise = api.getDeleteQuota();
+        // Long enough for every GET retry backoff to elapse.
+        await vi.advanceTimersByTimeAsync(10_000);
+
+        await expect(promise).resolves.toEqual({ permitted: false });
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy).toHaveBeenCalledWith(logMessage, {
+          message: "Threads API network request failed: fetch failed",
+        });
+        expect(JSON.stringify(warnSpy.mock.calls)).not.toContain("test-token");
+      });
+
+      it("logs a request timeout (408)", async () => {
+        fetchSpy.mockResolvedValueOnce(
+          jsonResponse({ error: { message: "timeout" } }, { status: 408 }),
+        );
+
+        await expect(api.getDeleteQuota()).resolves.toEqual({
+          permitted: false,
+        });
+
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy).toHaveBeenCalledWith(logMessage, {
+          status: 408,
+          message: "Threads API error: 408",
+        });
+      });
+
+      it("logs once when rate-limit retries are exhausted", async () => {
+        vi.useFakeTimers();
+
+        const response429 = () =>
+          new Response(null, {
+            status: 429,
+            headers: { "Retry-After": "0" },
+          });
+        fetchSpy
+          .mockResolvedValueOnce(response429())
+          .mockResolvedValueOnce(response429())
+          .mockResolvedValueOnce(response429())
+          .mockResolvedValueOnce(response429());
+
+        const promise = api.getDeleteQuota();
+        await vi.advanceTimersByTimeAsync(30_000);
+
+        await expect(promise).resolves.toEqual({ permitted: false });
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy).toHaveBeenCalledWith(logMessage, {
+          status: 429,
+          message: "Rate limited: max retries exceeded",
+        });
+      });
+
+      it("logs an unexpected non-Threads error with only its message", async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(null));
+
+        await expect(api.getDeleteQuota()).resolves.toEqual({
+          permitted: false,
+        });
+
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy).toHaveBeenCalledWith(logMessage, {
+          message: expect.any(String),
+        });
+      });
+
+      it("keeps a token echoed in an error message out of the log", async () => {
+        fetchSpy.mockRejectedValueOnce(
+          new Error(
+            "Failed to parse URL from https://graph.threads.net/v1.0/user-123/threads_publishing_limit?access_token=test-token",
+          ),
+        );
+
+        await expect(api.getDeleteQuota()).resolves.toEqual({
+          permitted: false,
+        });
+
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        const logged = JSON.stringify(warnSpy.mock.calls);
+        expect(logged).not.toContain("test-token");
+        expect(logged).toContain("access_token=REDACTED");
+      });
+    });
   });
 
   describe("refreshToken", () => {
