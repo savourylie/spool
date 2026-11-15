@@ -136,16 +136,29 @@ export async function refreshMetrics(
     // Skip posts we just fetched metrics for above
     if (newPostsData.some((p) => p.id === post.threads_media_id)) continue;
 
-    const insights = await api.getPostInsights(post.threads_media_id);
-    await supabase.from("post_metrics").insert({
-      post_id: post.id,
-      views: insights.views,
-      likes: insights.likes,
-      replies: insights.replies,
-      reposts: insights.reposts,
-      quotes: insights.quotes,
-      shares: insights.shares,
-    });
+    // A post deleted on Threads (here or in the Threads app) can linger in
+    // Spool, and Threads rejects its insights call. Skip it so one leftover row
+    // does not stop the refresh for this user.
+    try {
+      const insights = await api.getPostInsights(post.threads_media_id);
+      await supabase.from("post_metrics").insert({
+        post_id: post.id,
+        views: insights.views,
+        likes: insights.likes,
+        replies: insights.replies,
+        reposts: insights.reposts,
+        quotes: insights.quotes,
+        shares: insights.shares,
+      });
+    } catch (error) {
+      // Log the message only. The error object and its body can hold a request
+      // URL, which would carry the access token.
+      const reason = error instanceof Error ? error.message : "Unknown error";
+      console.error(
+        `Skipping metrics for post ${post.id} (Threads media ${post.threads_media_id}): ${reason}`,
+      );
+      continue;
+    }
     updatedMetrics++;
   }
 
