@@ -5,6 +5,24 @@ function readSource(relativePath: string) {
   return readFile(new URL(relativePath, import.meta.url), "utf8");
 }
 
+// The body of the function declared by `signature`, found by matching braces
+// from the first "{" after it. Throws when the declaration is missing, so a
+// renamed function fails the test instead of passing it vacuously.
+function functionBody(source: string, signature: string): string {
+  const at = source.indexOf(signature);
+  if (at === -1) throw new Error(`${signature} not found`);
+
+  const open = source.indexOf("{", at + signature.length);
+  if (open === -1) throw new Error(`${signature} has no body`);
+
+  let depth = 0;
+  for (let i = open; i < source.length; i++) {
+    if (source[i] === "{") depth++;
+    if (source[i] === "}" && --depth === 0) return source.slice(open + 1, i);
+  }
+  throw new Error(`${signature} has no closing brace`);
+}
+
 const DIALOG = "../../../components/dashboard/bulk-delete-dialog.tsx";
 const DIALOG_PRIMITIVE = "../../../components/ui/dialog.tsx";
 const BAR = "../../../components/dashboard/post-selection-bar.tsx";
@@ -29,9 +47,20 @@ describe("bulk delete source", () => {
 
     it("ignores a second start while a run is in flight", async () => {
       const dialog = await readSource(DIALOG);
+      const start = functionBody(dialog, "async function start(");
 
-      expect(dialog).toContain("runningRef");
-      expect(dialog).toMatch(/if \(runningRef\.current\) return;/);
+      // Checked and set with nothing in between, so a second click cannot get
+      // past the check before the first one has set the flag.
+      expect(start).toMatch(
+        /if \(runningRef\.current\) return;\s*runningRef\.current = true;/,
+      );
+      // Cleared in one place only: once the awaited run has ended.
+      expect(dialog.match(/runningRef\.current = false/g)).toHaveLength(1);
+      const runAt = start.indexOf("await runBulkDelete(");
+      expect(runAt).toBeGreaterThan(-1);
+      expect(start.indexOf("runningRef.current = false")).toBeGreaterThan(
+        runAt,
+      );
     });
 
     it("refuses every dismiss request while running", async () => {
@@ -40,6 +69,18 @@ describe("bulk delete source", () => {
       // The primitive's Escape and outside-press requests are cancelled, and
       // the check reads the ref, which flips before any render.
       expect(dialog).toMatch(/runningRef\.current[^;]*\)\s*\{\s*\w+\.cancel\(\);/);
+    });
+
+    it("closes the summary through finish, so Escape and an outside press apply the result too", async () => {
+      const dialog = await readSource(DIALOG);
+      const handleOpenChange = functionBody(
+        dialog,
+        "function handleOpenChange(",
+      );
+
+      expect(handleOpenChange).toMatch(
+        /if \(phase === "summary"\) \{\s*finish\(\);\s*return;\s*\}/,
+      );
     });
 
     it("warns before the tab closes while a run is in flight and removes the warning afterwards", async () => {
@@ -69,6 +110,17 @@ describe("bulk delete source", () => {
       // A single remove for the ids gathered over every run in this dialog.
       expect(dialog.match(/\bremove\(/g)).toHaveLength(1);
       expect(dialog).toMatch(/onFinished\(/);
+
+      // All of it happens when the summary closes...
+      const finish = functionBody(dialog, "function finish()");
+      expect(finish).toMatch(/\bremove\(/);
+      expect(finish).toContain("router.refresh()");
+      expect(finish).toMatch(/\bonFinished\(/);
+      expect(finish).toContain("onOpenChange(false)");
+      // ...and none of it while a run is going.
+      const start = functionBody(dialog, "async function start(");
+      expect(start).not.toMatch(/\bremove\(/);
+      expect(start).not.toContain("router.refresh()");
     });
 
     it("says the delete is permanent and links to the CSV export", async () => {
