@@ -1,7 +1,7 @@
 # Bulk Delete Posts — Design
 
 **Date:** 2026-11-15
-**Status:** Draft, awaiting approval
+**Status:** Approved and implemented. Where the build differs from this text, the "Execution rulings" section of the plan (`docs/superpowers/plans/2026-11-16-bulk-delete-posts.md`) records what changed and why.
 
 ## Purpose
 
@@ -74,7 +74,7 @@ Items marked **(my call)** were decided by the author, not the user, and can be 
 ### Permission and reconnect
 
 - Add `threads_delete` to the scope list in `getAuthorizationUrl`. Every new sign-in and every reconnect requests it. **(my call)** The alternative, requesting it only when a user opts in to deleting, was rejected because an ordinary re-login would replace the token with one that lacks the permission.
-- Spool does not store granted permissions. Instead it asks Threads: the delete quota call doubles as the permission check. Delete is treated as permitted only when the response contains `delete_config`. An error response or a response without `delete_config` means "not permitted". **(my call)** This needs no migration and stays correct whatever the consent screen allows.
+- Spool does not store granted permissions. Instead it asks Threads: the delete quota call doubles as the permission check. Delete is treated as permitted only when the response contains `delete_config`. An HTTP error response from Threads (a 4xx or 5xx other than 408 and 429) or a response without `delete_config` means "not permitted". When Threads gives no answer (a network failure, a timeout, or still rate limited after the retries), the check fails instead, and the selection bar shows "Couldn't check today's delete limit." with Try again. **(my call)** This needs no migration and stays correct whatever the consent screen allows.
 - When delete is not permitted, the selection bar shows "Reconnect Threads to enable deleting" linking to `/api/auth/threads`. Reconnecting uses the existing OAuth flow unchanged, which ends on the Posts page and re-runs the backfill as any sign-in does today.
 - `docs/threads-setup.md` gains a step: add the `threads_delete` permission to the Threads use case in the Meta dashboard. `docs/threads-api.md` gains the delete endpoint, quota fields, and limit, and its two existing rows that describe `threads_delete` as a webhook-only permission are corrected.
 
@@ -86,7 +86,7 @@ Items marked **(my call)** were decided by the author, not the user, and can be 
 
 **`ThreadsAPI.getDeleteQuota()`** — calls the quota endpoint with only the two delete fields. Returns `{ permitted: true, used, total, remaining }` or `{ permitted: false }`.
 
-**`GET /api/posts/delete-quota`** — session required (401 otherwise). Returns the quota object above. An expired Threads token returns `{ permitted: false }`.
+**`GET /api/posts/delete-quota`** — session required (401 otherwise). Returns the quota object above. An expired Threads token returns `{ permitted: false }`. A failed check (a database error, or no answer from Threads) returns 500 `{ error: "quota_check_failed" }`.
 
 **`DELETE /api/posts/[postId]`** (new `src/app/api/posts/[postId]/route.ts`):
 
@@ -94,7 +94,7 @@ Items marked **(my call)** were decided by the author, not the user, and can be 
 2. Load the post by `id` **and** `user_id`. Not found → 404. This is the ownership check.
 3. The user's most recent backfill job has status `pending` or `running` → 409 `import_in_progress` (see Edge cases).
 4. Expired Threads token → 403 `reconnect_required`.
-5. Call `deletePost(threads_media_id)`. On failure → 502 with `{ error: "threads_error", message }`, where `message` is the message from the Threads error body when present. The Spool row is left untouched.
+5. Call `deletePost(threads_media_id)`. On failure → 502 with `{ error: "threads_error", message }`. The Spool row is left untouched. Only a Threads 4xx refusal (other than 408) is shown as a definite failure: `message` is the message from the Threads error body when present, otherwise "Threads couldn't delete this post." Every other failure (a network error, a timeout, a 5xx, a 200 that did not confirm the delete, an unexpected error) leaves the outcome unknown, and `message` is "Couldn't confirm whether Threads deleted this post."
 6. Delete the `posts` row. On success → 200 `{ deleted: true }`.
 7. If step 6 fails after step 5 succeeded → 500 `{ error: "spool_cleanup_failed" }`, logged server-side. The post is gone from Threads but still listed in Spool. This is a known, rare leftover; see Out of scope.
 
@@ -167,14 +167,19 @@ After confirming, the same dialog shows the run:
 - **Post already gone from Threads.** Threads returns an error; the post stays in Spool and is reported as failed with Threads' message.
 - **Timeout or network error during a delete.** The outcome is unknown. The post is reported as failed with a message saying the result could not be confirmed, and stays in Spool.
 - **Quota runs out mid-run** (for example deletions made elsewhere). The Threads error is reported per post like any other failure, and the three-in-a-row rule ends the run.
+- **Every post on the last page deleted.** `?page=N` is then past the last page. The Posts page redirects to the same URL without `page`, keeping sort and filters, so the user lands on page 1 instead of an empty page that looks like data loss.
 - **Unlinked predictions.** `post_predictions` rows for a deleted post lose their link. They must not be re-linked to a different post or reappear as awaiting review; the builder verifies how `post-review` treats them and adjusts if needed.
 - **Derived analyses** (topic clusters, brand voice, concept library, heatmaps) pick up the change the next time they recompute. No extra recomputation is triggered.
 
 ## Rollout
 
-1. Add the `threads_delete` permission to the Threads use case in the Meta dashboard. This is a manual step for the app owner.
-2. Only then deploy the code that requests the scope. Threads does not document what the consent screen does when asked for a permission the app does not have; if it rejects the request, deploying first would break sign-in.
-3. Existing users see the reconnect prompt the first time they select a post.
+Three release gates must all be met before this feature is deployed to production:
+
+1. **Meta permission.** The `threads_delete` permission is added to the Threads use case in the Meta dashboard and, if the app serves people who are not testers or don't have a role on the app, approved through Meta's App Review. This is a manual step for the app owner. Spool requests the scope on every sign-in, and Threads does not document what the consent screen does when asked for a permission the app does not have or that is not approved; if it rejects the request, deploying first would break sign-in for everyone.
+2. **Signed sessions.** TICKET-084 has landed (see Security note).
+3. **Real-account checks.** The manual checks 1–5 under Testing have been run against a real Threads account.
+
+After the deploy, existing users see the reconnect prompt the first time they select a post.
 
 ## Security note
 

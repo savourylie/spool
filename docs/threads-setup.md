@@ -68,9 +68,9 @@ THREADS_REDIRECT_URI=http://localhost:3000/api/auth/callback
 
 ## 6. Add the `threads_delete` Permission
 
-Spool requests `threads_delete` so users can delete posts from the Posts page. In the Meta dashboard, open your app's **Threads** use case and add the `threads_delete` permission.
+Spool requests `threads_delete` so users can delete posts from the Posts page. In the Meta dashboard, open your app's **Threads** use case and add the `threads_delete` permission. If the app serves people who are not testers or don't have a role on the app, the permission must also be approved through Meta's App Review.
 
-> Do this **before** deploying code that requests the permission. Threads doesn't document what the consent screen does when an app asks for a permission it doesn't have, and if it rejects the request, sign-in breaks.
+> Do this, App Review included, **before** deploying code that requests the permission. Spool requests the scope on every sign-in, and Threads doesn't document what the consent screen does when an app asks for a permission it doesn't have or that isn't approved. If it rejects the request, sign-in breaks for everyone.
 
 ## 7. Verify the OAuth Flow
 
@@ -91,3 +91,4 @@ Spool requests `threads_delete` so users can delete posts from the Posts page. I
 | Redirect URI mismatch error | `THREADS_REDIRECT_URI` in `.env.local` doesn't match the one configured in the Meta dashboard |
 | "User is not a tester" error | You haven't added and accepted the Threads tester role (see step 4) |
 | Token exchange fails | `THREADS_APP_SECRET` is incorrect or missing |
+| "Reconnect Threads to enable deleting" persists after reconnecting | `threads_delete` is missing from the app, not approved in App Review, or was declined on the consent screen (see step 6) |

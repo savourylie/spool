@@ -25,11 +25,11 @@
 
 ## Review Focus
 
-1. **Double-click on "Delete N posts".** Expected: exactly one run starts. Test: Task 7, `bulk-delete-dialog.source.test.ts` asserts the confirm button is disabled while running; Task 5 `runBulkDelete` is called through a guarded `start` (ref check).
+1. **Double-click on "Delete N posts".** Expected: exactly one run starts. Test: Task 7, `bulk-delete.source.test.ts` asserts that Task 5 `runBulkDelete` is called through a guarded `start`: `runningRef` is checked and set with nothing in between, and cleared only after the awaited run. While a run is going, Stop replaces the confirm buttons.
 2. **Spool session expires mid-run (401).** Expected: the run stops at once, like a reconnect, instead of failing every remaining post. Test: Task 5, "stops on unauthorized".
 3. **A selected post is no longer in Spool (404, e.g. deleted from another tab).** Expected: reported as failed with "This post is no longer in Spool." and dropped from the selection, so "Retry failed" does not loop on it. Test: Task 5, "not_found is failed and not retried".
 4. **Post with no text (`text_preview` null) in the dialog list.** Expected: shown as "—", like the table. Test: Task 4, `getDialogPreviewLines`.
-5. **The delete-quota request itself fails (network or 500).** Expected: the delete button is disabled with "Couldn't check today's delete limit." and a "Try again" action, not treated as "reconnect". Test: Task 4, `getDeleteGate` with `quota: "error"`.
+5. **The delete-quota request itself fails (network or 500).** Expected: the delete button is replaced by "Couldn't check today's delete limit." and a "Try again" button, not treated as "reconnect". Test: Task 4, `getDeleteGate` with `quota: "error"`.
 
 ---
 
@@ -62,7 +62,7 @@
   - `getDeleteQuota` requests `/v1.0/user-123/threads_publishing_limit` with `fields=delete_quota_usage,delete_config` and maps `{ data: [{ delete_quota_usage: 3, delete_config: { quota_total: 100, quota_duration: 86400 } }] }` to `{ permitted: true, used: 3, total: 100, remaining: 97 }`.
   - `getDeleteQuota` returns `{ permitted: false }` when `delete_config` is missing, and when the response is a 403 error.
   - `redactAccessToken("https://graph.threads.net/v1.0/me?fields=id&access_token=abc")` returns a URL with `access_token=REDACTED` and `fields=id` intact.
-  - `getThreadsErrorMessage(new ThreadsAPIError("x", 400, { error: { message: "Boom" } }))` is `"Boom"`; for a `ThreadsAPIError` with status 408 or `body.reason === "network_error"` it is `"Couldn't confirm whether Threads deleted this post."`; otherwise `"Threads couldn't delete this post."`.
+  - `getThreadsErrorMessage(new ThreadsAPIError("x", 400, { error: { message: "Boom" } }))` is `"Boom"`; a `ThreadsAPIError` with any other 4xx refusal (not 408) and no usable message gives `"Threads couldn't delete this post."`; everything else (status 408, `body.reason === "network_error"`, a 5xx, a 200 that did not confirm, no status, an error that is not a `ThreadsAPIError`) gives `"Couldn't confirm whether Threads deleted this post."` (R9).
 
 - [ ] **Step 2: Run to verify they fail**
 
@@ -71,9 +71,9 @@
 
 - [ ] **Step 3: Implement**
   - `request<T>(path, params?, options?: { method?: "GET" | "DELETE"; retryNetworkErrors?: boolean })`. Default `GET`, `retryNetworkErrors: true`. When `retryNetworkErrors` is false, a network error is thrown on the first attempt. `fetchWithTimeout(url, method)` passes `{ method, signal }`.
-  - `createNetworkRequestError` stores `redactAccessToken(url)`, which applies to every request.
+  - `createNetworkRequestError` stores `redactAccessToken(url)` and also redacts the token from the composed message and the cause message, which applies to every request.
   - `deletePost` calls `request<{ success?: boolean }>(\`/${mediaId}\`, undefined, { method: "DELETE", retryNetworkErrors: false })` and throws `new ThreadsAPIError("Threads did not confirm the delete", 200, body)` unless `success === true`.
-  - `getDeleteQuota` catches every error and returns `{ permitted: false }`; `remaining = Math.max(0, total - used)`.
+  - `getDeleteQuota` returns `{ permitted: false }` when Threads answers with an HTTP error (a 4xx or 5xx other than 408 and 429, a 5xx also logged without the token) or without a usable `delete_config`, and rethrows when Threads gives no answer (a network failure, 408, 429 after the retries, an error that is not a `ThreadsAPIError`) (R5, R14); `remaining = Math.max(0, total - used)`.
   - Scope string becomes `"threads_basic,threads_manage_insights,threads_read_replies,threads_delete"`.
   - Docs: in `threads-api.md`, change the `threads_delete` purpose to "Deleting posts (and delete webhook notifications)", and add a "Delete posts" section with the endpoint, success body, quota call, and the 100-per-24-hours default. In `threads-setup.md`, add a step: add the `threads_delete` permission to the Threads use case in the Meta dashboard, and note it must be done before deploying code that requests it.
 
@@ -108,7 +108,7 @@
   Run: `npx vitest run src/lib/__tests__/metrics-refresh.test.ts src/lib/__tests__/velocity-refresh.test.ts`
   Expected: FAIL (the rejection propagates)
 
-- [ ] **Step 3: Implement** — wrap each per-post insights fetch and insert in `try/catch`; on error `console.error` the post id and `getThreadsErrorMessage(error)` (from Task 1), then `continue`.
+- [ ] **Step 3: Implement** — wrap each per-post insights fetch and insert in `try/catch`; on error `console.error` the post's Spool id, its Threads media id and the error's message (not `getThreadsErrorMessage`, whose wording is delete-specific; R6), then `continue`.
 
 - [ ] **Step 4: Run to verify they pass** (same command). Expected: PASS
 
@@ -140,14 +140,14 @@
   export async function deletePostForUser(userId: string, postId: string): Promise<DeletePostResult>;
   export async function getDeleteQuotaForUser(userId: string): Promise<ThreadsDeleteQuota>;
   ```
-- Produces (HTTP): `DELETE /api/posts/:postId` → 200 `{ deleted: true }`, or `{ status }` with body `{ error: code, message }`; 401 `{ error: "unauthorized" }` without a session. `GET /api/posts/delete-quota` → 200 `ThreadsDeleteQuota`; 401 without a session; 500 `{ error: "quota_check_failed" }` on a database error.
+- Produces (HTTP): `DELETE /api/posts/:postId` → 200 `{ deleted: true }`, or `{ status }` with body `{ error: code, message }`; 401 `{ error: "unauthorized" }` without a session. `GET /api/posts/delete-quota` → 200 `ThreadsDeleteQuota`; 401 without a session; 500 `{ error: "quota_check_failed" }` when the check fails (a database error, or no answer from Threads; R14).
 
 - [ ] **Step 1: Write the failing tests** for `deletePostForUser` (mock supabase admin client, `ThreadsAPI`, `decrypt`, `getMostRecentBackfillJob`), one test per rule, in the spec's order:
   - Post not found for this user (query filters by `id` **and** `user_id`) → `not_found`, 404, message `"This post is no longer in Spool."`; `deletePost` not called.
   - Most recent backfill job `pending` → `import_in_progress`, 409; same for `running`. A `failed` or `complete` job does not block.
   - `token_expires_at` in the past → `reconnect_required`, 403.
   - `deletePost` rejects with `ThreadsAPIError(…, 400, { error: { message: "Boom" } })` → `threads_error`, 502, message `"Boom"`; no delete issued on `posts`.
-  - `deletePost` resolves → first `post_predictions` is updated to `review_state: "discarded"` where `post_id = postId` and `review_state = "pending"`, then the `posts` delete is issued with `.eq("id", postId).eq("user_id", userId)`; result `{ ok: true }`. Why: `ON DELETE SET NULL` turns a pending prediction into an unlinked pending one, and `linkPredictionToPost` (`src/lib/post-review.ts`, `.is("post_id", null)`) would then link it to the next post with matching text, such as a re-post of the deleted one. Reviewed predictions are left as they are.
+  - `deletePost` resolves → first `post_predictions` is updated to `review_state: "discarded"` where `post_id = postId`, `user_id = userId` and `review_state = "pending"`, then the `posts` delete is issued with `.eq("id", postId).eq("user_id", userId)`; result `{ ok: true }`. Why: `ON DELETE SET NULL` turns a pending prediction into an unlinked pending one, and `linkPredictionToPost` (`src/lib/post-review.ts`, `.is("post_id", null)`) would then link it to the next post with matching text, such as a re-post of the deleted one. Reviewed predictions are left as they are.
   - `deletePost` resolves and either the predictions update or the `posts` delete returns an error → `spool_cleanup_failed`, 500, message `"Deleted from Threads, but Spool couldn't remove it."`; error logged.
   - `getDeleteQuotaForUser`: expired token → `{ permitted: false }`, no Threads call; otherwise returns `getDeleteQuota()`'s result.
   - Route tests (style of `src/app/api/posts/sync/route.test.ts`, mocking `@/lib/session` and `@/lib/post-delete`): 401 with no session; passes the awaited `postId` and session user to `deletePostForUser`; maps a failure result to its status and `{ error, message }`; quota route returns the quota JSON and 401 without a session.
@@ -249,7 +249,7 @@
   ```
 
 - [ ] **Step 1: Write the failing tests**
-  - `requestPostDelete`: 200 → `{ ok: true }`; 401 → `unauthorized` with `"Your Spool session ended. Sign in again."`; 404/409/403/502/500 → the body's `error` as `code` and its `message`; fetch throws → `network_error`, `"Couldn't reach Spool. Check your connection."`. Asserts the request is `DELETE /api/posts/<encoded id>`.
+  - `requestPostDelete`: 200 → `{ ok: true }`; 401 → `unauthorized` with `"Your Spool session ended. Sign in again."`; 404/409/403/502/500 → the body's `error` as `code` and its `message`; fetch throws → `network_error`, `"Couldn't confirm whether this post was deleted. Check your connection."`; a body that is not JSON or names no known code → `network_error`, `"Couldn't confirm whether this post was deleted."` (R2). Asserts the request is `DELETE /api/posts/<encoded id>`.
   - `runBulkDelete` deletes in the given order and calls `onProgress(n, total)` after each post.
   - "stops when asked": `shouldStop` returns true after the first post → `stopReason: "user_stopped"`, remaining posts in `notAttempted`, no further `deleteOne` calls.
   - "stops on unauthorized" (Review Focus 2), "stops on reconnect_required", "stops on import_in_progress": the triggering post is in `failed`, the rest in `notAttempted`.
@@ -313,6 +313,8 @@
 
 ### Task 7: Selection bar and delete dialog
 
+> Built in two halves (R10): first the dialog, adding `src/lib/bulk-delete-view.ts` and its tests (`feat: add bulk delete confirmation dialog`); then the bar and the page wiring with the R3 redirect, adding `getPostsFirstPageHref` to `src/lib/posts-pagination.ts` and its tests (`feat: add bulk delete selection bar to the Posts page`). The single commit in Step 5 was not used.
+
 **Files:**
 - Create: `src/components/ui/dialog.tsx` (wrapper over `@base-ui/react/dialog`: root, popup, title, description; supports a controlled `open` and blocking dismissal)
 - Create: `src/components/dashboard/post-selection-bar.tsx`
@@ -328,7 +330,7 @@ Behavior (from the spec):
 - The bar renders nothing when nothing is selected. Otherwise: `"{n} selected"`, a "Clear" button, `"{remaining} deletions left today"` when the quota is known, and the action from `getDeleteGate`: `ready` → destructive button "Delete from Threads"; `disabled` → that button disabled with the reason shown; `reconnect` → link "Reconnect Threads to enable deleting" to `/api/auth/threads`; `quota_error` → "Couldn't check today's delete limit." plus a "Try again" button that refetches.
 - The quota is fetched when the selection goes from 0 to ≥1, and again in `onFinished`. A non-OK response or a fetch rejection sets `"error"`.
 - Dialog, confirm phase: title `"Delete {n} posts from Threads?"` (`"1 post"` when singular); the preview list from `getDialogPreviewLines` plus `"and {moreCount} more"`; body text exactly: "This permanently deletes these posts from Threads. It cannot be undone. Their metrics and replies are also removed from Spool." followed by "Want a copy first?" and an "Export CSV" link to `/api/export/posts`; buttons "Cancel" and destructive `"Delete {n} posts"`.
-- Running phase: `"Deleting {done} of {total}…"`, the existing `ProgressBar`, and a "Stop" button that sets a ref read by `shouldStop`. While running: the dialog ignores dismiss requests, the confirm button is disabled, a second start is ignored via a `runningRef`, and a `beforeunload` listener is registered (removed when the run ends).
+- Running phase: `"Deleting {done} of {total}…"`, the existing `ProgressBar`, and a "Stop" button that sets a ref read by `shouldStop`. While running: the dialog ignores dismiss requests, Stop replaces the confirm buttons, a second start is ignored via a `runningRef`, and a `beforeunload` listener is registered (removed when the run ends).
 - Summary phase: `"Deleted {k} of {n} posts."`; a list of failed posts with each message; a sentence for the stop reason when not `completed` (`unauthorized` → "Sign in again to continue.", `reconnect_required` → "Reconnect Threads to continue.", `import_in_progress` → "Deleting is paused while posts are importing.", `consecutive_failures` → "Stopped after 3 failures in a row.", `user_stopped` → "Stopped. The remaining posts are still selected."); "Retry failed" (only when there are retryable failures, i.e. failures other than `not_found`) runs again with those posts; "Done" closes.
 - On close after a run: apply `getSelectionAfterRun` to the selection via `remove`, call `router.refresh()`, and call `onFinished`.
 
@@ -360,3 +362,24 @@ Behavior (from the spec):
 - [ ] **Step 3: Build** — `npm run build`. Expected: success, with `/api/posts/[postId]` and `/api/posts/delete-quota` listed.
 - [ ] **Step 4: Run the app and check the page** (see the `local-dev-env` memory for starting dev and the seed session): with a seed user and no Threads delete permission, select two posts across two pages, confirm the selection survives page, sort, and filter changes, the header checkbox shows mixed state, row clicks on checkboxes do not expand rows, and the bar shows the reconnect link. Screenshot it.
 - [ ] **Step 5: Hand the real-account checks to the user.** The spec's manual steps 1-5 need a real Threads account, the Meta dashboard change, and disposable posts. List them for the user; do not delete real posts without their go-ahead.
+
+## Execution rulings
+
+Decisions made while building. Where one differs from the task text above, the ruling is what the code does.
+
+| Ruling | What differs from the plan text | Why |
+| --- | --- | --- |
+| R1 | Tests that mock `@/lib/threads-api` keep the real helpers: `vi.mock(..., async (importOriginal) => ({ ...(await importOriginal()), ThreadsAPI: ... }))`. | Vitest throws on a missing export of a mocked module, and the real `getThreadsErrorMessage` writes the delete messages under test. |
+| R2 | `requestPostDelete`: a rejected fetch gives `network_error` with "Couldn't confirm whether this post was deleted. Check your connection." (not "Couldn't reach Spool…"); a body that is not JSON or names no known code gives `network_error` with "Couldn't confirm whether this post was deleted." `network_error` means the outcome could not be confirmed. | An outcome-unknown message must say the result could not be confirmed. |
+| R3 | When `page > 1` returns no rows, the Posts page redirects to the same URL without `page`, keeping sort and filters (`getPostsFirstPageHref`, unit-tested). | Deleting every post on the last page would otherwise show "0 posts" and look like data loss. |
+| R4 | A database error while loading the post throws; only a missing row is `not_found`. | A failed read must not tell the user the post is gone. |
+| R5, R14 | `getDeleteQuota` no longer catches everything. An HTTP error answer (a 4xx or 5xx other than 408 and 429, a 5xx also logged without the token) or a 200 without `delete_config` is `{ permitted: false }`. No answer (a network failure, 408, 429 after the retries, an error that is not a `ThreadsAPIError`) is rethrown, so the route answers 500 `quota_check_failed` and the bar shows "Couldn't check today's delete limit." with Try again. | A Threads blip should not send the user to reconnect, which runs a full sign-in and a new backfill and drops the selection. Whenever Threads does answer with an error, the user still gets the reconnect remedy. |
+| R6 | The refresh skip logs record the post's Spool id, its Threads media id and the error's message, not `getThreadsErrorMessage`. | That helper's wording is delete-specific and would mislead in a refresh log. |
+| R7 | A post id that is not a UUID is `not_found` without a query. | Postgres would reject it and the route would answer 500. |
+| R8 | Cleanup stops at the first failure: if discarding pending predictions fails, the `posts` row is not deleted (`spool_cleanup_failed`). | A partial cleanup could leave an unlinked pending prediction that is later linked to a different post. |
+| R9 | `getThreadsErrorMessage` is definitive only for a 4xx refusal other than 408 (the body's message, else "Threads couldn't delete this post."). Everything else, a 5xx included, is "Couldn't confirm whether Threads deleted this post." | The delete is irreversible, and anything but an explicit refusal leaves its outcome unknown. |
+| R10 | Task 7 was built in two halves, adding `src/lib/bulk-delete-view.ts` (stop-reason wording, retry selection) and `getPostsFirstPageHref`, each with unit tests. | One task was too large for one review, and pure helpers keep the wording and retry rules unit-tested. |
+| R11 | Every `buttonVariants` call in the new components adds `focus-visible:outline-solid`, because the base string's `outline-none` hides the focus ring in Tailwind 4. The global fix, not made here, is adding `focus-visible:outline-solid` to `buttonVariants`' base string or dropping `outline-none`; `outline-hidden` does **not** work in the installed Tailwind 4.2.1. | Keyboard users must see focus in an irreversible-delete dialog, and a global change would alter every button in the app. |
+| R12 | The dialog does not clear its refs on reopen: `runningRef` never, `stopRef` only when no run is going. | Safer if a parent ever forced a close and reopen mid-run: the old run can neither keep deleting unseen nor be joined by a second one. |
+| R13 | `src/app/dashboard/layout.tsx`, outside the plan's files: the `<main>` gets `min-w-0`. | Without it `main` grows to the table's width, the table's `overflow-x-auto` never scrolls, and the page overflows at phone and laptop widths, taking the bar's action and the dialog off screen. |
+| R15 | Three release gates before production: the Meta permission (approved in App Review if the app serves people without a role on it), TICKET-084 signed sessions, and the real-account checks 1–5 (spec, Rollout). | Spool requests the scope on every sign-in, so a missing or unapproved permission can break sign-in for everyone; the unsigned session cookie would let anyone who knows a user's id delete their posts. |

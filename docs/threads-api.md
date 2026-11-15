@@ -163,6 +163,7 @@ GET /{threads-user-id}/threads_publishing_limit?fields=delete_quota_usage,delete
 
 - `delete_quota_usage` — deletions used in the current window.
 - `delete_config` — `quota_total` deletions allowed per `quota_duration` seconds (`86400` = 24 hours).
+- Requires only `threads_basic` and `threads_delete` (Meta's Rate Limiting → Deletion section); `threads_content_publish` is not needed.
 
 **Not documented:** the error bodies for a missing permission, a post that no longer exists, or an exhausted quota, and whether a deleted post can be restored. Treat a delete as irreversible and don't rely on specific error codes.
 
