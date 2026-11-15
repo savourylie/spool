@@ -621,6 +621,7 @@ describe("deletePostForUser", () => {
           payload: { review_state: "discarded" },
           filters: [
             ["post_id", POST_ID],
+            ["user_id", USER_ID],
             ["review_state", "pending"],
           ],
         },
@@ -741,6 +742,27 @@ describe("getDeleteQuotaForUser", () => {
     expect(mocks.decrypt).not.toHaveBeenCalled();
     expect(mocks.ThreadsAPI).not.toHaveBeenCalled();
     expect(mocks.getDeleteQuota).not.toHaveBeenCalled();
+  });
+
+  it("passes a quota check that got no answer from Threads on as a rejection, and still answers an expired token without calling Threads", async () => {
+    const noAnswer = new ThreadsAPIError(
+      "Threads API network request failed: fetch failed",
+      undefined,
+      { reason: "network_error" },
+    );
+    mocks.getDeleteQuota.mockRejectedValue(noAnswer);
+
+    // Not turned into "not permitted": the route answers 500 instead.
+    await expect(getDeleteQuotaForUser(USER_ID)).rejects.toBe(noAnswer);
+    expect(mocks.getDeleteQuota).toHaveBeenCalledTimes(1);
+
+    results["users.select"] = { data: userRow(aMinuteAgo()), error: null };
+
+    await expect(getDeleteQuotaForUser(USER_ID)).resolves.toEqual({
+      permitted: false,
+    });
+    expect(mocks.ThreadsAPI).toHaveBeenCalledTimes(1);
+    expect(mocks.getDeleteQuota).toHaveBeenCalledTimes(1);
   });
 
   it.each([

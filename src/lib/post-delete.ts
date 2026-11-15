@@ -197,6 +197,7 @@ export async function deletePostForUser(
     .from("post_predictions")
     .update({ review_state: "discarded" })
     .eq("post_id", postId)
+    .eq("user_id", userId)
     .eq("review_state", "pending");
 
   if (predictionsError) {
@@ -222,8 +223,9 @@ export async function deletePostForUser(
 
 /**
  * The user's remaining Threads deletions today. An expired token returns
- * `{ permitted: false }` without calling Threads. A database error throws, so
- * the route can answer 500 instead of reporting a wrong quota.
+ * `{ permitted: false }` without calling Threads. A database error throws, and
+ * so does a quota check that got no answer from Threads, so the route can
+ * answer 500 instead of reporting a wrong quota.
  */
 export async function getDeleteQuotaForUser(
   userId: string,

@@ -112,10 +112,14 @@ function createNetworkRequestError(url: string, error: unknown) {
     return error;
   }
 
+  // The underlying error and its cause can quote the request URL, token
+  // included, so everything built from them is redacted.
   const baseMessage =
     error instanceof Error ? error.message : "Network request failed";
   const code = getErrorCode(error);
-  const causeMessage = getErrorCauseMessage(error);
+  const rawCauseMessage = getErrorCauseMessage(error);
+  const causeMessage =
+    rawCauseMessage === null ? null : redactAccessToken(rawCauseMessage);
   const detail = code
     ? causeMessage
       ? `${code}: ${causeMessage}`
@@ -123,9 +127,11 @@ function createNetworkRequestError(url: string, error: unknown) {
     : causeMessage;
 
   return new ThreadsAPIError(
-    detail
-      ? `Threads API network request failed: ${baseMessage} (${detail})`
-      : `Threads API network request failed: ${baseMessage}`,
+    redactAccessToken(
+      detail
+        ? `Threads API network request failed: ${baseMessage} (${detail})`
+        : `Threads API network request failed: ${baseMessage}`,
+    ),
     undefined,
     {
       reason: "network_error",
@@ -151,6 +157,16 @@ function isOrdinaryClientError(error: unknown): boolean {
     error.status < 500 &&
     error.status !== 408 &&
     error.status !== 429
+  );
+}
+
+// A 5xx is Threads answering the request with a server error.
+function isServerErrorResponse(error: unknown): boolean {
+  return (
+    error instanceof ThreadsAPIError &&
+    typeof error.status === "number" &&
+    error.status >= 500 &&
+    error.status < 600
   );
 }
 
@@ -568,10 +584,18 @@ export class ThreadsAPI {
 
   /**
    * The delete quota call doubles as the permission check: delete counts as
-   * permitted only when the response carries `delete_config`. Any error, or a
-   * response without it, means "not permitted". An error that does not look
-   * like Threads answering the request (outage, timeout, rate limit, 5xx, a
-   * bug) is also logged, so it leaves a trace on the server.
+   * permitted only when the response carries `delete_config`.
+   *
+   * When Threads answers, its answer decides: an HTTP error response (a 4xx or
+   * 5xx other than 408 and 429), or a response without a usable
+   * `delete_config`, means "not permitted". A 5xx is also logged without the
+   * token, so an outage leaves a trace on the server; a 4xx is the usual answer
+   * for a token that may not delete and stays quiet.
+   *
+   * When Threads gives no answer (a network failure, a timeout, still rate
+   * limited after the retries, or an error that did not come from Threads),
+   * the original error is rethrown without logging it here: the check failed,
+   * which says nothing about the permission. The caller reports and logs it.
    */
   async getDeleteQuota(): Promise<ThreadsDeleteQuota> {
     try {
@@ -600,14 +624,19 @@ export class ThreadsAPI {
         remaining: Math.max(0, total - used),
       };
     } catch (error) {
-      if (!isOrdinaryClientError(error)) {
+      if (isOrdinaryClientError(error)) {
+        return { permitted: false };
+      }
+
+      if (isServerErrorResponse(error)) {
         console.warn(
           "Threads delete quota check failed",
           describeFailureForLog(error),
         );
+        return { permitted: false };
       }
 
-      return { permitted: false };
+      throw error;
     }
   }
 
