@@ -66,7 +66,13 @@ THREADS_REDIRECT_URI=http://localhost:3000/api/auth/callback
 - **THREADS_APP_SECRET** — Same location; click **Show** to reveal it.
 - **THREADS_REDIRECT_URI** — Must match exactly what you entered in step 3.
 
-## 6. Verify the OAuth Flow
+## 6. Add the `threads_delete` Permission
+
+Spool requests `threads_delete` so users can delete posts from the Posts page. In the Meta dashboard, open your app's **Threads** use case and add the `threads_delete` permission.
+
+> Do this **before** deploying code that requests the permission. Threads doesn't document what the consent screen does when an app asks for a permission it doesn't have, and if it rejects the request, sign-in breaks.
+
+## 7. Verify the OAuth Flow
 
 1. Start the dev server:
    ```bash

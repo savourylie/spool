@@ -9,6 +9,7 @@ import type {
   ThreadsDemographicBreakdown,
   ThreadsTokenRefreshResult,
   ThreadsPaginatedResponse,
+  ThreadsDeleteQuota,
 } from "@/lib/threads-api.types";
 
 const BASE_URL = "https://graph.threads.net/v1.0";
@@ -52,6 +53,44 @@ function getErrorCauseMessage(error: unknown): string | null {
   return typeof cause.message === "string" ? cause.message : null;
 }
 
+/**
+ * Replaces the value of every `access_token` query parameter, so a request URL
+ * can be stored on an error or written to a log without leaking the token.
+ */
+export function redactAccessToken(url: string): string {
+  return url.replace(/([?&]access_token=)[^&#]*/gi, "$1REDACTED");
+}
+
+const DELETE_UNCONFIRMED_MESSAGE =
+  "Couldn't confirm whether Threads deleted this post.";
+const DELETE_FAILED_MESSAGE = "Threads couldn't delete this post.";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+/**
+ * User-facing reason a delete failed. A timeout or network error means the
+ * outcome is unknown (the post may be gone), so that is checked before the
+ * message in the Threads error body.
+ */
+export function getThreadsErrorMessage(error: unknown): string {
+  if (!(error instanceof ThreadsAPIError)) {
+    return DELETE_FAILED_MESSAGE;
+  }
+
+  const body = isRecord(error.body) ? error.body : null;
+
+  if (error.status === 408 || body?.reason === "network_error") {
+    return DELETE_UNCONFIRMED_MESSAGE;
+  }
+
+  const message = isRecord(body?.error) ? body.error.message : undefined;
+  return typeof message === "string" && message.trim()
+    ? message
+    : DELETE_FAILED_MESSAGE;
+}
+
 function createNetworkRequestError(url: string, error: unknown) {
   if (error instanceof ThreadsAPIError) {
     return error;
@@ -74,7 +113,7 @@ function createNetworkRequestError(url: string, error: unknown) {
     undefined,
     {
       reason: "network_error",
-      url,
+      url: redactAccessToken(url),
       code,
       causeMessage,
     },
@@ -101,7 +140,9 @@ export class ThreadsAPI {
   private async request<T>(
     path: string,
     params?: Record<string, string>,
+    options: { method?: "GET" | "DELETE"; retryNetworkErrors?: boolean } = {},
   ): Promise<T> {
+    const { method = "GET", retryNetworkErrors = true } = options;
     const url = new URL(`${BASE_URL}${path}`);
     if (params) {
       for (const [key, value] of Object.entries(params)) {
@@ -123,11 +164,17 @@ export class ThreadsAPI {
 
       let response: Response;
       try {
-        response = await this.fetchWithTimeout(url.toString());
+        response = await this.fetchWithTimeout(url.toString(), method);
       } catch (error) {
         const requestError = createNetworkRequestError(url.toString(), error);
 
-        if (attempt === MAX_RETRIES || !isRetryableFetchError(error)) {
+        // The request may have reached Threads before the connection failed,
+        // so a caller that cannot safely repeat it opts out of this retry.
+        if (
+          attempt === MAX_RETRIES ||
+          !retryNetworkErrors ||
+          !isRetryableFetchError(error)
+        ) {
           throw requestError;
         }
 
@@ -188,14 +235,17 @@ export class ThreadsAPI {
     throw lastError ?? new ThreadsAPIError("Request failed");
   }
 
-  private async fetchWithTimeout(url: string): Promise<Response> {
+  private async fetchWithTimeout(
+    url: string,
+    method: "GET" | "DELETE",
+  ): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
     }, REQUEST_TIMEOUT_MS);
 
     try {
-      return await fetch(url, { signal: controller.signal });
+      return await fetch(url, { method, signal: controller.signal });
     } catch (error) {
       if (
         error instanceof Error &&
@@ -448,6 +498,63 @@ export class ThreadsAPI {
     }
 
     return allReplies;
+  }
+
+  /**
+   * Deletes a post from Threads. A delete is not idempotent, so it is never
+   * retried after a network error or timeout (the post may already be gone);
+   * a 429 is still retried because the request was not executed.
+   */
+  async deletePost(mediaId: string): Promise<void> {
+    const body = await this.request<{ success?: boolean }>(
+      `/${mediaId}`,
+      undefined,
+      { method: "DELETE", retryNetworkErrors: false },
+    );
+
+    if (body?.success !== true) {
+      throw new ThreadsAPIError(
+        "Threads did not confirm the delete",
+        200,
+        body,
+      );
+    }
+  }
+
+  /**
+   * The delete quota call doubles as the permission check: delete counts as
+   * permitted only when the response carries `delete_config`. Any error, or a
+   * response without it, means "not permitted".
+   */
+  async getDeleteQuota(): Promise<ThreadsDeleteQuota> {
+    try {
+      const response = await this.request<{
+        data?: {
+          delete_quota_usage?: number;
+          delete_config?: { quota_total?: number; quota_duration?: number };
+        }[];
+      }>(`/${this.userId}/threads_publishing_limit`, {
+        fields: "delete_quota_usage,delete_config",
+      });
+
+      const entry = response.data?.[0];
+      const total = entry?.delete_config?.quota_total;
+      if (typeof total !== "number") {
+        return { permitted: false };
+      }
+
+      const usage = entry?.delete_quota_usage;
+      const used = typeof usage === "number" ? usage : 0;
+
+      return {
+        permitted: true,
+        used,
+        total,
+        remaining: Math.max(0, total - used),
+      };
+    } catch {
+      return { permitted: false };
+    }
   }
 
   static async refreshToken(

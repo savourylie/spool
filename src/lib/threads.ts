@@ -17,7 +17,8 @@ export function getAuthorizationUrl(state: string): string {
   const params = new URLSearchParams({
     client_id: process.env.THREADS_APP_ID!,
     redirect_uri: process.env.THREADS_REDIRECT_URI!,
-    scope: "threads_basic,threads_manage_insights,threads_read_replies",
+    scope:
+      "threads_basic,threads_manage_insights,threads_read_replies,threads_delete",
     response_type: "code",
     state,
   });
