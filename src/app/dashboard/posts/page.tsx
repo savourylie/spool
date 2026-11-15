@@ -8,6 +8,7 @@ import { ConfidenceBadge } from "@/components/ui/confidence-badge";
 import { ScreenHead } from "@/components/dashboard/screen-head";
 import { PostTable, type PostRow } from "@/components/dashboard/post-table";
 import { PostFilters } from "@/components/dashboard/post-filters";
+import { PostSelectionBar } from "@/components/dashboard/post-selection-bar";
 import { PostSyncButton } from "@/components/dashboard/post-sync-button";
 import { ReselectionAlert } from "@/components/dashboard/reselection-alert";
 import { detectReselectedPosts } from "@/lib/reselection-detection";
@@ -15,6 +16,7 @@ import { isImportingBackfillStatus } from "@/lib/backfill-job";
 import { getMostRecentBackfillJob } from "@/lib/backfill-recovery";
 import {
   POSTS_PAGE_SIZE,
+  getPostsFirstPageHref,
   getPostsTotalPages,
 } from "@/lib/posts-pagination";
 import { getVelocityMapForRecentPosts } from "@/lib/velocity-scoring";
@@ -108,6 +110,13 @@ export default async function PostsPage({
     return <ErrorState description="We couldn't load your posts right now." />;
   }
 
+  // Deleting every post on the last page leaves ?page=N past the end, which
+  // would show an empty table and a misleading "0 posts". Go back to page 1,
+  // keeping the sort and filters.
+  if (page > 1 && rows.length === 0) {
+    redirect(getPostsFirstPageHref(params));
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const posts: PostRow[] = rows.map(({ total_count, ...rest }) => rest);
   const totalCount = rows[0]?.total_count ?? 0;
@@ -156,6 +165,7 @@ export default async function PostsPage({
       <div className="mt-6">
         <PostFilters />
         <ReselectionAlert posts={reselectedPosts} />
+        <PostSelectionBar isImporting={isImporting} />
         <PostTable
           posts={posts}
           currentPage={page}
