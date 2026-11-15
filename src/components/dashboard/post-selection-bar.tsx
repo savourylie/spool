@@ -7,7 +7,9 @@ import { BulkDeleteDialog } from "@/components/dashboard/bulk-delete-dialog";
 import { usePostSelection } from "@/components/dashboard/post-selection-provider";
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
+  formatRemaining,
   getDeleteGate,
+  readQuota,
   type QuotaState,
   type SelectedPost,
 } from "@/lib/post-selection";
@@ -29,34 +31,6 @@ import {
 const QUOTA_URL = "/api/posts/delete-quota";
 const QUOTA_ERROR_MESSAGE = "Couldn't check today's delete limit.";
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-// The route's answer, checked. Anything that is not exactly one of the two
-// shapes it sends is an error, never a guess about what is allowed.
-function readQuota(body: unknown): QuotaState {
-  if (typeof body !== "object" || body === null) return "error";
-
-  const { permitted, used, total, remaining } = body as {
-    permitted?: unknown;
-    used?: unknown;
-    total?: unknown;
-    remaining?: unknown;
-  };
-
-  if (permitted === false) return { permitted: false };
-  if (
-    permitted === true &&
-    isFiniteNumber(used) &&
-    isFiniteNumber(total) &&
-    isFiniteNumber(remaining)
-  ) {
-    return { permitted: true, used, total, remaining };
-  }
-  return "error";
-}
-
 // Never rejects: a non-OK response, a failed request and a body that is not
 // JSON or not a quota all come back as "error".
 async function requestQuota(): Promise<QuotaState> {
@@ -68,12 +42,6 @@ async function requestQuota(): Promise<QuotaState> {
   } catch {
     return "error";
   }
-}
-
-function formatRemaining(remaining: number): string {
-  return remaining === 1
-    ? "1 deletion left today"
-    : `${remaining} deletions left today`;
 }
 
 export function PostSelectionBar({ isImporting }: { isImporting: boolean }) {

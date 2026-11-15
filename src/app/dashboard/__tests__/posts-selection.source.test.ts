@@ -143,10 +143,17 @@ describe("posts selection source", () => {
       expect(table).toMatch(/setPage\(\w+, \w+ !== "all"\)/);
     });
 
-    it("labels each row checkbox as a post selection", async () => {
+    it("names each row checkbox after its post through the shared label rule", async () => {
       const table = await readSource(TABLE);
 
-      expect(table).toMatch(/aria-label=\{`Select post[^`]*`\}/);
+      // getPostSelectLabel uses the post's text, so same-day posts get
+      // different names, and falls back to the date for a post without text.
+      expect(table).toMatch(
+        /import \{[^}]*\bgetPostSelectLabel\b[^}]*\} from "@\/lib\/post-selection"/,
+      );
+      expect(table).toMatch(
+        /aria-label=\{getPostSelectLabel\(\s*post\.text_preview,\s*formatDate\(post\.published_at\),?\s*\)\}/,
+      );
     });
 
     it("keeps each selected post's id and text preview", async () => {

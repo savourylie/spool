@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatRemaining,
   getDeleteGate,
   getDialogPreviewLines,
   getPageSelectionState,
+  getPostSelectLabel,
+  readQuota,
   removeFromSelection,
   setPageSelected,
   togglePost,
@@ -329,6 +332,43 @@ describe("getDeleteGate", () => {
   });
 });
 
+describe("readQuota", () => {
+  it("returns either answer the route sends as it is", () => {
+    expect(readQuota({ permitted: false })).toEqual({ permitted: false });
+    expect(
+      readQuota({ permitted: true, used: 3, total: 100, remaining: 97 }),
+    ).toEqual({ permitted: true, used: 3, total: 100, remaining: 97 });
+  });
+
+  it.each<[string, unknown]>([
+    ["null", null],
+    ["an array", [{ permitted: false }]],
+    ["a string", '{"permitted":false}'],
+    ["a NaN count", { permitted: true, used: NaN, total: 100, remaining: 97 }],
+    [
+      "an infinite count",
+      { permitted: true, used: 3, total: Infinity, remaining: 97 },
+    ],
+    ["a missing count", { permitted: true, used: 3, total: 100 }],
+    [
+      'permitted: "true"',
+      { permitted: "true", used: 3, total: 100, remaining: 97 },
+    ],
+  ])("reads %s as an error", (_case, body) => {
+    expect(readQuota(body)).toBe("error");
+  });
+});
+
+describe("formatRemaining", () => {
+  it.each([
+    [0, "0 deletions left today"],
+    [1, "1 deletion left today"],
+    [2, "2 deletions left today"],
+  ])("words %i remaining", (remaining, text) => {
+    expect(formatRemaining(remaining)).toBe(text);
+  });
+});
+
 describe("getDialogPreviewLines", () => {
   const sevenPosts = Array.from({ length: 7 }, (_, index) =>
     post(`p${index + 1}`, `Preview ${index + 1}`),
@@ -405,5 +445,53 @@ describe("getDialogPreviewLines", () => {
     getDialogPreviewLines(posts);
 
     expect(posts).toEqual(sevenPosts);
+  });
+});
+
+describe("getPostSelectLabel", () => {
+  const date = "Nov 3, 2026";
+
+  it.each<[string, string | null]>([
+    ["null", null],
+    ["empty", ""],
+    ["whitespace-only", "  \n\t "],
+  ])("names a post by its date when the preview is %s", (_case, preview) => {
+    expect(getPostSelectLabel(preview, date)).toBe(
+      "Select post from Nov 3, 2026",
+    );
+  });
+
+  it("names a post with short text by the whole text, trimmed", () => {
+    expect(getPostSelectLabel("  Hello world  ", date)).toBe(
+      "Select post: Hello world",
+    );
+  });
+
+  it("keeps text of exactly 60 characters whole", () => {
+    const text = "a".repeat(60);
+
+    expect(getPostSelectLabel(text, date)).toBe(`Select post: ${text}`);
+  });
+
+  it("cuts longer text to its first 60 characters and marks the cut", () => {
+    expect(getPostSelectLabel(`${"a".repeat(60)}bcd`, date)).toBe(
+      `Select post: ${"a".repeat(60)}…`,
+    );
+    // A cut that ends on a space does not leave it before the mark.
+    expect(getPostSelectLabel(`${"a".repeat(59)} bcd`, date)).toBe(
+      `Select post: ${"a".repeat(59)}…`,
+    );
+  });
+
+  it("cuts between characters, never inside an emoji", () => {
+    expect(getPostSelectLabel(`${"a".repeat(59)}😀 tail`, date)).toBe(
+      `Select post: ${"a".repeat(59)}😀…`,
+    );
+  });
+
+  it("collapses newlines and runs of whitespace inside the text", () => {
+    expect(
+      getPostSelectLabel("First line\n\nsecond\tline   here", date),
+    ).toBe("Select post: First line second line here");
   });
 });

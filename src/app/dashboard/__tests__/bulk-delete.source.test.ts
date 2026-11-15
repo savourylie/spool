@@ -171,6 +171,14 @@ describe("bulk delete source", () => {
       expect(dialog).toContain("overflow-y-auto");
     });
 
+    it("names the failure list, which takes focus so it can be scrolled by keyboard", async () => {
+      const dialog = await readSource(DIALOG);
+
+      expect(dialog).toMatch(
+        /<ul\b(?=[^>]*\btabIndex=\{0\})(?=[^>]*\baria-label="Posts that weren't deleted")[^>]*>/,
+      );
+    });
+
     it("keeps the keyboard focus ring visible on every button, which buttonVariants' outline-none would hide", async () => {
       const dialog = await readSource(DIALOG);
 
@@ -339,10 +347,14 @@ describe("bulk delete source", () => {
     it("reads anything but the two known answers as an error", async () => {
       const bar = await readSource(BAR);
 
+      // The shape check is the shared readQuota (unit-tested with the
+      // selection logic), applied to every body the route sends.
+      expect(bar).toMatch(
+        /import \{[^}]*\breadQuota\b[^}]*\} from "@\/lib\/post-selection"/,
+      );
+      expect(bar).not.toMatch(/(?:function|const|let)\s+readQuota\b/);
+      expect(bar).toContain("readQuota(await response.json())");
       expect(bar).toContain("response.ok");
-      expect(bar).toContain("permitted === false");
-      expect(bar).toContain("permitted === true");
-      expect(bar).toContain("Number.isFinite");
       // A rejected fetch and a body that is not JSON land in the catch.
       expect(bar).toMatch(/catch \{\s*return "error";\s*\}/);
     });
@@ -406,9 +418,13 @@ describe("bulk delete source", () => {
       expect(bar).toContain("`${selection.size} selected`");
       expect(bar).toMatch(/>\s*Clear\s*</);
       expect(bar).toContain("onClick={clear}");
+      // The count's wording is the shared formatRemaining (unit-tested with
+      // the selection logic).
+      expect(bar).toMatch(
+        /import \{[^}]*\bformatRemaining\b[^}]*\} from "@\/lib\/post-selection"/,
+      );
+      expect(bar).not.toMatch(/(?:function|const|let)\s+formatRemaining\b/);
       expect(bar).toContain("formatRemaining(quota.remaining)");
-      expect(bar).toContain("1 deletion left today");
-      expect(bar).toContain("`${remaining} deletions left today`");
     });
 
     it("styles the strip as one hairlined band above the table", async () => {

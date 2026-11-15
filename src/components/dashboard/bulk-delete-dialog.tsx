@@ -313,6 +313,7 @@ export function BulkDeleteDialog({
             {summary && summary.failed.length > 0 ? (
               <ul
                 tabIndex={0}
+                aria-label="Posts that weren't deleted"
                 className="mt-4 max-h-48 divide-y divide-line overflow-y-auto border border-line text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               >
                 {summary.failed.map(({ post, message }, index) => (

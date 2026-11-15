@@ -11,7 +11,11 @@ import { Pagination } from "./pagination";
 import { PostRowDetail } from "./post-row-detail";
 import { usePostSelection } from "./post-selection-provider";
 import { getPostsEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
-import { getPageSelectionState, type SelectedPost } from "@/lib/post-selection";
+import {
+  getPageSelectionState,
+  getPostSelectLabel,
+  type SelectedPost,
+} from "@/lib/post-selection";
 import { getPostsPageRange } from "@/lib/posts-pagination";
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
 import { formatNumber } from "@/lib/engagement-prediction";
@@ -235,7 +239,10 @@ export function PostTable({
                       onKeyDown={(e) => e.stopPropagation()}
                     >
                       <Checkbox
-                        aria-label={`Select post from ${formatDate(post.published_at)}`}
+                        aria-label={getPostSelectLabel(
+                          post.text_preview,
+                          formatDate(post.published_at),
+                        )}
                         checked={selection.has(post.id)}
                         onCheckedChange={() =>
                           toggle({ id: post.id, preview: post.text_preview })
