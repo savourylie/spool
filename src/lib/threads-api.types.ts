@@ -55,6 +55,10 @@ export interface ThreadsTokenRefreshResult {
   expires_in: number;
 }
 
+export type ThreadsDeleteQuota =
+  | { permitted: true; used: number; total: number; remaining: number }
+  | { permitted: false };
+
 export interface ThreadsReply {
   id: string;
   text: string;

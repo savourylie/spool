@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { ThreadsAPI, THREADS_API_LAUNCH } from "../threads-api";
-import { ThreadsAPIError } from "../threads";
+import {
+  ThreadsAPI,
+  THREADS_API_LAUNCH,
+  getThreadsErrorMessage,
+  redactAccessToken,
+} from "../threads-api";
+import { ThreadsAPIError, getAuthorizationUrl } from "../threads";
 
 function jsonResponse(body: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {
@@ -412,6 +417,395 @@ describe("ThreadsAPI", () => {
     });
   });
 
+  describe("deletePost", () => {
+    beforeEach(() => {
+      // A destructive request must never reach the real network, even if the
+      // client sends more calls than a test expects.
+      fetchSpy.mockImplementation(() =>
+        Promise.reject(new Error("unexpected fetch call")),
+      );
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("sends a DELETE with the access token and resolves on success", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({ success: true, deleted_id: "media-1" }),
+      );
+
+      await expect(api.deletePost("media-1")).resolves.toBeUndefined();
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      const url = new URL(fetchSpy.mock.calls[0][0] as string);
+      expect(url.pathname).toBe("/v1.0/media-1");
+      expect(url.searchParams.get("access_token")).toBe("test-token");
+      expect(fetchSpy.mock.calls[0][1]?.method).toBe("DELETE");
+    });
+
+    it("rejects when Threads does not confirm the delete", async () => {
+      fetchSpy.mockResolvedValueOnce(jsonResponse({ success: false }));
+
+      const error = await api.deletePost("media-1").catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ThreadsAPIError);
+      expect((error as ThreadsAPIError).body).toEqual({ success: false });
+    });
+
+    it("rejects with the Threads error body on a 400", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse(
+          { error: { message: "Unsupported delete request" } },
+          { status: 400 },
+        ),
+      );
+
+      const error = await api.deletePost("media-1").catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ThreadsAPIError);
+      expect((error as ThreadsAPIError).status).toBe(400);
+      expect((error as ThreadsAPIError).body).toEqual({
+        error: { message: "Unsupported delete request" },
+      });
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not retry after a network failure and keeps the token out of the error", async () => {
+      fetchSpy.mockRejectedValueOnce(new TypeError("fetch failed"));
+
+      const error = await api.deletePost("media-1").catch((e: unknown) => e);
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(error).toBeInstanceOf(ThreadsAPIError);
+      expect((error as ThreadsAPIError).body).toMatchObject({
+        reason: "network_error",
+      });
+      expect(JSON.stringify((error as ThreadsAPIError).body)).not.toContain(
+        "test-token",
+      );
+      expect((error as Error).message).not.toContain("test-token");
+      expect(getThreadsErrorMessage(error)).toBe(
+        "Couldn't confirm whether Threads deleted this post.",
+      );
+    });
+
+    it("does not retry after a timeout", async () => {
+      vi.useFakeTimers();
+
+      fetchSpy.mockImplementationOnce((_url: unknown, init?: RequestInit) => {
+        return new Promise<Response>((_, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            const abortError = new Error("Aborted");
+            abortError.name = "AbortError";
+            reject(abortError);
+          });
+        });
+      });
+
+      const promise = api.deletePost("media-1").catch((e: unknown) => e);
+      // 30s to time out, then well past the first retry backoff (1-1.5s).
+      await vi.advanceTimersByTimeAsync(40_000);
+
+      const error = await promise;
+      expect(error).toBeInstanceOf(ThreadsAPIError);
+      expect((error as ThreadsAPIError).status).toBe(408);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("retries after a 429 and resolves when the second response succeeds", async () => {
+      vi.useFakeTimers();
+
+      fetchSpy
+        .mockResolvedValueOnce(
+          new Response(null, {
+            status: 429,
+            headers: { "Retry-After": "0" },
+          }),
+        )
+        .mockResolvedValueOnce(
+          jsonResponse({ success: true, deleted_id: "media-1" }),
+        );
+
+      const promise = api.deletePost("media-1");
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      await expect(promise).resolves.toBeUndefined();
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(fetchSpy.mock.calls[1][1]?.method).toBe("DELETE");
+    });
+  });
+
+  describe("getDeleteQuota", () => {
+    it("requests only the delete fields and maps the response", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          data: [
+            {
+              delete_quota_usage: 3,
+              delete_config: { quota_total: 100, quota_duration: 86400 },
+            },
+          ],
+        }),
+      );
+
+      await expect(api.getDeleteQuota()).resolves.toEqual({
+        permitted: true,
+        used: 3,
+        total: 100,
+        remaining: 97,
+      });
+
+      const url = new URL(fetchSpy.mock.calls[0][0] as string);
+      expect(url.pathname).toBe("/v1.0/user-123/threads_publishing_limit");
+      expect(url.searchParams.get("fields")).toBe(
+        "delete_quota_usage,delete_config",
+      );
+      expect(fetchSpy.mock.calls[0][1]?.method).toBe("GET");
+    });
+
+    it("reads the limit from Threads instead of assuming 100", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          data: [
+            {
+              delete_quota_usage: 10,
+              delete_config: { quota_total: 250, quota_duration: 86400 },
+            },
+          ],
+        }),
+      );
+
+      await expect(api.getDeleteQuota()).resolves.toEqual({
+        permitted: true,
+        used: 10,
+        total: 250,
+        remaining: 240,
+      });
+    });
+
+    it("never reports fewer than zero deletions remaining", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          data: [
+            {
+              delete_quota_usage: 120,
+              delete_config: { quota_total: 100, quota_duration: 86400 },
+            },
+          ],
+        }),
+      );
+
+      await expect(api.getDeleteQuota()).resolves.toEqual({
+        permitted: true,
+        used: 120,
+        total: 100,
+        remaining: 0,
+      });
+    });
+
+    it("counts a missing usage value as zero", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({
+          data: [{ delete_config: { quota_total: 100, quota_duration: 86400 } }],
+        }),
+      );
+
+      await expect(api.getDeleteQuota()).resolves.toEqual({
+        permitted: true,
+        used: 0,
+        total: 100,
+        remaining: 100,
+      });
+    });
+
+    it("is not permitted when delete_config is missing", async () => {
+      fetchSpy
+        .mockResolvedValueOnce(jsonResponse({ data: [{ delete_quota_usage: 3 }] }))
+        .mockResolvedValueOnce(jsonResponse({ data: [{ delete_config: {} }] }))
+        .mockResolvedValueOnce(jsonResponse({ data: [] }));
+
+      await expect(api.getDeleteQuota()).resolves.toEqual({ permitted: false });
+      await expect(api.getDeleteQuota()).resolves.toEqual({ permitted: false });
+      await expect(api.getDeleteQuota()).resolves.toEqual({ permitted: false });
+    });
+
+    it("is not permitted when Threads returns an error", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        jsonResponse({ error: { message: "forbidden" } }, { status: 403 }),
+      );
+
+      await expect(api.getDeleteQuota()).resolves.toEqual({ permitted: false });
+    });
+
+    describe("failure logging", () => {
+      const logMessage = "Threads delete quota check failed";
+      let warnSpy: ReturnType<typeof vi.spyOn>;
+
+      // What a rejection carries that could reach a log line or a response:
+      // its message and, for a ThreadsAPIError, its body.
+      function exposedText(error: unknown): string {
+        return JSON.stringify({
+          message: error instanceof Error ? error.message : String(error),
+          body: error instanceof ThreadsAPIError ? error.body : undefined,
+        });
+      }
+
+      beforeEach(() => {
+        warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it.each([400, 403, 404, 499])(
+        "stays quiet on an ordinary %i client error",
+        async (status) => {
+          fetchSpy.mockResolvedValueOnce(
+            jsonResponse({ error: { message: "nope" } }, { status }),
+          );
+
+          await expect(api.getDeleteQuota()).resolves.toEqual({
+            permitted: false,
+          });
+          expect(warnSpy).not.toHaveBeenCalled();
+        },
+      );
+
+      it("stays quiet when the response has no usable delete_config", async () => {
+        fetchSpy
+          .mockResolvedValueOnce(
+            jsonResponse({ data: [{ delete_quota_usage: 3 }] }),
+          )
+          .mockResolvedValueOnce(jsonResponse({ data: [{ delete_config: {} }] }))
+          .mockResolvedValueOnce(jsonResponse({ data: [] }));
+
+        for (let call = 0; call < 3; call++) {
+          await expect(api.getDeleteQuota()).resolves.toEqual({
+            permitted: false,
+          });
+        }
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it.each([500, 502, 503])(
+        "is not permitted on a %i server error, logged once with only its status and message",
+        async (status) => {
+          fetchSpy.mockResolvedValueOnce(
+            jsonResponse(
+              { error: { message: "Internal error", fbtrace_id: "trace-1" } },
+              { status },
+            ),
+          );
+
+          await expect(api.getDeleteQuota()).resolves.toEqual({
+            permitted: false,
+          });
+
+          expect(warnSpy).toHaveBeenCalledTimes(1);
+          expect(warnSpy).toHaveBeenCalledWith(logMessage, {
+            status,
+            message: `Threads API error: ${status}`,
+          });
+          expect(JSON.stringify(warnSpy.mock.calls)).not.toContain(
+            "test-token",
+          );
+        },
+      );
+
+      // When Threads gave no answer, the check failed: that says nothing about
+      // the permission, so the error goes to the caller instead of becoming
+      // "not permitted". The caller logs it.
+      it("rethrows a network failure without the token, and does not log it", async () => {
+        vi.useFakeTimers();
+        vi.spyOn(Math, "random").mockReturnValue(0);
+
+        fetchSpy.mockRejectedValue(new TypeError("fetch failed"));
+
+        const promise = api.getDeleteQuota().catch((e: unknown) => e);
+        // Long enough for every GET retry backoff to elapse.
+        await vi.advanceTimersByTimeAsync(10_000);
+
+        const error = await promise;
+        expect(error).toBeInstanceOf(ThreadsAPIError);
+        expect((error as ThreadsAPIError).status).toBeUndefined();
+        expect((error as Error).message).toBe(
+          "Threads API network request failed: fetch failed",
+        );
+        expect(exposedText(error)).not.toContain("test-token");
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it("rethrows a request timeout (408), and does not log it", async () => {
+        fetchSpy.mockResolvedValueOnce(
+          jsonResponse({ error: { message: "timeout" } }, { status: 408 }),
+        );
+
+        const error = await api.getDeleteQuota().catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(ThreadsAPIError);
+        expect((error as ThreadsAPIError).status).toBe(408);
+        expect(exposedText(error)).not.toContain("test-token");
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it("rethrows once rate-limit retries are exhausted, and does not log it", async () => {
+        vi.useFakeTimers();
+
+        const response429 = () =>
+          new Response(null, {
+            status: 429,
+            headers: { "Retry-After": "0" },
+          });
+        fetchSpy
+          .mockResolvedValueOnce(response429())
+          .mockResolvedValueOnce(response429())
+          .mockResolvedValueOnce(response429())
+          .mockResolvedValueOnce(response429());
+
+        const promise = api.getDeleteQuota().catch((e: unknown) => e);
+        await vi.advanceTimersByTimeAsync(30_000);
+
+        const error = await promise;
+        expect(error).toBeInstanceOf(ThreadsAPIError);
+        expect((error as ThreadsAPIError).status).toBe(429);
+        expect((error as Error).message).toBe(
+          "Rate limited: max retries exceeded",
+        );
+        expect(exposedText(error)).not.toContain("test-token");
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it("rethrows an unexpected non-Threads error as it is, and does not log it", async () => {
+        fetchSpy.mockResolvedValueOnce(jsonResponse(null));
+
+        const error = await api.getDeleteQuota().catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(TypeError);
+        expect(error).not.toBeInstanceOf(ThreadsAPIError);
+        expect(exposedText(error)).not.toContain("test-token");
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it("keeps a token echoed in an error message out of the rethrown error", async () => {
+        fetchSpy.mockRejectedValueOnce(
+          new Error(
+            "Failed to parse URL from https://graph.threads.net/v1.0/user-123/threads_publishing_limit?access_token=test-token",
+          ),
+        );
+
+        const error = await api.getDeleteQuota().catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(ThreadsAPIError);
+        const exposed = exposedText(error);
+        expect(exposed).not.toContain("test-token");
+        expect(exposed).toContain("access_token=REDACTED");
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+    });
+  });
+
   describe("refreshToken", () => {
     it("returns new token data", async () => {
       fetchSpy.mockResolvedValueOnce(
@@ -438,6 +832,23 @@ describe("ThreadsAPI", () => {
 
       await expect(ThreadsAPI.refreshToken("expired")).rejects.toThrow(
         ThreadsAPIError,
+      );
+    });
+
+    it("keeps the token out of network errors", async () => {
+      fetchSpy.mockRejectedValueOnce(new TypeError("fetch failed"));
+
+      const error = await ThreadsAPI.refreshToken("old-token").catch(
+        (e: unknown) => e,
+      );
+
+      expect(error).toBeInstanceOf(ThreadsAPIError);
+      expect((error as ThreadsAPIError).body).toMatchObject({
+        reason: "network_error",
+        url: expect.stringContaining("access_token=REDACTED"),
+      });
+      expect(JSON.stringify((error as ThreadsAPIError).body)).not.toContain(
+        "old-token",
       );
     });
   });
@@ -572,11 +983,46 @@ describe("ThreadsAPI", () => {
       );
       expect((result as ThreadsAPIError).body).toEqual({
         reason: "network_error",
-        url: "https://graph.threads.net/v1.0/me?fields=id%2Cusername&access_token=test-token",
+        url: "https://graph.threads.net/v1.0/me?fields=id%2Cusername&access_token=REDACTED",
         code: "ECONNRESET",
         causeMessage: "socket hang up",
       });
       expect(fetchSpy).toHaveBeenCalledTimes(4);
+
+      vi.useRealTimers();
+    });
+
+    it("keeps a token quoted by the underlying network error out of the error", async () => {
+      vi.useFakeTimers();
+      vi.spyOn(Math, "random").mockReturnValue(0);
+
+      const error = new TypeError("fetch failed");
+      Object.assign(error, {
+        cause: new Error(
+          "connect failed https://graph.threads.net/v1.0/me?access_token=secret-token",
+        ),
+      });
+
+      fetchSpy.mockRejectedValue(error);
+
+      const promise = api.getUserProfile().catch((err: Error) => err);
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      const result = await promise;
+      expect(result).toBeInstanceOf(ThreadsAPIError);
+      expect((result as Error).message).not.toContain("secret-token");
+      expect(JSON.stringify((result as ThreadsAPIError).body)).not.toContain(
+        "secret-token",
+      );
+      // The cause is still reported, with only the token taken out.
+      expect((result as Error).message).toContain(
+        "fetch failed (connect failed https://graph.threads.net/v1.0/me?access_token=REDACTED",
+      );
+      expect((result as ThreadsAPIError).body).toMatchObject({
+        reason: "network_error",
+        causeMessage:
+          "connect failed https://graph.threads.net/v1.0/me?access_token=REDACTED",
+      });
 
       vi.useRealTimers();
     });
@@ -619,5 +1065,164 @@ describe("ThreadsAPI", () => {
     it("is April 13, 2024", () => {
       expect(THREADS_API_LAUNCH.toISOString()).toBe("2024-04-13T00:00:00.000Z");
     });
+  });
+});
+
+describe("redactAccessToken", () => {
+  it("replaces the token and leaves other parameters intact", () => {
+    const redacted = redactAccessToken(
+      "https://graph.threads.net/v1.0/me?fields=id&access_token=abc",
+    );
+
+    const url = new URL(redacted);
+    expect(url.searchParams.get("access_token")).toBe("REDACTED");
+    expect(url.searchParams.get("fields")).toBe("id");
+    expect(redacted).not.toContain("abc");
+  });
+
+  it("handles a leading token and leaves token-free URLs unchanged", () => {
+    expect(
+      redactAccessToken(
+        "https://graph.threads.net/v1.0/me?access_token=abc&fields=id",
+      ),
+    ).toBe("https://graph.threads.net/v1.0/me?access_token=REDACTED&fields=id");
+
+    expect(redactAccessToken("https://graph.threads.net/v1.0/me?fields=id")).toBe(
+      "https://graph.threads.net/v1.0/me?fields=id",
+    );
+  });
+});
+
+describe("getThreadsErrorMessage", () => {
+  const unconfirmed = "Couldn't confirm whether Threads deleted this post.";
+  const generic = "Threads couldn't delete this post.";
+
+  it("uses the message from the Threads error body", () => {
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", 400, { error: { message: "Boom" } }),
+      ),
+    ).toBe("Boom");
+  });
+
+  it("says the outcome is unknown after a timeout or a network error", () => {
+    expect(getThreadsErrorMessage(new ThreadsAPIError("x", 408))).toBe(
+      unconfirmed,
+    );
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", undefined, { reason: "network_error" }),
+      ),
+    ).toBe(unconfirmed);
+  });
+
+  it("checks for an unknown outcome before reading the body message", () => {
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", 408, { error: { message: "Boom" } }),
+      ),
+    ).toBe(unconfirmed);
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", 500, {
+          reason: "network_error",
+          error: { message: "Boom" },
+        }),
+      ),
+    ).toBe(unconfirmed);
+    // Also on a status that would otherwise count as a refusal from Threads.
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", 400, {
+          reason: "network_error",
+          error: { message: "Boom" },
+        }),
+      ),
+    ).toBe(unconfirmed);
+  });
+
+  it("shows the Threads message for any 4xx other than a timeout, a rate limit included", () => {
+    for (const status of [400, 401, 403, 404, 429, 499]) {
+      expect(
+        getThreadsErrorMessage(
+          new ThreadsAPIError("x", status, { error: { message: "Boom" } }),
+        ),
+      ).toBe("Boom");
+    }
+  });
+
+  it("falls back to a generic message when Threads refused the delete without a reason", () => {
+    expect(getThreadsErrorMessage(new ThreadsAPIError("x", 400))).toBe(generic);
+    expect(getThreadsErrorMessage(new ThreadsAPIError("x", 404, null))).toBe(
+      generic,
+    );
+    expect(
+      getThreadsErrorMessage(new ThreadsAPIError("x", 400, { error: {} })),
+    ).toBe(generic);
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", 400, { error: { message: "" } }),
+      ),
+    ).toBe(generic);
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", 400, { error: { message: "   " } }),
+      ),
+    ).toBe(generic);
+  });
+
+  it.each([200, 301, 399, 500, 502, 503])(
+    "says the outcome is unknown for status %i, even when the body has a message",
+    (status) => {
+      expect(getThreadsErrorMessage(new ThreadsAPIError("x", status))).toBe(
+        unconfirmed,
+      );
+      expect(
+        getThreadsErrorMessage(
+          new ThreadsAPIError("x", status, { error: { message: "Boom" } }),
+        ),
+      ).toBe(unconfirmed);
+    },
+  );
+
+  it("says the outcome is unknown when Threads answered 200 without confirming the delete", () => {
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("Threads did not confirm the delete", 200, {
+          success: false,
+        }),
+      ),
+    ).toBe(unconfirmed);
+    expect(getThreadsErrorMessage(new ThreadsAPIError("x", 200, null))).toBe(
+      unconfirmed,
+    );
+  });
+
+  it("says the outcome is unknown when there is no HTTP status", () => {
+    expect(getThreadsErrorMessage(new ThreadsAPIError("x"))).toBe(unconfirmed);
+    expect(
+      getThreadsErrorMessage(
+        new ThreadsAPIError("x", undefined, { error: { message: "Boom" } }),
+      ),
+    ).toBe(unconfirmed);
+  });
+
+  it("says the outcome is unknown for an error that did not come from Threads", () => {
+    expect(getThreadsErrorMessage(new Error("boom"))).toBe(unconfirmed);
+    expect(
+      getThreadsErrorMessage(new SyntaxError("Unexpected end of JSON input")),
+    ).toBe(unconfirmed);
+    expect(getThreadsErrorMessage("boom")).toBe(unconfirmed);
+    expect(getThreadsErrorMessage(undefined)).toBe(unconfirmed);
+  });
+});
+
+describe("getAuthorizationUrl", () => {
+  it("requests the delete permission along with the existing scopes", () => {
+    const url = new URL(getAuthorizationUrl("state-1"));
+
+    expect(url.searchParams.get("scope")).toBe(
+      "threads_basic,threads_manage_insights,threads_read_replies,threads_delete",
+    );
   });
 });

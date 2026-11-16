@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { ThreadsAPIError } from "@/lib/threads";
 import { refreshMetrics, refreshAllUsers } from "../metrics-refresh";
 
 // --- Mock tracking ---
@@ -372,6 +373,60 @@ describe("refreshMetrics", () => {
     expect(mockGetPostInsights).toHaveBeenCalledTimes(2);
     expect(mockGetPostInsights).toHaveBeenCalledWith("media-recent-1");
     expect(mockGetPostInsights).toHaveBeenCalledWith("media-recent-2");
+  });
+
+  it("continues past a post whose insights call fails", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockGetUserPosts.mockResolvedValue([]);
+    mockRecentPostsResult = {
+      data: [
+        { id: "recent-uuid-1", threads_media_id: "media-recent-1" },
+        { id: "recent-uuid-2", threads_media_id: "media-recent-2" },
+      ],
+      error: null,
+    };
+    // A post deleted on Threads can still sit in Spool, and Threads rejects its
+    // insights call. The body holds a token-bearing URL on purpose: none of it
+    // may reach the log.
+    mockGetPostInsights.mockImplementation(async (mediaId: string) => {
+      if (mediaId === "media-recent-1") {
+        throw new ThreadsAPIError("Threads API error: 400", 400, {
+          url: "https://graph.threads.net/v1.0/media-recent-1/insights?access_token=secret-token",
+        });
+      }
+      return {
+        views: 200,
+        likes: 20,
+        replies: 10,
+        reposts: 4,
+        quotes: 2,
+        shares: 6,
+      };
+    });
+
+    const result = await refreshMetrics("user-uuid");
+
+    expect(result.updatedMetrics).toBe(1);
+    expect(mockGetPostInsights).toHaveBeenCalledWith("media-recent-1");
+    expect(mockGetPostInsights).toHaveBeenCalledWith("media-recent-2");
+    expect(getMetricsInsertCalls()).toEqual([
+      expect.objectContaining({ post_id: "recent-uuid-2", views: 200 }),
+    ]);
+    expect(mockGetPostReplies).toHaveBeenCalledTimes(2);
+    expect(mockGetPostReplies).toHaveBeenCalledWith("media-recent-1");
+    expect(mockGetPostReplies).toHaveBeenCalledWith("media-recent-2");
+
+    // One line naming the skipped post and Threads' message, nothing else
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    const loggedArgs = errorSpy.mock.calls[0];
+    expect(loggedArgs).toHaveLength(1);
+    const line = String(loggedArgs[0]);
+    expect(line).toContain("recent-uuid-1");
+    expect(line).toContain("media-recent-1");
+    expect(line).toContain("Threads API error: 400");
+    expect(line).not.toContain("access_token");
+
+    errorSpy.mockRestore();
   });
 
   it("skips metric refresh for posts that were just fetched as new", async () => {

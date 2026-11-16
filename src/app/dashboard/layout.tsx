@@ -42,7 +42,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar username={user.username} />
-      <main className="flex min-h-screen flex-1 flex-col pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
+      <main className="flex min-h-screen min-w-0 flex-1 flex-col pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
           {tokenStatus !== "valid" && (
             <div className="mb-4">

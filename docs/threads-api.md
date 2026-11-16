@@ -9,6 +9,7 @@
 - [Authentication & Setup](#authentication--setup)
 - [Posts (Publishing)](#posts-publishing)
 - [Retrieving Posts](#retrieving-posts)
+- [Delete Posts](#delete-posts)
 - [Reply Management](#reply-management)
 - [Keyword Search](#keyword-search)
 - [Insights](#insights)
@@ -33,7 +34,7 @@ The Threads API uses **OAuth 2.0** for authentication. All requests require a Th
 | `threads_manage_insights`   | Insights endpoints                         |
 | `threads_keyword_search`    | Searching public posts                     |
 | `threads_manage_mentions`   | Mention webhook notifications              |
-| `threads_delete`            | Delete webhook notifications               |
+| `threads_delete`            | Deleting posts (and delete webhook notifications) |
 
 ### Token Types
 
@@ -124,6 +125,47 @@ Publishing uses a **two-step container model**:
 
 - **Single post:** `GET /{threads-media-id}` — returns post fields (text, media URL, timestamp, etc.)
 - **User's posts:** `GET /{threads-user-id}/threads` — paginated list of the user's posts
+
+---
+
+## Delete Posts
+
+```
+DELETE /{threads-media-id}
+```
+
+- Pass the token as the `access_token` query parameter.
+- Requires `threads_basic` and `threads_delete`. Only posts created by the authenticated user can be deleted.
+- Limit: **100 deletions per 24 hours** per account. This is the documented default; read the live value from `delete_config.quota_total`.
+
+Success response:
+
+```json
+{ "success": true, "deleted_id": "<THREADS_MEDIA_ID>" }
+```
+
+### Check the Delete Quota
+
+```
+GET /{threads-user-id}/threads_publishing_limit?fields=delete_quota_usage,delete_config
+```
+
+```json
+{
+  "data": [
+    {
+      "delete_quota_usage": 3,
+      "delete_config": { "quota_total": 100, "quota_duration": 86400 }
+    }
+  ]
+}
+```
+
+- `delete_quota_usage` — deletions used in the current window.
+- `delete_config` — `quota_total` deletions allowed per `quota_duration` seconds (`86400` = 24 hours).
+- Requires only `threads_basic` and `threads_delete` (Meta's Rate Limiting → Deletion section); `threads_content_publish` is not needed.
+
+**Not documented:** the error bodies for a missing permission, a post that no longer exists, or an exhausted quota, and whether a deleted post can be restored. Treat a delete as irreversible and don't rely on specific error codes.
 
 ---
 
@@ -258,7 +300,7 @@ Real-time notifications for Threads events.
 | Topic      | Description                                           | Required Permission         |
 | ---------- | ----------------------------------------------------- | --------------------------- |
 | `replies`  | Replies to the authenticated user's posts             | `threads_read_replies`      |
-| `delete`   | When a verified user deletes a post                   | `threads_delete`            |
+| `delete`   | When a verified user deletes a post                   | `threads_delete` (also needed to delete posts) |
 | `mentions` | Public posts mentioning the authenticated user        | `threads_manage_mentions`   |
 | `publish`  | New posts published by the authenticated user         | `threads_basic`             |
 

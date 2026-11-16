@@ -9,6 +9,7 @@ import type {
   ThreadsDemographicBreakdown,
   ThreadsTokenRefreshResult,
   ThreadsPaginatedResponse,
+  ThreadsDeleteQuota,
 } from "@/lib/threads-api.types";
 
 const BASE_URL = "https://graph.threads.net/v1.0";
@@ -52,15 +53,73 @@ function getErrorCauseMessage(error: unknown): string | null {
   return typeof cause.message === "string" ? cause.message : null;
 }
 
+/**
+ * Replaces the value of every `access_token` query parameter, so a request URL
+ * can be stored on an error or written to a log without leaking the token.
+ */
+export function redactAccessToken(url: string): string {
+  return url.replace(/([?&]access_token=)[^&#]*/gi, "$1REDACTED");
+}
+
+const DELETE_UNCONFIRMED_MESSAGE =
+  "Couldn't confirm whether Threads deleted this post.";
+const DELETE_FAILED_MESSAGE = "Threads couldn't delete this post.";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+// Threads received the request and refused to run it: a 4xx, except 408 (the
+// request timed out, so its outcome is unknown). A 429 counts, since a request
+// that was rate limited was not executed.
+function isRefusalStatus(status: number | undefined): boolean {
+  return (
+    typeof status === "number" &&
+    status >= 400 &&
+    status < 500 &&
+    status !== 408
+  );
+}
+
+/**
+ * User-facing reason a delete failed. Only Threads refusing the request (a
+ * ThreadsAPIError with a 4xx status other than 408) proves the post was not
+ * deleted, so only then is the message from the Threads error body shown.
+ * Anything else leaves the outcome unknown, because the post may already be
+ * gone: a timeout, a network error, a 5xx, a 200 without `success: true`, a
+ * response that could not be read, a missing status, or an error that did not
+ * come from Threads. That is checked before the message in the body.
+ */
+export function getThreadsErrorMessage(error: unknown): string {
+  if (!(error instanceof ThreadsAPIError) || !isRefusalStatus(error.status)) {
+    return DELETE_UNCONFIRMED_MESSAGE;
+  }
+
+  const body = isRecord(error.body) ? error.body : null;
+
+  if (body?.reason === "network_error") {
+    return DELETE_UNCONFIRMED_MESSAGE;
+  }
+
+  const message = isRecord(body?.error) ? body.error.message : undefined;
+  return typeof message === "string" && message.trim()
+    ? message
+    : DELETE_FAILED_MESSAGE;
+}
+
 function createNetworkRequestError(url: string, error: unknown) {
   if (error instanceof ThreadsAPIError) {
     return error;
   }
 
+  // The underlying error and its cause can quote the request URL, token
+  // included, so everything built from them is redacted.
   const baseMessage =
     error instanceof Error ? error.message : "Network request failed";
   const code = getErrorCode(error);
-  const causeMessage = getErrorCauseMessage(error);
+  const rawCauseMessage = getErrorCauseMessage(error);
+  const causeMessage =
+    rawCauseMessage === null ? null : redactAccessToken(rawCauseMessage);
   const detail = code
     ? causeMessage
       ? `${code}: ${causeMessage}`
@@ -68,13 +127,15 @@ function createNetworkRequestError(url: string, error: unknown) {
     : causeMessage;
 
   return new ThreadsAPIError(
-    detail
-      ? `Threads API network request failed: ${baseMessage} (${detail})`
-      : `Threads API network request failed: ${baseMessage}`,
+    redactAccessToken(
+      detail
+        ? `Threads API network request failed: ${baseMessage} (${detail})`
+        : `Threads API network request failed: ${baseMessage}`,
+    ),
     undefined,
     {
       reason: "network_error",
-      url,
+      url: redactAccessToken(url),
       code,
       causeMessage,
     },
@@ -83,6 +144,45 @@ function createNetworkRequestError(url: string, error: unknown) {
 
 function isRetryableFetchError(error: unknown) {
   return error instanceof TypeError;
+}
+
+// A 4xx other than 408 (timeout) and 429 (rate limit) is Threads answering the
+// request, for example because the token may not delete. It is not the call
+// itself failing.
+function isOrdinaryClientError(error: unknown): boolean {
+  return (
+    error instanceof ThreadsAPIError &&
+    typeof error.status === "number" &&
+    error.status >= 400 &&
+    error.status < 500 &&
+    error.status !== 408 &&
+    error.status !== 429
+  );
+}
+
+// A 5xx is Threads answering the request with a server error.
+function isServerErrorResponse(error: unknown): boolean {
+  return (
+    error instanceof ThreadsAPIError &&
+    typeof error.status === "number" &&
+    error.status >= 500 &&
+    error.status < 600
+  );
+}
+
+// What is safe to log about a failure: the HTTP status and the message, never
+// the response body, the request URL or the error object.
+function describeFailureForLog(error: unknown): {
+  status?: number;
+  message: string;
+} {
+  const message = redactAccessToken(
+    error instanceof Error ? error.message : "Unknown error",
+  );
+
+  return error instanceof ThreadsAPIError && typeof error.status === "number"
+    ? { status: error.status, message }
+    : { message };
 }
 
 export class ThreadsAPI {
@@ -101,7 +201,9 @@ export class ThreadsAPI {
   private async request<T>(
     path: string,
     params?: Record<string, string>,
+    options: { method?: "GET" | "DELETE"; retryNetworkErrors?: boolean } = {},
   ): Promise<T> {
+    const { method = "GET", retryNetworkErrors = true } = options;
     const url = new URL(`${BASE_URL}${path}`);
     if (params) {
       for (const [key, value] of Object.entries(params)) {
@@ -123,11 +225,17 @@ export class ThreadsAPI {
 
       let response: Response;
       try {
-        response = await this.fetchWithTimeout(url.toString());
+        response = await this.fetchWithTimeout(url.toString(), method);
       } catch (error) {
         const requestError = createNetworkRequestError(url.toString(), error);
 
-        if (attempt === MAX_RETRIES || !isRetryableFetchError(error)) {
+        // The request may have reached Threads before the connection failed,
+        // so a caller that cannot safely repeat it opts out of this retry.
+        if (
+          attempt === MAX_RETRIES ||
+          !retryNetworkErrors ||
+          !isRetryableFetchError(error)
+        ) {
           throw requestError;
         }
 
@@ -188,14 +296,17 @@ export class ThreadsAPI {
     throw lastError ?? new ThreadsAPIError("Request failed");
   }
 
-  private async fetchWithTimeout(url: string): Promise<Response> {
+  private async fetchWithTimeout(
+    url: string,
+    method: "GET" | "DELETE",
+  ): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
     }, REQUEST_TIMEOUT_MS);
 
     try {
-      return await fetch(url, { signal: controller.signal });
+      return await fetch(url, { method, signal: controller.signal });
     } catch (error) {
       if (
         error instanceof Error &&
@@ -448,6 +559,85 @@ export class ThreadsAPI {
     }
 
     return allReplies;
+  }
+
+  /**
+   * Deletes a post from Threads. A delete is not idempotent, so it is never
+   * retried after a network error or timeout (the post may already be gone);
+   * a 429 is still retried because the request was not executed.
+   */
+  async deletePost(mediaId: string): Promise<void> {
+    const body = await this.request<{ success?: boolean }>(
+      `/${mediaId}`,
+      undefined,
+      { method: "DELETE", retryNetworkErrors: false },
+    );
+
+    if (body?.success !== true) {
+      throw new ThreadsAPIError(
+        "Threads did not confirm the delete",
+        200,
+        body,
+      );
+    }
+  }
+
+  /**
+   * The delete quota call doubles as the permission check: delete counts as
+   * permitted only when the response carries `delete_config`.
+   *
+   * When Threads answers, its answer decides: an HTTP error response (a 4xx or
+   * 5xx other than 408 and 429), or a response without a usable
+   * `delete_config`, means "not permitted". A 5xx is also logged without the
+   * token, so an outage leaves a trace on the server; a 4xx is the usual answer
+   * for a token that may not delete and stays quiet.
+   *
+   * When Threads gives no answer (a network failure, a timeout, still rate
+   * limited after the retries, or an error that did not come from Threads),
+   * the original error is rethrown without logging it here: the check failed,
+   * which says nothing about the permission. The caller reports and logs it.
+   */
+  async getDeleteQuota(): Promise<ThreadsDeleteQuota> {
+    try {
+      const response = await this.request<{
+        data?: {
+          delete_quota_usage?: number;
+          delete_config?: { quota_total?: number; quota_duration?: number };
+        }[];
+      }>(`/${this.userId}/threads_publishing_limit`, {
+        fields: "delete_quota_usage,delete_config",
+      });
+
+      const entry = response.data?.[0];
+      const total = entry?.delete_config?.quota_total;
+      if (typeof total !== "number") {
+        return { permitted: false };
+      }
+
+      const usage = entry?.delete_quota_usage;
+      const used = typeof usage === "number" ? usage : 0;
+
+      return {
+        permitted: true,
+        used,
+        total,
+        remaining: Math.max(0, total - used),
+      };
+    } catch (error) {
+      if (isOrdinaryClientError(error)) {
+        return { permitted: false };
+      }
+
+      if (isServerErrorResponse(error)) {
+        console.warn(
+          "Threads delete quota check failed",
+          describeFailureForLog(error),
+        );
+        return { permitted: false };
+      }
+
+      throw error;
+    }
   }
 
   static async refreshToken(

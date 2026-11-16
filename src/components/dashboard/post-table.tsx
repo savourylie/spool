@@ -5,10 +5,17 @@ import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { CaretUp, CaretDown, TextT, Image, VideoCamera, SquaresFour, NoteBlank, FunnelSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "./pagination";
 import { PostRowDetail } from "./post-row-detail";
+import { usePostSelection } from "./post-selection-provider";
 import { getPostsEmptyStateCopy } from "@/lib/dashboard-empty-state-copy";
+import {
+  getPageSelectionState,
+  getPostSelectLabel,
+  type SelectedPost,
+} from "@/lib/post-selection";
 import { getPostsPageRange } from "@/lib/posts-pagination";
 import { computeNormalizedWES } from "@/lib/weighted-engagement";
 import { formatNumber } from "@/lib/engagement-prediction";
@@ -62,7 +69,8 @@ const COLUMNS = [
   { key: "wes", label: "WES", sortable: false },
 ] as const;
 
-const COLUMN_COUNT = COLUMNS.length;
+// One more than COLUMNS: the leading checkbox column.
+const COLUMN_COUNT = COLUMNS.length + 1;
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -86,6 +94,7 @@ export function PostTable({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { selection, toggle, setPage } = usePostSelection();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [mountedIds, setMountedIds] = useState<Set<string>>(new Set());
   const emptyStateCopy = getPostsEmptyStateCopy(isImporting);
@@ -125,6 +134,16 @@ export function PostTable({
     pageItemCount: posts.length,
   });
 
+  // The header checkbox acts on every row rendered on this page.
+  const pageEntries: SelectedPost[] = posts.map((p) => ({
+    id: p.id,
+    preview: p.text_preview,
+  }));
+  const pageSelectionState = getPageSelectionState(
+    selection,
+    posts.map((p) => p.id),
+  );
+
   return (
     <div>
       {visibleRange && (
@@ -140,10 +159,21 @@ export function PostTable({
           )}
         </div>
       )}
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-foreground">
+              <th className="w-10 px-3 py-3 text-left">
+                <Checkbox
+                  aria-label="Select all posts on this page"
+                  checked={pageSelectionState === "all"}
+                  indeterminate={pageSelectionState === "some"}
+                  disabled={posts.length === 0}
+                  onCheckedChange={() =>
+                    setPage(pageEntries, pageSelectionState !== "all")
+                  }
+                />
+              </th>
               {COLUMNS.map((col) => (
                 <th
                   key={col.key}
@@ -203,6 +233,22 @@ export function PostTable({
                       !isExpanded && "border-b border-border"
                     )}
                   >
+                    <td
+                      className="w-10 px-3 py-3"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        aria-label={getPostSelectLabel(
+                          post.text_preview,
+                          formatDate(post.published_at),
+                        )}
+                        checked={selection.has(post.id)}
+                        onCheckedChange={() =>
+                          toggle({ id: post.id, preview: post.text_preview })
+                        }
+                      />
+                    </td>
                     <td className="px-3 py-3 max-w-[280px]">
                       <div className="flex items-center gap-2">
                         <span className="flex-shrink-0 inline-flex items-center justify-center text-ink-3">
