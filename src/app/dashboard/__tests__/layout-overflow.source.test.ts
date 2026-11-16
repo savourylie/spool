@@ -15,4 +15,24 @@ describe("dashboard layout overflow source", () => {
     expect(mainClassName).toBeDefined();
     expect(mainClassName?.split(/\s+/)).toContain("min-w-0");
   });
+
+  it("keeps the Posts table's absolutely positioned content inside its scroll wrapper", async () => {
+    const source = await readFile(
+      new URL("../../../components/dashboard/post-table.tsx", import.meta.url),
+      "utf8",
+    );
+
+    // An absolutely positioned element, such as the sr-only "(top performer)"
+    // span in the WES cell, is placed against its nearest positioned ancestor.
+    // Unless the scroll wrapper itself is positioned, that ancestor is outside
+    // the wrapper, so overflow-x-auto does not clip the span and it widens the
+    // whole page.
+    const wrapperClassName = source.match(
+      /<div\b[^>]*\bclassName="([^"]*)"[^>]*>\s*<table\b/,
+    )?.[1];
+    expect(wrapperClassName).toBeDefined();
+    expect(wrapperClassName?.split(/\s+/)).toEqual(
+      expect.arrayContaining(["relative", "overflow-x-auto"]),
+    );
+  });
 });
